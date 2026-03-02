@@ -130,51 +130,32 @@
     };
 
     // --- ANA DATA YÜKLEME (TEKRAR ENGELLEYİCİ) ---
-    // --- NOTLARI VE SIRALAMAYI YÜKLEME (KESİN ÇÖZÜM) ---
-    document.getElementById('notes-file').addEventListener('change', function(e) {
+    document.getElementById('excel-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
         const reader = new FileReader();
         reader.onload = function(evt) {
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-            const sheetName = workbook.SheetNames[0];
-            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            const worksheet = workbook.Sheets["ANLIK_STOK_DATA"];
+            if(!worksheet) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
             
-            // Excel'deki verileri bir Map'e alalım (Hızlı erişim için)
-            const excelMap = new Map();
-            jsonData.forEach(row => {
-                const kodu = String(row["STOK KODU"] || "").trim();
-                if(kodu) {
-                    excelMap.set(kodu, row);
-                    
-                    // Notları hemen hafızaya (LocalStorage) kaydet
-                    if(row["SİP-1"] !== undefined) localStorage.setItem(kodu + '_s1', row["SİP-1"]);
-                    if(row["SİP-2"] !== undefined) localStorage.setItem(kodu + '_s2', row["SİP-2"]);
-                    if(row["SİP-3"] !== undefined) localStorage.setItem(kodu + '_s3', row["SİP-3"]);
-                    if(row["SİP-4"] !== undefined) localStorage.setItem(kodu + '_s4', row["SİP-4"]);
-                }
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: "A"});
+            const uniqueIncomingData = new Map();
+            
+            jsonData.slice(1).filter(r => r.A).forEach(r => {
+                const kodu = String(r.A).trim();
+                uniqueIncomingData.set(kodu, {
+                    stokKodu: kodu,
+                    stokAdi: String(r.B || ''),
+                    marka: String(r.C || '').toUpperCase(),
+                    ozelKod5: String(r.F || 'DİĞER'),
+                    fiyat: parseFloat(r.G) || 0,
+                    fiili: r.H || 0,
+                    satis: r.I || 0,
+                    kalan: r.J || 0,
+                    ithalat: r.K || 0
+                });
             });
-
-            // ŞİMDİ SIRALAMAYI ZORLA GÜNCELLE
-            // allData içindeki her ürüne Excel'deki SIRA numarasını yapıştıralım
-            allData.forEach(item => {
-                const excelRow = excelMap.get(item.stokKodu);
-                // Eğer Excel'de bu ürün varsa onun SIRA numarasını al, yoksa en sona at (99999)
-                item.tempSort = (excelRow && excelRow["SIRA"]) ? parseInt(excelRow["SIRA"]) : 99999;
-            });
-
-            // allData'yı bu geçici SIRA numarasına göre küçükten büyüğe diz
-            allData.sort((a, b) => a.tempSort - b.tempSort);
-
-            // Temizlik: geçici sırayı sil
-            allData.forEach(item => delete item.tempSort);
-
-            // SONUÇ: Yeni sıralı listeyi kalıcı hafızaya yaz
-            saveAndRender();
-            alert("Sıralama ve Notlar Başarıyla Senkronize Edildi!");
-        };
-        reader.readAsBinaryString(file);
-    });
 
             const masterMap = new Map(allData.map(item => [item.stokKodu, item]));
             uniqueIncomingData.forEach((newItem, kodu) => {
@@ -336,4 +317,3 @@
 </script>
 </body>
 </html>
-
