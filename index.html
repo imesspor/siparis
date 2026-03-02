@@ -136,34 +136,48 @@
 
     // ANA DATA YÜKLEME
     // ANA DATA YÜKLEME (TEKRAR ENGELLEYİCİ GÜNCELLEME)
-    document.getElementById('excel-file').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-            const worksheet = workbook.Sheets["ANLIK_STOK_DATA"];
-            if(!worksheet) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
+    document.getElementById('notes-file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const workbook = XLSX.read(evt.target.result, {type: 'binary'});
+        const sheetName = workbook.SheetNames[0];
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        
+        // Önce gelen verileri hafızaya ve bir geçici sıraya alalım
+        const orderMap = new Map();
+        
+        jsonData.forEach(row => {
+            const kodu = String(row["STOK KODU"] || "").trim();
+            const sira = row["SIRA"]; // Excel'deki sıra no
             
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: "A"});
-            
-            // 1. ADIM: Excel'den gelen veriyi kendi içinde tekilleştir
-            const uniqueIncomingData = new Map();
-            
-            jsonData.slice(1).filter(r => r.A).forEach(r => {
-                const kodu = String(r.A).trim();
-                uniqueIncomingData.set(kodu, {
-                    stokKodu: kodu,
-                    stokAdi: String(r.B || ''),
-                    marka: String(r.C || '').toUpperCase(),
-                    ozelKod5: String(r.F || 'DİĞER'),
-                    fiyat: parseFloat(r.G) || 0,
-                    fiili: r.H || 0,
-                    satis: r.I || 0,
-                    kalan: r.J || 0,
-                    ithalat: r.K || 0
-                });
+            if(kodu) {
+                if(row["SİP-1"] !== undefined) localStorage.setItem(kodu + '_s1', row["SİP-1"]);
+                if(row["SİP-2"] !== undefined) localStorage.setItem(kodu + '_s2', row["SİP-2"]);
+                if(row["SİP-3"] !== undefined) localStorage.setItem(kodu + '_s3', row["SİP-3"]);
+                if(row["SİP-4"] !== undefined) localStorage.setItem(kodu + '_s4', row["SİP-4"]);
+                
+                if(sira !== undefined) orderMap.set(kodu, sira);
+            }
+        });
+
+        // 2. ADIM: Listeyi Excel'deki SIRA sütununa göre yeniden diz
+        if(orderMap.size > 0) {
+            allData.sort((a, b) => {
+                const siraA = orderMap.get(a.stokKodu) || 9999;
+                const siraB = orderMap.get(b.stokKodu) || 9999;
+                return siraA - siraB;
             });
+            // Yeni sıralamayı ana hafızaya kaydet
+            localStorage.setItem('masterInventoryData', JSON.stringify(allData));
+        }
+
+        alert("Notlar ve Sıralama başarıyla yüklendi!");
+        renderTable();
+    };
+    reader.readAsBinaryString(file);
+});
 
             // 2. ADIM: Mevcut veritabanını (allData) güncelle veya yeni ekle
             // Önce mevcut verileri bir Map'e alalım
@@ -300,26 +314,37 @@
         });
     }
 
-    function downloadReport() {
-        const reportData = allData.filter(item => {
-            const s1 = localStorage.getItem(item.stokKodu + '_s1') || '';
-            const s2 = localStorage.getItem(item.stokKodu + '_s2') || '';
-            const s3 = localStorage.getItem(item.stokKodu + '_s3') || '';
-            const s4 = localStorage.getItem(item.stokKodu + '_s4') || '';
-            return (s1+s2+s3+s4).trim() !== '';
-        }).map(item => ({
-            "STOK KODU": item.stokKodu, "STOK ADI": item.stokAdi, "MARKA": item.marka, "KATEGORİ": item.ozelKod5,
-            "FİYAT": formatCurrency(item.fiyat), "FİİLİ": item.fiili, "SATIŞ": item.satis, "KALAN": item.kalan, "İTHALAT": item.ithalat,
-            "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '', "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
-            "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '', "SİP-4": localStorage.getItem(item.stokKodu + '_s4') || ''
-        }));
-        if (reportData.length === 0) return alert("Sipariş yok!");
-        const ws = XLSX.utils.json_to_sheet(reportData);
-        const wb = XLSX.utils.book_new();
-        const sheetName = "Sipariş Raporu";
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-        XLSX.writeFile(wb, "Siparis_Raporu.xlsx");
-    }
+   function downloadReport() {
+    const reportData = allData.filter(item => {
+        const s1 = localStorage.getItem(item.stokKodu + '_s1') || '';
+        const s2 = localStorage.getItem(item.stokKodu + '_s2') || '';
+        const s3 = localStorage.getItem(item.stokKodu + '_s3') || '';
+        const s4 = localStorage.getItem(item.stokKodu + '_s4') || '';
+        return (s1+s2+s3+s4).trim() !== '';
+    }).map((item, index) => ({
+        "SIRA": index + 1, // Sıralama bilgisini buraya ekliyoruz
+        "STOK KODU": item.stokKodu, 
+        "STOK ADI": item.stokAdi, 
+        "MARKA": item.marka, 
+        "KATEGORİ": item.ozelKod5,
+        "FİYAT": formatCurrency(item.fiyat), 
+        "FİİLİ": item.fiili, 
+        "SATIŞ": item.satis, 
+        "KALAN": item.kalan, 
+        "İTHALAT": item.ithalat,
+        "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '', 
+        "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
+        "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '', 
+        "SİP-4": localStorage.getItem(item.stokKodu + '_s4') || ''
+    }));
+    
+    if (reportData.length === 0) return alert("Sipariş yok!");
+    const ws = XLSX.utils.json_to_sheet(reportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sipariş Raporu");
+    XLSX.writeFile(wb, "Siparis_Raporu.xlsx");
+}
 </script>
 </body>
 </html>
+
