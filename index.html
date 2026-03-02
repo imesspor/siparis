@@ -51,7 +51,10 @@
         .col-ithalat { background-color: #def8e1 !important; }
         .col-siparis { background-color: #f1effb !important; }
         .critical-row { background-color: #fbdada !important; }
-        .critical-row td { color: #000000 !important; }
+        .critical-row td { 
+            color: #000000 !important; 
+            background-color: inherit !important; /* Satırın arka plan rengini miras almasını sağlar */
+        }
         .siparis-input { width: 100%; border: none; background: transparent; outline: none; font-size: 11px; text-align: center; color: inherit; font-weight: bold; padding: 0; height: 100%; }
         tr:hover { background-color: #f1f3f5; }
         .w-sort { width: 25px; cursor: move; color: #adb5bd; text-align: center; font-size: 14px; }
@@ -336,3 +339,4 @@
 </script>
 </body>
 </html>
+
