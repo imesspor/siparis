@@ -50,7 +50,35 @@
         .col-kalan { background-color: #f6fcc8 !important; }
         .col-ithalat { background-color: #def8e1 !important; }
         .col-siparis { background-color: #f1effb !important; }
-        .critical-row { background-color: #fbdada !important; }
+        /* Kritik satırın genel arka planı (Kod ve Adı kısmı için) */
+        .critical-row { 
+            background-color: #fbdada !important; 
+        }
+
+        /* Renkli sütunları kritik satırdayken kırmızıya boya */
+        .critical-row .col-fiili, 
+        .critical-row .col-satis, 
+        .critical-row .col-kalan, 
+        .critical-row .col-ithalat { 
+            background-color: #fbdada !important; 
+            color: #000000 !important;
+        }
+
+        /* Sipariş sütunları (col-siparis) kritik satırda bile olsa kendi rengini korusun */
+        .critical-row .col-siparis { 
+            background-color: #f1effb !important; 
+        }
+
+        /* Inputların arka planı her zaman şeffaf kalsın ki hücrenin rengini göstersin */
+        .siparis-input { 
+            width: 100%; 
+            border: none; 
+            background: transparent; 
+            outline: none; 
+            font-size: 11px; 
+            text-align: center; 
+            font-weight: bold; 
+        }
         .critical-row td { 
             color: #000000 !important; 
             background-color: inherit !important; /* Satırın arka plan rengini miras almasını sağlar */
@@ -339,4 +367,5 @@
 </script>
 </body>
 </html>
+
 
