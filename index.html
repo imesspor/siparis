@@ -135,6 +135,7 @@
     }
 
     // ANA DATA YÜKLEME
+    // ANA DATA YÜKLEME (TEKRAR ENGELLEYİCİ GÜNCELLEME)
     document.getElementById('excel-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -145,28 +146,45 @@
             if(!worksheet) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
             
             const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: "A"});
-            const rawExcelData = jsonData.slice(1).filter(r => r.A).map(r => ({
-                stokKodu: String(r.A).trim(),
-                stokAdi: String(r.B || ''),
-                marka: String(r.C || '').toUpperCase(),
-                ozelKod5: String(r.F || 'DİĞER'),
-                fiyat: parseFloat(r.G) || 0,
-                fiili: r.H || 0,
-                satis: r.I || 0,
-                kalan: r.J || 0,
-                ithalat: r.K || 0
-            }));
+            
+            // 1. ADIM: Excel'den gelen veriyi kendi içinde tekilleştir
+            const uniqueIncomingData = new Map();
+            
+            jsonData.slice(1).filter(r => r.A).forEach(r => {
+                const kodu = String(r.A).trim();
+                uniqueIncomingData.set(kodu, {
+                    stokKodu: kodu,
+                    stokAdi: String(r.B || ''),
+                    marka: String(r.C || '').toUpperCase(),
+                    ozelKod5: String(r.F || 'DİĞER'),
+                    fiyat: parseFloat(r.G) || 0,
+                    fiili: r.H || 0,
+                    satis: r.I || 0,
+                    kalan: r.J || 0,
+                    ithalat: r.K || 0
+                });
+            });
 
-            const existingMap = new Map(allData.map(item => [item.stokKodu, item]));
-            rawExcelData.forEach(newItem => {
-                if (existingMap.has(newItem.stokKodu)) {
-                    const oldItem = existingMap.get(newItem.stokKodu);
-                    Object.assign(oldItem, newItem);
+            // 2. ADIM: Mevcut veritabanını (allData) güncelle veya yeni ekle
+            // Önce mevcut verileri bir Map'e alalım
+            const masterMap = new Map(allData.map(item => [item.stokKodu, item]));
+
+            // Yeni tekilleşmiş verileri ana listeye işle
+            uniqueIncomingData.forEach((newItem, kodu) => {
+                if (masterMap.has(kodu)) {
+                    // Varsa sadece değerleri güncelle (Sipariş notları kaybolmaz)
+                    Object.assign(masterMap.get(kodu), newItem);
                 } else {
-                    allData.push(newItem);
+                    // Yoksa yeni ekle
+                    masterMap.set(kodu, newItem);
                 }
             });
+
+            // Map'i tekrar diziye çevir ve kaydet
+            allData = Array.from(masterMap.values());
+            
             saveAndRender();
+            alert("Veriler başarıyla güncellendi ve tekrarlar temizlendi!");
         };
         reader.readAsBinaryString(file);
     });
