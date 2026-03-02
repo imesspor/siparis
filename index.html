@@ -129,7 +129,7 @@
         }
     };
 
-    // --- ANA DATA YÜKLEME (TEKRAR ENGELLEYİCİ) ---
+    // --- ANA DATA YÜKLEME ---
     document.getElementById('excel-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -173,7 +173,7 @@
         reader.readAsBinaryString(file);
     });
 
-    // --- NOTLARI VE SIRALAMAYI YÜKLEME ---
+    // --- NOTLARI VE SIRALAMAYI YÜKLEME (GÜNCELLENMİŞ) ---
     document.getElementById('notes-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -182,29 +182,37 @@
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
             const sheetName = workbook.SheetNames[0];
             const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            
+            // Sıralama için Map
             const orderMap = new Map();
             
             jsonData.forEach(row => {
                 const kodu = String(row["STOK KODU"] || "").trim();
                 const sira = row["SIRA"];
+                
                 if(kodu) {
+                    // Notları stok kodu referansıyla doldur
                     if(row["SİP-1"] !== undefined) localStorage.setItem(kodu + '_s1', row["SİP-1"]);
                     if(row["SİP-2"] !== undefined) localStorage.setItem(kodu + '_s2', row["SİP-2"]);
                     if(row["SİP-3"] !== undefined) localStorage.setItem(kodu + '_s3', row["SİP-3"]);
                     if(row["SİP-4"] !== undefined) localStorage.setItem(kodu + '_s4', row["SİP-4"]);
-                    if(sira !== undefined) orderMap.set(kodu, sira);
+                    
+                    // Sıra bilgisini al
+                    if(sira !== undefined) orderMap.set(kodu, parseInt(sira));
                 }
             });
 
+            // Listeyi Excel'deki SIRA sütununa göre yeniden diz
             if(orderMap.size > 0) {
                 allData.sort((a, b) => {
-                    const sA = orderMap.get(a.stokKodu) || 9999;
-                    const sB = orderMap.get(b.stokKodu) || 9999;
+                    const sA = orderMap.get(a.stokKodu) || 99999;
+                    const sB = orderMap.get(b.stokKodu) || 99999;
                     return sA - sB;
                 });
             }
+
             saveAndRender();
-            alert("Notlar ve Sıralama yüklendi!");
+            alert("Notlar yüklendi ve sıralama Excel'e göre güncellendi!");
         };
         reader.readAsBinaryString(file);
     });
@@ -294,6 +302,7 @@
         });
     }
 
+    // --- RAPOR İNDİRME (GÜNCELLENMİŞ) ---
     function downloadReport() {
         const reportData = allData.filter(item => {
             const s1 = localStorage.getItem(item.stokKodu + '_s1') || '';
@@ -302,12 +311,22 @@
             const s4 = localStorage.getItem(item.stokKodu + '_s4') || '';
             return (s1+s2+s3+s4).trim() !== '';
         }).map((item, index) => ({
-            "SIRA": index + 1,
-            "STOK KODU": item.stokKodu, "STOK ADI": item.stokAdi, "MARKA": item.marka, "KATEGORİ": item.ozelKod5,
-            "FİYAT": formatCurrency(item.fiyat), "FİİLİ": item.fiili, "SATIŞ": item.satis, "KALAN": item.kalan, "İTHALAT": item.ithalat,
-            "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '', "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
-            "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '', "SİP-4": localStorage.getItem(item.stokKodu + '_s4') || ''
+            "SIRA": index + 1, // Mevcut tablodaki sırayı koru
+            "STOK KODU": item.stokKodu, 
+            "STOK ADI": item.stokAdi, 
+            "MARKA": item.marka, 
+            "KATEGORİ": item.ozelKod5,
+            "FİYAT": formatCurrency(item.fiyat), 
+            "FİİLİ": item.fiili, 
+            "SATIŞ": item.satis, 
+            "KALAN": item.kalan, 
+            "İTHALAT": item.ithalat,
+            "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '', 
+            "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
+            "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '', 
+            "SİP-4": localStorage.getItem(item.stokKodu + '_s4') || ''
         }));
+        
         if (reportData.length === 0) return alert("Sipariş yok!");
         const ws = XLSX.utils.json_to_sheet(reportData);
         const wb = XLSX.utils.book_new();
