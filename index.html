@@ -40,52 +40,34 @@
         .slicer-btn.active { background: var(--accent-blue); color: white; border-color: #1e272e; }
         .search-container-in-slicer { display: flex; align-items: center; background: white; border: 2px solid var(--accent-blue); border-radius: 3px; padding: 0 8px; height: 22px; grid-column: span 2; }
         .search-input { width: 100%; border: none; outline: none; font-size: 10px; font-weight: bold; background: transparent; }
+        
         .table-container { background: white; border-radius: 4px; border: 1px solid var(--border-color); overflow-x: auto; max-height: 78vh; }
         table { width: 100%; border-collapse: collapse; min-width: 1400px; table-layout: fixed; }
         thead { background: #e9ecef; position: sticky; top: 0; z-index: 10; }
         th, td { padding: 2px 4px; border: 1px solid #dee2e6; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; height: 18px; text-align: center; font-weight: bold; }
-        .col-stok-adi { text-align: left !important; padding-left: 4px; }
+        .col-stok-adi { text-align: left !important; padding-left: 4px; cursor: pointer; color: var(--accent-blue); }
         .col-fiili { background-color: #faeedf !important; }
         .col-satis { background-color: #fcf3cb !important; }
         .col-kalan { background-color: #f6fcc8 !important; }
         .col-ithalat { background-color: #def8e1 !important; }
         .col-siparis { background-color: #f1effb !important; }
-        /* Kritik satırın genel arka planı (Kod ve Adı kısmı için) */
-        .critical-row { 
-            background-color: #fbe8e8 !important; 
-        }
+        
+        .critical-row { background-color: #fbe8e8 !important; }
+        .critical-row .col-fiili, .critical-row .col-satis, .critical-row .col-kalan, .critical-row .col-ithalat { background-color: #fbe8e8 !important; color: #000000 !important; }
+        .critical-row .col-siparis { background-color: #f1effb !important; }
 
-        /* Renkli sütunları kritik satırdayken kırmızıya boya */
-        .critical-row .col-fiili, 
-        .critical-row .col-satis, 
-        .critical-row .col-kalan, 
-        .critical-row .col-ithalat { 
-            background-color: #fbe8e8 !important; 
-            color: #000000 !important;
-        }
-
-        /* Sipariş sütunları (col-siparis) kritik satırda bile olsa kendi rengini korusun */
-        .critical-row .col-siparis { 
-            background-color: #f1effb !important; 
-        }
-
-        /* Inputların arka planı her zaman şeffaf kalsın ki hücrenin rengini göstersin */
-        .siparis-input { 
-            width: 100%; 
-            border: none; 
-            background: transparent; 
-            outline: none; 
-            font-size: 11px; 
-            text-align: center; 
-            font-weight: bold; 
-        }
-        .critical-row td { 
-            color: #000000 !important; 
-            background-color: inherit !important; /* Satırın arka plan rengini miras almasını sağlar */
-        }
         .siparis-input { width: 100%; border: none; background: transparent; outline: none; font-size: 11px; text-align: center; color: inherit; font-weight: bold; padding: 0; height: 100%; }
         tr:hover { background-color: #f1f3f5; }
         .w-sort { width: 25px; cursor: move; color: #adb5bd; text-align: center; font-size: 14px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-header { border-bottom: 2px solid var(--accent-blue); margin-bottom: 15px; padding-bottom: 5px; font-size: 14px; display: flex; justify-content: space-between; }
+        .modal-section { margin-bottom: 15px; font-size: 12px; }
+        .modal-section h4 { margin: 8px 0; color: var(--accent-blue); border-bottom: 1px solid #eee; padding-bottom: 4px; font-size: 13px; }
+        .modal-close { cursor: pointer; font-size: 20px; line-height: 1; }
+        .info-row { padding: 6px 0; border-bottom: 1px dashed #eee; line-height: 1.5; font-size: 11.5px; }
+        
         @media (max-width: 600px) { #slicer-area { grid-template-columns: repeat(3, 1fr); } .search-container-in-slicer { grid-column: span 3; } }
     </style>
 </head>
@@ -94,11 +76,11 @@
     <div class="top-bar">
         <div class="upload-section">
             <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 DATA YÜKLE</button>
-            <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm" onchange="document.getElementById('data-name').textContent = this.files[0].name">
+            <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
             <span id="data-name" class="file-name-display"></span>
 
             <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 NOTLARI YÜKLE</button>
-            <input type="file" id="notes-file" class="hidden-input" accept=".xlsx" onchange="document.getElementById('notes-name').textContent = this.files[0].name">
+            <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
             <span id="notes-name" class="file-name-display"></span>
 
             <button class="btn-action btn-report" onclick="downloadReport()">📥 EXCEL AL</button>
@@ -136,6 +118,16 @@
         </table>
     </div>
 
+    <div id="info-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span id="modal-title">Ürün Detayı</span>
+                <span class="modal-close" onclick="document.getElementById('info-modal').style.display='none'">&times;</span>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
 <script>
     let allData = [];
     let currentBrand = 'PROFORCE'; 
@@ -152,6 +144,15 @@
         return text.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase();
     }
 
+    function excelDateToJS(serial) {
+        if(!serial || isNaN(serial)) return serial;
+        let date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+        let d = date.getDate().toString().padStart(2, '0');
+        let m = (date.getMonth() + 1).toString().padStart(2, '0');
+        let y = date.getFullYear();
+        return `${d}.${m}.${y}`;
+    }
+
     window.onload = function() {
         const savedData = localStorage.getItem('masterInventoryData');
         if (savedData) {
@@ -160,31 +161,71 @@
         }
     };
 
-    // --- ANA DATA YÜKLEME ---
     document.getElementById('excel-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
+        document.getElementById('data-name').textContent = file.name;
         const reader = new FileReader();
         reader.onload = function(evt) {
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-            const worksheet = workbook.Sheets["ANLIK_STOK_DATA"];
-            if(!worksheet) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
             
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: "A"});
+            const wsStok = workbook.Sheets["ANLIK_STOK_DATA"];
+            if(!wsStok) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
+            const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: "A", defval: ""});
+            
+            const wsSiparis = workbook.Sheets["ALINAN SİPARİŞLER DETAY"];
+            const siparisMap = new Map();
+            if(wsSiparis) {
+                const siparisJson = XLSX.utils.sheet_to_json(wsSiparis, {header: "A", defval: ""});
+                siparisJson.slice(1).forEach(row => {
+                    const sKodu = String(row.L || '').trim();
+                    const sMusteri = String(row.J || '').trim();
+                    const sAdet = String(row.R || '').trim();
+                    if(sKodu && sMusteri) {
+                        if(!siparisMap.has(sKodu)) siparisMap.set(sKodu, []);
+                        const mDetay = sAdet ? `${sAdet} Adet - ${sMusteri}` : sMusteri;
+                        siparisMap.get(sKodu).push(mDetay);
+                    }
+                });
+            }
+
+            const wsVerilen = workbook.Sheets["VERİLEN SİPARİŞ DETAY"];
+            const ithalatMap = new Map();
+            if(wsVerilen) {
+                const verilenJson = XLSX.utils.sheet_to_json(wsVerilen, {header: "A", defval: ""});
+                verilenJson.slice(1).forEach(row => {
+                    const vKodu = String(row.M || '').trim();
+                    const vTarihRaw = row.R; 
+                    const vTarih = excelDateToJS(vTarihRaw);
+                    const vMiktar = String(row.S || '').trim();
+                    if(vKodu && (vTarih || vMiktar)) {
+                        if(!ithalatMap.has(vKodu)) ithalatMap.set(vKodu, []);
+                        const iDetay = `${vMiktar} Adet -> ${vTarih}`;
+                        ithalatMap.get(vKodu).push(iDetay);
+                    }
+                });
+            }
+
             const uniqueIncomingData = new Map();
-            
-            jsonData.slice(1).filter(r => r.A).forEach(r => {
-                const kodu = String(r.A).trim();
+            stokJson.slice(1).forEach(r => {
+                const kodu = String(r.A || '').trim();
+                if (kodu === "" || kodu.toLowerCase() === "stok kodu") return;
+
+                const musteriler = siparisMap.get(kodu) || [];
+                const ithalatlar = ithalatMap.get(kodu) || [];
+
                 uniqueIncomingData.set(kodu, {
                     stokKodu: kodu,
                     stokAdi: String(r.B || ''),
                     marka: String(r.C || '').toUpperCase(),
                     ozelKod5: String(r.F || 'DİĞER'),
-                    fiyat: parseFloat(r.G) || 0,
-                    fiili: r.H || 0,
-                    satis: r.I || 0,
-                    kalan: r.J || 0,
-                    ithalat: r.K || 0
+                    fiyat: parseFloat(String(r.G).replace(',', '.')) || 0,
+                    fiili: parseInt(r.H) || 0,
+                    satis: parseInt(r.I) || 0,
+                    kalan: parseInt(r.J) || 0,
+                    ithalat: parseInt(r.K) || 0,
+                    ithalatDetay: ithalatlar.join('\n'), 
+                    satisDetay: musteriler.join('\n')
                 });
             });
 
@@ -199,54 +240,71 @@
 
             allData = Array.from(masterMap.values());
             saveAndRender();
-            alert("Ana veriler güncellendi!");
+            alert("Veriler başarıyla yüklendi!");
         };
         reader.readAsBinaryString(file);
     });
 
-    // --- NOTLARI VE SIRALAMAYI YÜKLEME (GÜNCELLENMİŞ) ---
     document.getElementById('notes-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
+        document.getElementById('notes-name').textContent = file.name;
         const reader = new FileReader();
         reader.onload = function(evt) {
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-            const sheetName = workbook.SheetNames[0];
-            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-            
-            // Sıralama için Map
+            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             const orderMap = new Map();
-            
             jsonData.forEach(row => {
                 const kodu = String(row["STOK KODU"] || "").trim();
                 const sira = row["SIRA"];
-                
                 if(kodu) {
-                    // Notları stok kodu referansıyla doldur
                     if(row["SİP-1"] !== undefined) localStorage.setItem(kodu + '_s1', row["SİP-1"]);
                     if(row["SİP-2"] !== undefined) localStorage.setItem(kodu + '_s2', row["SİP-2"]);
                     if(row["SİP-3"] !== undefined) localStorage.setItem(kodu + '_s3', row["SİP-3"]);
                     if(row["SİP-4"] !== undefined) localStorage.setItem(kodu + '_s4', row["SİP-4"]);
-                    
-                    // Sıra bilgisini al
                     if(sira !== undefined) orderMap.set(kodu, parseInt(sira));
                 }
             });
-
-            // Listeyi Excel'deki SIRA sütununa göre yeniden diz
             if(orderMap.size > 0) {
-                allData.sort((a, b) => {
-                    const sA = orderMap.get(a.stokKodu) || 99999;
-                    const sB = orderMap.get(b.stokKodu) || 99999;
-                    return sA - sB;
-                });
+                allData.sort((a, b) => (orderMap.get(a.stokKodu) || 99999) - (orderMap.get(b.stokKodu) || 99999));
             }
-
             saveAndRender();
-            alert("Notlar yüklendi ve sıralama Excel'e göre güncellendi!");
+            alert("Notlar yüklendi!");
         };
         reader.readAsBinaryString(file);
     });
+
+    function showDetail(stokKodu) {
+        const item = allData.find(d => d.stokKodu === stokKodu);
+        if(!item) return;
+
+        document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
+        let bodyHtml = '';
+
+        if(item.ithalatDetay && item.ithalatDetay !== '') {
+            bodyHtml += `<div class="modal-section"><h4>📦 GELECEK MALZEMELER (TERMİNLER)</h4>`;
+            const lines = item.ithalatDetay.split('\n');
+            lines.forEach(line => {
+                if(line.trim()) bodyHtml += `<div class="info-row" style="color:#00a859">● ${line.trim()}</div>`;
+            });
+            bodyHtml += `</div>`;
+        }
+
+        if(item.satisDetay && item.satisDetay !== '') {
+            bodyHtml += `<div class="modal-section"><h4>👥 SİPARİŞ VEREN MÜŞTERİLER</h4>`;
+            const lines = item.satisDetay.split('\n');
+            lines.forEach(line => {
+                if(line.trim()) bodyHtml += `<div class="info-row" style="color:#d35400">● ${line.trim()}</div>`;
+            });
+            bodyHtml += `</div>`;
+        }
+
+        if(bodyHtml === '') bodyHtml = '<p style="font-size:12px; color:red; text-align:center; padding:20px;">Detay bulunamadı.</p>';
+        document.getElementById('modal-body').innerHTML = bodyHtml;
+        document.getElementById('info-modal').style.display = 'flex';
+    }
+
+    function closeModal(e) { if(e.target.id === 'info-modal') document.getElementById('info-modal').style.display = 'none'; }
 
     function saveAndRender() {
         localStorage.setItem('masterInventoryData', JSON.stringify(allData));
@@ -258,8 +316,7 @@
         currentBrand = brand;
         currentFilter = 'HEPSİ';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const targetBtn = document.getElementById(`btn-${brand.toLowerCase()}`);
-        if(targetBtn) targetBtn.classList.add('active');
+        document.getElementById(`btn-${brand.toLowerCase()}`).classList.add('active');
         initSlicers();
         renderTable();
     }
@@ -269,17 +326,8 @@
         let categories = [...new Set(allData.filter(d => d.marka.includes(currentBrand)).map(d => d.ozelKod5))];
         categories.sort((a, b) => a.localeCompare(b, 'tr', {numeric: true}));
         categories = ['HEPSİ', ...categories];
-        
-        let html = categories.map(cat => `
-            <div class="slicer-btn ${currentFilter === cat ? 'active' : ''}" onclick="filterCategory('${cat}')">
-                ${cat}
-            </div>`).join('');
-
-        html += `
-            <div class="search-container-in-slicer">
-                <input type="text" id="search-input" class="search-input" placeholder="ARA..." oninput="renderTable()">
-            </div>`;
-        container.innerHTML = html;
+        container.innerHTML = categories.map(cat => `<div class="slicer-btn ${currentFilter === cat ? 'active' : ''}" onclick="filterCategory('${cat}')">${cat}</div>`).join('') + 
+        `<div class="search-container-in-slicer"><input type="text" id="search-input" class="search-input" placeholder="ARA..." oninput="renderTable()"></div>`;
     }
 
     function filterCategory(cat) {
@@ -290,84 +338,59 @@
 
     function renderTable() {
         const tbody = document.getElementById('table-body');
-        const sInput = document.getElementById('search-input');
-        const searchTerm = sInput ? toLowerTR(sInput.value) : "";
-        
+        const searchInput = document.getElementById('search-input');
+        const searchTerm = searchInput ? terrorist(searchInput.value) : "";
+
+        function terrorist(text) { // Yardımcı küçük harf ve TR karakter dönüşümü
+            if(!text) return "";
+            return text.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase();
+        }
+
         let filtered = allData.filter(d => {
-            const mBrand = d.marka.includes(currentBrand);
-            const mCat = (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter);
-            const mSearch = toLowerTR(d.stokKodu).includes(searchTerm) || toLowerTR(d.stokAdi).includes(searchTerm);
-            return mBrand && mCat && mSearch;
+            const matchesBrand = d.marka.includes(currentBrand);
+            const matchesSearch = terrorist(d.stokKodu).includes(searchTerm) || terrorist(d.stokAdi).includes(searchTerm);
+            
+            // EĞER ARAMA KUTUSU DOLUYSA: Sadece markaya bak, kategoriyi (slicer) görmezden gel (Global Arama)
+            if (searchTerm !== "") {
+                return matchesBrand && matchesSearch;
+            } 
+            
+            // EĞER ARAMA KUTUSU BOŞSA: Hem markaya hem de seçili kategoriye göre filtrele
+            const matchesCategory = (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter);
+            return matchesBrand && matchesCategory;
         });
 
         tbody.innerHTML = filtered.map(item => {
             const isCritical = parseFloat(item.kalan) <= 0 ? 'critical-row' : '';
-            return `
-                <tr data-id="${item.stokKodu}" class="${isCritical}">
-                    <td class="w-sort">::</td>
-                    <td>${item.stokKodu}</td>
-                    <td class="col-stok-adi" title="${item.stokAdi}">${item.stokAdi}</td>
-                    <td>${formatCurrency(item.fiyat)}</td>
-                    <td class="col-fiili">${item.fiili}</td>
-                    <td class="col-satis">${item.satis}</td>
-                    <td class="col-kalan">${item.kalan}</td>
-                    <td class="col-ithalat">${item.ithalat}</td>
-                    ${[1,2,3,4].map(n => `
-                        <td class="col-siparis">
-                            <input class="siparis-input" type="text" value="${localStorage.getItem(item.stokKodu+'_s'+n) || ''}" 
-                            oninput="localStorage.setItem('${item.stokKodu}_s${n}', this.value)">
-                        </td>`).join('')}
-                </tr>`;
+            return `<tr data-id="${item.stokKodu}" class="${isCritical}">
+                <td class="w-sort">::</td>
+                <td>${item.stokKodu}</td>
+                <td class="col-stok-adi" onclick="showDetail('${item.stokKodu}')">${item.stokAdi}</td>
+                <td>${formatCurrency(item.fiyat)}</td>
+                <td class="col-fiili">${item.fiili}</td>
+                <td class="col-satis">${item.satis}</td>
+                <td class="col-kalan">${item.kalan}</td>
+                <td class="col-ithalat">${item.ithalat}</td>
+                ${[1,2,3,4].map(n => `<td class="col-siparis"><input class="siparis-input" type="text" value="${localStorage.getItem(item.stokKodu+'_s'+n) || ''}" oninput="localStorage.setItem('${item.stokKodu}_s${n}', this.value)"></td>`).join('')}
+            </tr>`;
         }).join('');
 
         if(sortableRows) sortableRows.destroy();
-        sortableRows = new Sortable(tbody, { 
-            animation: 150, handle: '.w-sort',
-            onEnd: function() {
-                const newOrderIds = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
-                const otherItems = allData.filter(d => !newOrderIds.includes(d.stokKodu));
-                const sortedItems = newOrderIds.map(id => allData.find(d => d.stokKodu === id));
-                allData = [...sortedItems, ...otherItems];
-                localStorage.setItem('masterInventoryData', JSON.stringify(allData));
-            }
-        });
+        sortableRows = new Sortable(tbody, { animation: 150, handle: '.w-sort' });
     }
 
-    // --- RAPOR İNDİRME (GÜNCELLENMİŞ) ---
     function downloadReport() {
-        const reportData = allData.filter(item => {
-            const s1 = localStorage.getItem(item.stokKodu + '_s1') || '';
-            const s2 = localStorage.getItem(item.stokKodu + '_s2') || '';
-            const s3 = localStorage.getItem(item.stokKodu + '_s3') || '';
-            const s4 = localStorage.getItem(item.stokKodu + '_s4') || '';
-            return (s1+s2+s3+s4).trim() !== '';
-        }).map((item, index) => ({
-            "SIRA": index + 1, // Mevcut tablodaki sırayı koru
-            "STOK KODU": item.stokKodu, 
-            "STOK ADI": item.stokAdi, 
-            "MARKA": item.marka, 
-            "KATEGORİ": item.ozelKod5,
-            "FİYAT": formatCurrency(item.fiyat), 
-            "FİİLİ": item.fiili, 
-            "SATIŞ": item.satis, 
-            "KALAN": item.kalan, 
-            "İTHALAT": item.ithalat,
-            "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '', 
-            "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
-            "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '', 
-            "SİP-4": localStorage.getItem(item.stokKodu + '_s4') || ''
+        const reportData = allData.filter(item => (localStorage.getItem(item.stokKodu+'_s1') || localStorage.getItem(item.stokKodu+'_s2') || '').trim() !== '').map((item, index) => ({
+            "SIRA": index + 1, "STOK KODU": item.stokKodu, "STOK ADI": item.stokAdi, "MARKA": item.marka, "FİYAT": formatCurrency(item.fiyat), "KALAN": item.kalan,
+            "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '', "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
+            "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '', "SİP-4": localStorage.getItem(item.stokKodu + '_s4') || ''
         }));
-        
         if (reportData.length === 0) return alert("Sipariş yok!");
         const ws = XLSX.utils.json_to_sheet(reportData);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sipariş Raporu");
+        XLSX.utils.book_append_sheet(wb, ws, "Rapor");
         XLSX.writeFile(wb, "Siparis_Raporu.xlsx");
     }
 </script>
 </body>
 </html>
-
-
-
-
