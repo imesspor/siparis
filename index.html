@@ -406,7 +406,60 @@
         sortableRows = new Sortable(tbody, { animation: 150, handle: '.w-sort' });
     }
 
-    function downlo
+   function downloadReport() {
+        // Sadece KALAN < 0 olanları filtrele
+        const criticalItems = allData.filter(item => item.kalan < 0);
+
+        if (criticalItems.length === 0) {
+            return alert("Eksi bakiye veren ürün bulunamadı!");
+        }
+
+        const wb = XLSX.utils.book_new();
+        const brands = ['PROFORCE', 'PANATTA'];
+
+        brands.forEach(brand => {
+            const brandData = criticalItems
+                .filter(item => item.marka.includes(brand))
+                .map((item, index) => {
+                    // İthalat detaylarını satırlara böl (İthalat Detay: "10 Adet -> 10.02.2024 \n 5 Adet -> 20.03.2024")
+                    const ithalatSatirlari = item.ithalatDetay ? item.ithalatDetay.split('\n').filter(s => s.trim() !== '') : [];
+                    
+                    let row = {
+                        "SIRA": index + 1,
+                        "STOK KODU": item.stokKodu,
+                        "STOK ADI": item.stokAdi,
+                        "MARKA": item.marka,
+                        "FİYAT": formatCurrency(item.fiyat),
+                        "FİİLİ STOK": item.fiili,
+                        "SATIŞ": item.satis,
+                        "KALAN (EKSİK)": item.kalan,
+                        "TOPLAM İTHALAT": item.ithalat
+                    };
+
+                    // İthalat varsa sütunlara ayır, yoksa Muadil yaz
+                    if (item.ithalat > 0 && ithalatSatirlari.length > 0) {
+                        ithalatSatirlari.forEach((satir, i) => {
+                            row[`İTHALAT TERMİN-${i + 1}`] = satir.trim();
+                        });
+                    } else if (item.ithalat > 0) {
+                        row["İTHALAT BİLGİSİ"] = "Miktar var, tarih yok";
+                    } else {
+                        row["DURUM"] = "İTHALAT YOK - MUADİL BAKILMALI";
+                    }
+
+                    return row;
+                });
+
+            if (brandData.length > 0) {
+                const ws = XLSX.utils.json_to_sheet(brandData);
+                XLSX.utils.book_append_sheet(wb, ws, brand);
+            }
+        });
+
+        if (wb.SheetNames.length === 0) return alert("Raporlanacak veri bulunamadı!");
+
+        XLSX.writeFile(wb, "Eksi_Stok_Analiz_Raporu.xlsx");
+    }
 </script>
 </body>
 </html>
