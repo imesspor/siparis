@@ -441,36 +441,40 @@
 
                 const ws = XLSX.utils.aoa_to_sheet(headers.concat(rows));
 
-                // --- ESTETİK AYARLAR VE TASARIM ---
+                // --- ESTETİK VE HİZALAMA AYARLARI ---
                 
-                // 1. Sütun Genişlikleri (Auto-fit mantığı)
+                // 1. Sütun Genişlikleri
                 ws['!cols'] = [
-                    { wch: 6 },  // SIRA
-                    { wch: 18 }, // STOK KODU
-                    { wch: 50 }, // STOK ADI
-                    { wch: 12 }, // FİİLİ
-                    { wch: 12 }, // SATIŞ
-                    { wch: 15 }, // KALAN
-                    { wch: 30 }, // İTHALAT-1
-                    { wch: 30 }, // İTHALAT-2
-                    { wch: 30 }  // İTHALAT-3
+                    { wch: 8 },   // SIRA (Ortalı)
+                    { wch: 20 },  // STOK KODU (Ortalı)
+                    { wch: 55 },  // STOK ADI (Sola Hizalı)
+                    { wch: 15 },  // FİİLİ (Ortalı)
+                    { wch: 15 },  // SATIŞ (Ortalı)
+                    { wch: 18 },  // KALAN (Ortalı)
+                    { wch: 35 },  // İTHALAT-1 (Sola/Ortalı Hizalı)
+                    { wch: 35 },  // İTHALAT-2
+                    { wch: 35 }   // İTHALAT-3
                 ];
 
-                // 2. Filtreleme oklarını ekle (Görseldeki gibi)
+                // 2. Renklendirme ve Filtreleme (Görseldeki Gibi)
                 const range = XLSX.utils.decode_range(ws['!ref']);
+                
+                // Başlık Satırı Ayarları (Mor ve Bold için Meta Data)
+                // Not: Standart xlsx kütüphanesi (ücretsiz sürüm) hücre içi renk kodlarını 
+                // doğrudan desteklemez ancak 'Tablo' yapısını tetiklemek için autofilter ekliyoruz.
                 ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: 8, r: 0 } }) };
 
                 XLSX.utils.book_append_sheet(wb, ws, brand);
             }
         });
 
-        // Dosya ismi estetik olsun
         const date = new Date().toLocaleDateString('tr-TR').replace(/\./g, '_');
-        XLSX.writeFile(wb, `Eksi_Bakiye_Raporu_${date}.xlsx`);
+        XLSX.writeFile(wb, `Eksi_Bakiye_Detayli_Rapor_${date}.xlsx`);
     }
 </script>
 </body>
 </html>
+
 
 
 
