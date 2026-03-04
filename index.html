@@ -407,11 +407,11 @@
     }
 
    function downloadReport() {
-        // Sadece KALAN < 0 olanları filtrele
+        // Sadece KALAN < 0 (stokta kalmayan) ürünleri filtrele
         const criticalItems = allData.filter(item => item.kalan < 0);
 
         if (criticalItems.length === 0) {
-            return alert("Eksi bakiye veren ürün bulunamadı!");
+            return alert("Eksi bakiye veren (stokta kalmamış) ürün bulunamadı!");
         }
 
         const wb = XLSX.utils.book_new();
@@ -421,30 +421,27 @@
             const brandData = criticalItems
                 .filter(item => item.marka.includes(brand))
                 .map((item, index) => {
-                    // İthalat detaylarını satırlara böl (İthalat Detay: "10 Adet -> 10.02.2024 \n 5 Adet -> 20.03.2024")
-                    const ithalatSatirlari = item.ithalatDetay ? item.ithalatDetay.split('\n').filter(s => s.trim() !== '') : [];
-                    
+                    // Temel bilgiler (Görseldeki sütun sırasına göre)
                     let row = {
                         "SIRA": index + 1,
                         "STOK KODU": item.stokKodu,
                         "STOK ADI": item.stokAdi,
-                        "MARKA": item.marka,
-                        "FİYAT": formatCurrency(item.fiyat),
                         "FİİLİ STOK": item.fiili,
                         "SATIŞ": item.satis,
-                        "KALAN (EKSİK)": item.kalan,
-                        "TOPLAM İTHALAT": item.ithalat
+                        "KALAN (EKSİK)": item.kalan
                     };
 
-                    // İthalat varsa sütunlara ayır, yoksa Muadil yaz
-                    if (item.ithalat > 0 && ithalatSatirlari.length > 0) {
+                    // İthalat detaylarını satırlara böl
+                    const ithalatSatirlari = item.ithalatDetay ? item.ithalatDetay.split('\n').filter(s => s.trim() !== '') : [];
+
+                    if (ithalatSatirlari.length > 0) {
+                        // Kaç tane ithalat varsa İTHALAT-1, İTHALAT-2... diye sütun açar
                         ithalatSatirlari.forEach((satir, i) => {
-                            row[`İTHALAT TERMİN-${i + 1}`] = satir.trim();
+                            row[`İTHALAT-${i + 1}`] = satir.trim();
                         });
-                    } else if (item.ithalat > 0) {
-                        row["İTHALAT BİLGİSİ"] = "Miktar var, tarih yok";
                     } else {
-                        row["DURUM"] = "İTHALAT YOK - MUADİL BAKILMALI";
+                        // Eğer ithalat yoksa İTHALAT-1 sütununa Muadil yazısı gelir
+                        row["İTHALAT-1"] = "MUADİL BAKILMALI";
                     }
 
                     return row;
@@ -452,17 +449,32 @@
 
             if (brandData.length > 0) {
                 const ws = XLSX.utils.json_to_sheet(brandData);
+                
+                // Sütun genişliklerini ayarla (Okunabilirlik için)
+                const wscols = [
+                    {wch: 6},  // SIRA
+                    {wch: 15}, // STOK KODU
+                    {wch: 45}, // STOK ADI
+                    {wch: 10}, // FİİLİ
+                    {wch: 10}, // SATIŞ
+                    {wch: 12}, // KALAN
+                    {wch: 25}, // İTHALAT-1
+                    {wch: 25}  // İTHALAT-2
+                ];
+                ws['!cols'] = wscols;
+
                 XLSX.utils.book_append_sheet(wb, ws, brand);
             }
         });
 
         if (wb.SheetNames.length === 0) return alert("Raporlanacak veri bulunamadı!");
 
-        XLSX.writeFile(wb, "Eksi_Stok_Analiz_Raporu.xlsx");
+        XLSX.writeFile(wb, "Eksi_Stok_Raporu.xlsx");
     }
 </script>
 </body>
 </html>
+
 
 
 
