@@ -50,37 +50,24 @@
         .col-satis { background-color: #fcf3cb !important; }
         .col-kalan { background-color: #f6fcc8 !important; }
         .col-ithalat { background-color: #def8e1 !important; }
-        .col-siparis { background-color: #f1effb !important; }
+        .col-avg { background-color: #e3f2fd !important; }
+        .col-omur { background-color: #f3e5f5 !important; }
+        .col-oneri { background-color: #fff9c4 !important; }
+        .col-stok-durumu { background-color: #f1f2f6 !important; font-size: 10px !important; }
         
         .critical-row { background-color: #fbe8e8 !important; }
-        .critical-row .col-fiili, .critical-row .col-satis, .critical-row .col-kalan, .critical-row .col-ithalat { background-color: #fbe8e8 !important; color: #000000 !important; }
-        .critical-row .col-siparis { background-color: #f1effb !important; }
-
-        .siparis-input { width: 100%; border: none; background: transparent; outline: none; font-size: 11px; text-align: center; color: inherit; font-weight: bold; padding: 0; height: 100%; }
         tr:hover { background-color: #f1f3f5; }
         .w-sort { width: 25px; cursor: move; color: #adb5bd; text-align: center; font-size: 14px; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 8px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .modal-header { border-bottom: 2px solid var(--accent-blue); margin-bottom: 15px; padding-bottom: 5px; font-size: 14px; display: flex; justify-content: space-between; }
-        .modal-section { margin-bottom: 15px; font-size: 12px; }
-        .modal-section h4 { margin: 8px 0; color: var(--accent-blue); border-bottom: 1px solid #eee; padding-bottom: 4px; font-size: 13px; }
         .modal-close { cursor: pointer; font-size: 20px; line-height: 1; }
-        .info-row { padding: 6px 0; border-bottom: 1px dashed #eee; line-height: 1.5; font-size: 11.5px; }
+        .info-row { padding: 2px 0 !important; margin: 0 !important; font-size: 11px !important; border-bottom: 1px dashed #eee; line-height: 1.5; }
+        .modal-section h4 { margin-top: 8px !important; margin-bottom: 4px !important; }
+        .modal-section { margin-bottom: 10px !important; }
         
-        /* Görsel Stili - Ufaltılmış ve Ortalı */
-        .product-image { 
-            width: auto;
-            max-width: 250px;
-            max-height: 200px;
-            display: block;
-            margin: 0 auto 15px;
-            object-fit: contain;
-            border-radius: 6px;
-            border: 1px solid #eee;
-            background: #fff;
-        }
-
+        .product-image { width: auto; max-width: 250px; max-height: 200px; display: block; margin: 0 auto 15px; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fff; }
         @media (max-width: 600px) { #slicer-area { grid-template-columns: repeat(3, 1fr); } .search-container-in-slicer { grid-column: span 3; } }
     </style>
 </head>
@@ -92,11 +79,11 @@
             <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
             <span id="data-name" class="file-name-display"></span>
 
-            <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 NOTLARI YÜKLE</button>
+            <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 SIRALAMA YÜKLE</button>
             <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
             <span id="notes-name" class="file-name-display"></span>
 
-            <button class="btn-action btn-report" onclick="downloadReport()">📥 EKSİK ÜRÜN RAPORU</button>
+            <button class="btn-action btn-report" onclick="downloadReport()">📥 ANALİZ RAPORU AL</button>
         </div>
 
         <div class="brand-tabs">
@@ -121,10 +108,10 @@
                     <th class="col-satis" style="width: 60px;">SATIŞ</th>
                     <th class="col-kalan" style="width: 60px;">KALAN</th>
                     <th class="col-ithalat" style="width: 60px;">İTHALAT</th>
-                    <th class="col-siparis" style="width: 60px;">SİPARİŞ-1</th>
-                    <th class="col-siparis" style="width: 60px;">SİPARİŞ-2</th>
-                    <th class="col-siparis" style="width: 60px;">SİPARİŞ-3</th>
-                    <th class="col-siparis" style="width: 60px;">SİPARİŞ-4</th>
+                    <th class="col-avg" style="width: 80px;">AYLIK ORT.</th>
+                    <th class="col-omur" style="width: 80px;">STOK ÖMRÜ</th>
+                    <th class="col-oneri" style="width: 80px;">SİP. ÖNERİ</th>
+                    <th class="col-stok-durumu" style="width: 120px;">STOK DURUMU</th>
                 </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -177,24 +164,51 @@
         reader.onload = function(evt) {
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
             
-            // 1. ANA STOK DATA OKUMA
             const wsStok = workbook.Sheets["ANLIK_STOK_DATA"];
             if(!wsStok) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
             const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: "A", defval: ""});
             
-            // 2. GÖRSEL SEKME OKUMA (C Sütunu)
             const wsGorsel = workbook.Sheets["GÖRSEL"];
             const resimMap = new Map();
             if(wsGorsel) {
                 const gorselJson = XLSX.utils.sheet_to_json(wsGorsel, {header: "A", defval: ""});
                 gorselJson.slice(1).forEach(row => {
                     const gKodu = String(row.A || '').trim();
-                    const gLink = String(row.C || '').trim(); // C Sütunu
+                    const gLink = String(row.C || '').trim();
                     if(gKodu) resimMap.set(gKodu, gLink);
                 });
             }
 
-            // 3. SİPARİŞ DETAYLARI
+            const wsGecmis = workbook.Sheets["GEÇMİŞ SATIŞ"];
+            const satisAnalizMap = new Map();
+            if(wsGecmis) {
+                const gecmisJson = XLSX.utils.sheet_to_json(wsGecmis, {header: "A", defval: 0});
+                gecmisJson.slice(1).forEach(row => {
+                    const kodu = String(row.A || '').trim();
+                    if(!kodu) return;
+                    let satislar = [];
+                    let toplamSatisVaktiBoyunca = 0;
+                    let baslangicBulundu = false;
+                    for(let i = 2; i <= 26; i++) {
+                        let sutunHarfi = i <= 25 ? String.fromCharCode(65 + i) : "AA";
+                        let val = parseFloat(row[sutunHarfi]) || 0;
+                        toplamSatisVaktiBoyunca += val;
+                        if(val > 0) baslangicBulundu = true;
+                        if(baslangicBulundu) satislar.push(val);
+                    }
+                    if(satislar.length > 0) {
+                        const toplamSatis = satislar.reduce((a, b) => a + b, 0);
+                        satisAnalizMap.set(kodu, { 
+                            ortalama: toplamSatis / satislar.length, 
+                            aktifAy: satislar.length,
+                            totalSatis: toplamSatisVaktiBoyunca 
+                        });
+                    } else {
+                        satisAnalizMap.set(kodu, { ortalama: 0, aktifAy: 0, totalSatis: 0 });
+                    }
+                });
+            }
+
             const wsSiparis = workbook.Sheets["ALINAN SİPARİŞLER DETAY"];
             const siparisMap = new Map();
             if(wsSiparis) {
@@ -205,13 +219,11 @@
                     const sAdet = String(row.R || '').trim();
                     if(sKodu && sMusteri) {
                         if(!siparisMap.has(sKodu)) siparisMap.set(sKodu, []);
-                        const mDetay = sAdet ? `${sAdet} Adet - ${sMusteri}` : sMusteri;
-                        siparisMap.get(sKodu).push(mDetay);
+                        siparisMap.get(sKodu).push(sAdet ? `${sAdet} Adet - ${sMusteri}` : sMusteri);
                     }
                 });
             }
 
-            // 4. İTHALAT DETAYLARI
             const wsVerilen = workbook.Sheets["VERİLEN SİPARİŞ DETAY"];
             const ithalatMap = new Map();
             if(wsVerilen) {
@@ -229,15 +241,26 @@
                 });
                 Object.values(gruplanmisIthalat).forEach(item => {
                     if(!ithalatMap.has(item.kodu)) ithalatMap.set(item.kodu, []);
-                    ithalatMap.get(item.kodu).push(`${item.miktar} Adet -> ${item.tarih}`);
+                    ithalatMap.get(item.kodu).push(`${item.miktar} Adet → ${item.tarih}`);
                 });
             }
 
-            // 5. DATA BİRLEŞTİRME
             const uniqueIncomingData = new Map();
             stokJson.slice(1).forEach(r => {
                 const kodu = String(r.A || '').trim();
                 if (kodu === "" || kodu.toLowerCase() === "stok kodu") return;
+                const analiz = satisAnalizMap.get(kodu) || { ortalama: 0, aktifAy: 0, totalSatis: 0 };
+                const fiili = parseInt(r.H) || 0;
+                const ithalat = parseInt(r.K) || 0;
+                const eldekiToplam = fiili + ithalat;
+                const hedefStok = analiz.ortalama * 5;
+                
+                let durum = "DİĞER";
+                let renk = "#333";
+                if(fiili > 0 && analiz.totalSatis === 0) { durum = "🛑 DURAN STOK"; renk = "#e74c3c"; }
+                else if(analiz.ortalama > 5) { durum = "⭐ HIZLI SİRKÜLASYON"; renk = "#2ecc71"; }
+                else if(analiz.ortalama >= 2) { durum = "📈 NORMAL"; renk = "#3498db"; }
+                else if(analiz.ortalama > 0) { durum = "⏳ YAVAŞ HAREKET"; renk = "#f39c12"; }
 
                 uniqueIncomingData.set(kodu, {
                     stokKodu: kodu,
@@ -245,28 +268,31 @@
                     marka: String(r.C || '').toUpperCase(),
                     ozelKod5: String(r.F || 'DİĞER'),
                     fiyat: parseFloat(String(r.G).replace(',', '.')) || 0,
-                    fiili: parseInt(r.H) || 0,
+                    fiili: fiili,
                     satis: parseInt(r.I) || 0,
                     kalan: parseInt(r.J) || 0,
-                    ithalat: parseInt(r.K) || 0,
+                    ithalat: ithalat,
                     resim: resimMap.get(kodu) || '', 
                     ithalatDetay: (ithalatMap.get(kodu) || []).join('\n'), 
-                    satisDetay: (siparisMap.get(kodu) || []).join('\n')
+                    satisDetay: (siparisMap.get(kodu) || []).join('\n'),
+                    avgSatis: analiz.ortalama,
+                    totalSatis: analiz.totalSatis,
+                    stokOmru: analiz.ortalama > 0 ? (eldekiToplam / analiz.ortalama).toFixed(1) : "0.0",
+                    ihtiyacAdet: hedefStok > eldekiToplam ? Math.ceil(hedefStok - eldekiToplam) : 0,
+                    stokDurumu: durum,
+                    stokDurumuRenk: renk
                 });
             });
 
             const masterMap = new Map(allData.map(item => [item.stokKodu, item]));
             uniqueIncomingData.forEach((newItem, kodu) => {
-                if (masterMap.has(kodu)) {
-                    Object.assign(masterMap.get(kodu), newItem);
-                } else {
-                    masterMap.set(kodu, newItem);
-                }
+                if (masterMap.has(kodu)) Object.assign(masterMap.get(kodu), newItem);
+                else masterMap.set(kodu, newItem);
             });
 
             allData = Array.from(masterMap.values());
             saveAndRender();
-            alert("Veriler ve Görseller Başarıyla Güncellendi!");
+            alert("Veriler Güncellendi!");
         };
         reader.readAsBinaryString(file);
     });
@@ -274,7 +300,6 @@
     document.getElementById('notes-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
-        document.getElementById('notes-name').textContent = file.name;
         const reader = new FileReader();
         reader.onload = function(evt) {
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
@@ -283,19 +308,13 @@
             jsonData.forEach(row => {
                 const kodu = String(row["STOK KODU"] || "").trim();
                 const sira = row["SIRA"];
-                if(kodu) {
-                    if(row["SİP-1"] !== undefined) localStorage.setItem(kodu + '_s1', row["SİP-1"]);
-                    if(row["SİP-2"] !== undefined) localStorage.setItem(kodu + '_s2', row["SİP-2"]);
-                    if(row["SİP-3"] !== undefined) localStorage.setItem(kodu + '_s3', row["SİP-3"]);
-                    if(row["SİP-4"] !== undefined) localStorage.setItem(kodu + '_s4', row["SİP-4"]);
-                    if(sira !== undefined) orderMap.set(kodu, parseInt(sira));
-                }
+                if(kodu && sira !== undefined) orderMap.set(kodu, parseInt(sira));
             });
             if(orderMap.size > 0) {
                 allData.sort((a, b) => (orderMap.get(a.stokKodu) || 99999) - (orderMap.get(b.stokKodu) || 99999));
             }
             saveAndRender();
-            alert("Notlar yüklendi!");
+            alert("Sıralama Güncellendi!");
         };
         reader.readAsBinaryString(file);
     });
@@ -303,34 +322,21 @@
     function showDetail(stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if(!item) return;
-
         document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
         let bodyHtml = '';
-
-        if(item.resim && item.resim.trim() !== '') {
-            bodyHtml += `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">`;
-        }
-
-        if(item.ithalatDetay && item.ithalatDetay !== '') {
-            bodyHtml += `<div class="modal-section"><h4>📦 GELECEK MALZEMELER (TERMİNLER)</h4>`;
-            const lines = item.ithalatDetay.split('\n');
-            lines.forEach(line => {
-                if(line.trim()) bodyHtml += `<div class="info-row" style="color:#00a859">● ${line.trim()}</div>`;
-            });
+        if(item.resim) bodyHtml += `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">`;
+        
+        if(item.ithalatDetay) {
+            bodyHtml += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER</h4>`;
+            item.ithalatDetay.split('\n').forEach(line => bodyHtml += `<div class="info-row" style="color:#00a859">✔ ${line}</div>`);
             bodyHtml += `</div>`;
         }
-
-        if(item.satisDetay && item.satisDetay !== '') {
-            bodyHtml += `<div class="modal-section"><h4>👥 SİPARİŞ VEREN MÜŞTERİLER</h4>`;
-            const lines = item.satisDetay.split('\n');
-            lines.forEach(line => {
-                if(line.trim()) bodyHtml += `<div class="info-row" style="color:#d35400">● ${line.trim()}</div>`;
-            });
+        if(item.satisDetay) {
+            bodyHtml += `<div class="modal-section"><h4>👥 SİPARİŞLER</h4>`;
+            item.satisDetay.split('\n').forEach(line => bodyHtml += `<div class="info-row" style="color:#d35400">✔ ${line}</div>`);
             bodyHtml += `</div>`;
         }
-
-        if(bodyHtml === '') bodyHtml = '<p style="font-size:12px; color:red; text-align:center; padding:20px;">Detay bulunamadı.</p>';
-        document.getElementById('modal-body').innerHTML = bodyHtml;
+        document.getElementById('modal-body').innerHTML = bodyHtml || '<p>Detay yok.</p>';
         document.getElementById('info-modal').style.display = 'flex';
     }
 
@@ -369,27 +375,19 @@
     function renderTable() {
         const tbody = document.getElementById('table-body');
         const searchInput = document.getElementById('search-input');
-        
-        function terrorist(text) { 
-            if(!text) return "";
-            return text.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase();
-        }
-
+        const terrorist = (t) => t ? t.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase() : "";
         const searchTerm = searchInput ? terrorist(searchInput.value) : "";
-
+        
         let filtered = allData.filter(d => {
-            const matchesBrand = d.marka.includes(currentBrand);
-            const matchesSearch = terrorist(d.stokKodu).includes(searchTerm) || terrorist(d.stokAdi).includes(searchTerm);
-            
-            if (searchTerm !== "") return matchesBrand && matchesSearch;
-            
-            const matchesCategory = (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter);
-            return matchesBrand && matchesCategory;
+            const mb = d.marka.includes(currentBrand);
+            const ms = terrorist(d.stokKodu).includes(searchTerm) || terrorist(d.stokAdi).includes(searchTerm);
+            return searchTerm !== "" ? (mb && ms) : (mb && (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter));
         });
 
         tbody.innerHTML = filtered.map(item => {
-            const isCritical = parseFloat(item.kalan) <= 0 ? 'critical-row' : '';
-            return `<tr data-id="${item.stokKodu}" class="${isCritical}">
+            const omurVal = parseFloat(item.stokOmru);
+            const omurSimge = omurVal < 5 ? '⚠️' : '✅';
+            return `<tr data-id="${item.stokKodu}" class="${item.kalan <= 0 ? 'critical-row' : ''}">
                 <td class="w-sort">::</td>
                 <td>${item.stokKodu}</td>
                 <td class="col-stok-adi" onclick="showDetail('${item.stokKodu}')">${item.stokAdi}</td>
@@ -398,7 +396,10 @@
                 <td class="col-satis">${item.satis}</td>
                 <td class="col-kalan">${item.kalan}</td>
                 <td class="col-ithalat">${item.ithalat}</td>
-                ${[1,2,3,4].map(n => `<td class="col-siparis"><input class="siparis-input" type="text" value="${localStorage.getItem(item.stokKodu+'_s'+n) || ''}" oninput="localStorage.setItem('${item.stokKodu}_s${n}', this.value)"></td>`).join('')}
+                <td class="col-avg">${item.avgSatis ? item.avgSatis.toFixed(2) : '0.00'}</td>
+                <td class="col-omur">${item.stokOmru} Ay ${omurSimge}</td>
+                <td class="col-oneri" style="color:${item.ihtiyacAdet > 0 ? 'red' : 'green'}">${item.ihtiyacAdet} Adet</td>
+                <td class="col-stok-durumu" style="color:${item.stokDurumuRenk}">${item.stokDurumu || "DİĞER"}</td>
             </tr>`;
         }).join('');
 
@@ -406,105 +407,62 @@
         sortableRows = new Sortable(tbody, { animation: 150, handle: '.w-sort' });
     }
 
-   function downloadReport() {
-        const criticalItems = allData.filter(item => item.kalan < 0);
+    function downloadReport() {
+        if (allData.length === 0) return alert("Raporluk veri bulunamadı!");
+        
+        const wb = XLSX.utils.book_new();
+        
+        // --- 1. SAYFA: SATIŞ HIZI ANALİZİ (Tüm Ürünler) ---
+        const speedHeaders = [["SIRA", "STOK KODU", "STOK ADI", "MARKA", "KATEGORİ", "FİİLİ STOK", "AYLIK ORT. SATIŞ", "STOK ÖMRÜ (AY)", "DURUM"]];
+        const speedRows = allData
+            .filter(item => item.marka.includes('PROFORCE') || item.marka.includes('PANATTA'))
+            .sort((a, b) => b.avgSatis - a.avgSatis)
+            .map((it, idx) => [
+                idx + 1, 
+                it.stokKodu, 
+                it.stokAdi, 
+                it.marka, 
+                it.ozelKod5,
+                it.fiili, 
+                it.avgSatis.toFixed(2), 
+                it.stokOmru, 
+                it.stokDurumu
+            ]);
+        
+        const wsSpeed = XLSX.utils.aoa_to_sheet(speedHeaders.concat(speedRows));
+        XLSX.utils.book_append_sheet(wb, wsSpeed, "SATIŞ HIZI ANALİZİ");
 
-        if (criticalItems.length === 0) {
-            return alert("Eksi bakiye veren ürün bulunamadı!");
+        // --- 2. SAYFA: KRİTİK EKSİKLER ---
+        const criticalItems = allData.filter(item => item.kalan < 0 || item.ihtiyacAdet > 0);
+        if (criticalItems.length > 0) {
+            const critHeaders = [["SIRA", "MARKA", "STOK KODU", "STOK ADI", "FİİLİ", "KALAN", "İTHALAT", "SİP. ÖNERİSİ"]];
+            const critRows = criticalItems.map((it, idx) => [
+                idx + 1, it.marka, it.stokKodu, it.stokAdi, it.fiili, it.kalan, it.ithalat, it.ihtiyacAdet
+            ]);
+            const wsCrit = XLSX.utils.aoa_to_sheet(critHeaders.concat(critRows));
+            XLSX.utils.book_append_sheet(wb, wsCrit, "ACİL SİPARİŞ LİSTESİ");
         }
 
-        const wb = XLSX.utils.book_new();
-        const brands = ['PROFORCE', 'PANATTA'];
+        // --- 3. SAYFA: ÖLÜ STOK (1 YIL HAREKETSİZ) ---
+        const deadStockItems = allData.filter(item => item.fiili > 0 && item.totalSatis === 0);
+        if(deadStockItems.length > 0) {
+            const deadHeaders = [["SIRA", "STOK KODU", "STOK ADI", "MARKA", "FİİLİ STOK", "FİYAT", "TOPLAM TUTAR"]];
+            const deadRows = deadStockItems.map((it, idx) => [
+                idx + 1, it.stokKodu, it.stokAdi, it.marka, it.fiili, it.fiyat, (it.fiili * it.fiyat).toFixed(2)
+            ]);
+            const wsDead = XLSX.utils.aoa_to_sheet(deadHeaders.concat(deadRows));
+            XLSX.utils.book_append_sheet(wb, wsDead, "ATIL STOK RAPORU");
+        }
 
-        brands.forEach(brand => {
-            const brandItems = criticalItems.filter(item => item.marka.includes(brand));
-            
-            if (brandItems.length > 0) {
-                // Sütun Başlıkları
-                const headers = [["SIRA", "STOK KODU", "STOK ADI", "FİİLİ STOK", "SATIŞ", "KALAN (EKSİK)", "İTHALAT-1", "İTHALAT-2", "İTHALAT-3"]];
-                
-                const rows = brandItems.map((item, index) => {
-                    const ithalatSatirlari = item.ithalatDetay ? item.ithalatDetay.split('\n').filter(s => s.trim() !== '') : [];
-                    
-                    return [
-                        index + 1,
-                        item.stokKodu,
-                        item.stokAdi,
-                        item.fiili,
-                        item.satis,
-                        item.kalan,
-                        ithalatSatirlari[0] || (item.ithalat === 0 ? "MUADİL BAKILMALI" : ""),
-                        ithalatSatirlari[1] || "",
-                        ithalatSatirlari[2] || ""
-                    ];
-                });
-
-                const ws = XLSX.utils.aoa_to_sheet(headers.concat(rows));
-
-                // --- ESTETİK VE HİZALAMA AYARLARI ---
-                
-                // 1. Sütun Genişlikleri
-                ws['!cols'] = [
-                    { wch: 8 },   // SIRA (Ortalı)
-                    { wch: 20 },  // STOK KODU (Ortalı)
-                    { wch: 55 },  // STOK ADI (Sola Hizalı)
-                    { wch: 15 },  // FİİLİ (Ortalı)
-                    { wch: 15 },  // SATIŞ (Ortalı)
-                    { wch: 18 },  // KALAN (Ortalı)
-                    { wch: 35 },  // İTHALAT-1 (Sola/Ortalı Hizalı)
-                    { wch: 35 },  // İTHALAT-2
-                    { wch: 35 }   // İTHALAT-3
-                ];
-
-                // 2. Renklendirme ve Filtreleme (Görseldeki Gibi)
-                const range = XLSX.utils.decode_range(ws['!ref']);
-                
-                // Başlık Satırı Ayarları (Mor ve Bold için Meta Data)
-                // Not: Standart xlsx kütüphanesi (ücretsiz sürüm) hücre içi renk kodlarını 
-                // doğrudan desteklemez ancak 'Tablo' yapısını tetiklemek için autofilter ekliyoruz.
-                ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: 8, r: 0 } }) };
-
-                XLSX.utils.book_append_sheet(wb, ws, brand);
-            }
-        });
-
-        const date = new Date().toLocaleDateString('tr-TR').replace(/\./g, '_');
-        XLSX.writeFile(wb, `Eksi_Bakiye_Detayli_Rapor_${date}.xlsx`);
+        XLSX.writeFile(wb, `Satis_Hizi_ve_Stok_Analizi_${new Date().toLocaleDateString('tr-TR')}.xlsx`);
     }
-    // ... (Önceki fonksiyonlarının bittiği yer)
 
-  // ... (Önceki fonksiyonlarının bittiği yer)
-
-    // ARAMA KISAYOLU: CTRL + E tuşlarına basınca arama çubuğuna odaklanır
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key.toLowerCase() === 'e') {
-            e.preventDefault(); // Tarayıcının varsayılan arama sayfasını açmasını engeller
-            const searchInput = document.getElementById('search-input');
-            if (searchInput) {
-                searchInput.focus();
-                searchInput.select(); // Mevcut metni seçer ki direkt yeni bir şey yazabilesin
-            }
+            e.preventDefault();
+            document.getElementById('search-input')?.focus();
         }
     });
-
 </script>
 </body>
 </html>
-
-</script>
-</body>
-</html>
-</script>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
