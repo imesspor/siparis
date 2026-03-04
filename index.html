@@ -68,6 +68,19 @@
         .modal-close { cursor: pointer; font-size: 20px; line-height: 1; }
         .info-row { padding: 6px 0; border-bottom: 1px dashed #eee; line-height: 1.5; font-size: 11.5px; }
         
+        /* Görsel Stili */
+        .product-image { 
+    width: auto;            /* Genişliği otomatik ayarlar */
+    max-width: 250px;      /* Genişlik en fazla 250px olur */
+    max-height: 200px;     /* Yükseklik en fazla 200px olur */
+    display: block;        /* Ortalamaya yardımcı olur */
+    margin: 0 auto 15px;   /* Resmi ortalar ve altına boşluk bırakır */
+    object-fit: contain;   /* Oranları bozmaz */
+    border-radius: 6px;    /* Köşeleri biraz daha yumuşak yapar */
+    border: 1px solid #eee; /* Daha ince, hafif bir çerçeve */
+    background: #fff;      /* Şeffaf resimler için beyaz arka plan */
+}
+
         @media (max-width: 600px) { #slicer-area { grid-template-columns: repeat(3, 1fr); } .search-container-in-slicer { grid-column: span 3; } }
     </style>
 </head>
@@ -235,6 +248,7 @@
                     satis: parseInt(r.I) || 0,
                     kalan: parseInt(r.J) || 0,
                     ithalat: parseInt(r.K) || 0,
+                    resim: String(r.AB || ''), // AB Sütunu
                     ithalatDetay: ithalatlar.join('\n'), 
                     satisDetay: musteriler.join('\n')
                 });
@@ -291,6 +305,11 @@
 
         document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
         let bodyHtml = '';
+
+        // Resim Ekleme Bölümü
+        if(item.resim && item.resim.trim() !== '') {
+            bodyHtml += `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">`;
+        }
 
         if(item.ithalatDetay && item.ithalatDetay !== '') {
             bodyHtml += `<div class="modal-section"><h4>📦 GELECEK MALZEMELER (TERMİNLER)</h4>`;
