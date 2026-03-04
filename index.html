@@ -471,9 +471,27 @@
         const date = new Date().toLocaleDateString('tr-TR').replace(/\./g, '_');
         XLSX.writeFile(wb, `Eksi_Bakiye_Detayli_Rapor_${date}.xlsx`);
     }
+    // ... (Önceki fonksiyonlarının bittiği yer)
+
+    // ARAMA KISAYOLU: CTRL + E tuşlarına basınca arama çubuğuna odaklanır
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+            e.preventDefault(); // Tarayıcının varsayılan arama sayfasını açmasını engeller
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.select(); // Mevcut metni seçer ki direkt yeni bir şey yazabilesin
+            }
+        }
+    });
+
 </script>
 </body>
 </html>
+</script>
+</body>
+</html>
+
 
 
 
