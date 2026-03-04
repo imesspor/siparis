@@ -68,18 +68,18 @@
         .modal-close { cursor: pointer; font-size: 20px; line-height: 1; }
         .info-row { padding: 6px 0; border-bottom: 1px dashed #eee; line-height: 1.5; font-size: 11.5px; }
         
-        /* Görsel Stili */
+        /* Görsel Stili - Ufaltılmış ve Ortalı */
         .product-image { 
-    width: auto;            /* Genişliği otomatik ayarlar */
-    max-width: 250px;      /* Genişlik en fazla 250px olur */
-    max-height: 200px;     /* Yükseklik en fazla 200px olur */
-    display: block;        /* Ortalamaya yardımcı olur */
-    margin: 0 auto 15px;   /* Resmi ortalar ve altına boşluk bırakır */
-    object-fit: contain;   /* Oranları bozmaz */
-    border-radius: 6px;    /* Köşeleri biraz daha yumuşak yapar */
-    border: 1px solid #eee; /* Daha ince, hafif bir çerçeve */
-    background: #fff;      /* Şeffaf resimler için beyaz arka plan */
-}
+            width: auto;
+            max-width: 250px;
+            max-height: 200px;
+            display: block;
+            margin: 0 auto 15px;
+            object-fit: contain;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            background: #fff;
+        }
 
         @media (max-width: 600px) { #slicer-area { grid-template-columns: repeat(3, 1fr); } .search-container-in-slicer { grid-column: span 3; } }
     </style>
@@ -152,11 +152,6 @@
         return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     }
 
-    function toLowerTR(text) {
-        if(!text) return "";
-        return text.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase();
-    }
-
     function excelDateToJS(serial) {
         if(!serial || isNaN(serial)) return serial;
         let date = new Date(Math.round((serial - 25569) * 86400 * 1000));
@@ -182,10 +177,24 @@
         reader.onload = function(evt) {
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
             
+            // 1. ANA STOK DATA OKUMA
             const wsStok = workbook.Sheets["ANLIK_STOK_DATA"];
             if(!wsStok) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
             const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: "A", defval: ""});
             
+            // 2. GÖRSEL SEKME OKUMA (C Sütunu)
+            const wsGorsel = workbook.Sheets["GÖRSEL"];
+            const resimMap = new Map();
+            if(wsGorsel) {
+                const gorselJson = XLSX.utils.sheet_to_json(wsGorsel, {header: "A", defval: ""});
+                gorselJson.slice(1).forEach(row => {
+                    const gKodu = String(row.A || '').trim();
+                    const gLink = String(row.C || '').trim(); // C Sütunu
+                    if(gKodu) resimMap.set(gKodu, gLink);
+                });
+            }
+
+            // 3. SİPARİŞ DETAYLARI
             const wsSiparis = workbook.Sheets["ALINAN SİPARİŞLER DETAY"];
             const siparisMap = new Map();
             if(wsSiparis) {
@@ -202,41 +211,33 @@
                 });
             }
 
+            // 4. İTHALAT DETAYLARI
             const wsVerilen = workbook.Sheets["VERİLEN SİPARİŞ DETAY"];
             const ithalatMap = new Map();
             if(wsVerilen) {
                 const verilenJson = XLSX.utils.sheet_to_json(wsVerilen, {header: "A", defval: ""});
                 const gruplanmisIthalat = {}; 
-
                 verilenJson.slice(1).forEach(row => {
                     const vKodu = String(row.M || '').trim();
-                    const vTarihRaw = row.R; 
-                    const vTarih = excelDateToJS(vTarihRaw);
+                    const vTarih = excelDateToJS(row.R);
                     const vMiktar = parseInt(row.S) || 0;
-
                     if(vKodu && vTarih) {
                         const key = `${vKodu}_${vTarih}`;
-                        if(!gruplanmisIthalat[key]) {
-                            gruplanmisIthalat[key] = { kodu: vKodu, tarih: vTarih, miktar: 0 };
-                        }
+                        if(!gruplanmisIthalat[key]) gruplanmisIthalat[key] = { kodu: vKodu, tarih: vTarih, miktar: 0 };
                         gruplanmisIthalat[key].miktar += vMiktar;
                     }
                 });
-
                 Object.values(gruplanmisIthalat).forEach(item => {
                     if(!ithalatMap.has(item.kodu)) ithalatMap.set(item.kodu, []);
-                    const iDetay = `${item.miktar} Adet -> ${item.tarih}`;
-                    ithalatMap.get(item.kodu).push(iDetay);
+                    ithalatMap.get(item.kodu).push(`${item.miktar} Adet -> ${item.tarih}`);
                 });
             }
 
+            // 5. DATA BİRLEŞTİRME
             const uniqueIncomingData = new Map();
             stokJson.slice(1).forEach(r => {
                 const kodu = String(r.A || '').trim();
                 if (kodu === "" || kodu.toLowerCase() === "stok kodu") return;
-
-                const musteriler = siparisMap.get(kodu) || [];
-                const ithalatlar = ithalatMap.get(kodu) || [];
 
                 uniqueIncomingData.set(kodu, {
                     stokKodu: kodu,
@@ -248,9 +249,9 @@
                     satis: parseInt(r.I) || 0,
                     kalan: parseInt(r.J) || 0,
                     ithalat: parseInt(r.K) || 0,
-                    resim: String(r.AB || ''), // AB Sütunu
-                    ithalatDetay: ithalatlar.join('\n'), 
-                    satisDetay: musteriler.join('\n')
+                    resim: resimMap.get(kodu) || '', 
+                    ithalatDetay: (ithalatMap.get(kodu) || []).join('\n'), 
+                    satisDetay: (siparisMap.get(kodu) || []).join('\n')
                 });
             });
 
@@ -265,7 +266,7 @@
 
             allData = Array.from(masterMap.values());
             saveAndRender();
-            alert("Veriler başarıyla yüklendi!");
+            alert("Veriler ve Görseller Başarıyla Güncellendi!");
         };
         reader.readAsBinaryString(file);
     });
@@ -306,7 +307,6 @@
         document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
         let bodyHtml = '';
 
-        // Resim Ekleme Bölümü
         if(item.resim && item.resim.trim() !== '') {
             bodyHtml += `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">`;
         }
@@ -369,20 +369,19 @@
     function renderTable() {
         const tbody = document.getElementById('table-body');
         const searchInput = document.getElementById('search-input');
-        const searchTerm = searchInput ? terrorist(searchInput.value) : "";
-
+        
         function terrorist(text) { 
             if(!text) return "";
             return text.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase();
         }
 
+        const searchTerm = searchInput ? terrorist(searchInput.value) : "";
+
         let filtered = allData.filter(d => {
             const matchesBrand = d.marka.includes(currentBrand);
             const matchesSearch = terrorist(d.stokKodu).includes(searchTerm) || terrorist(d.stokAdi).includes(searchTerm);
             
-            if (searchTerm !== "") {
-                return matchesBrand && matchesSearch;
-            } 
+            if (searchTerm !== "") return matchesBrand && matchesSearch;
             
             const matchesCategory = (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter);
             return matchesBrand && matchesCategory;
