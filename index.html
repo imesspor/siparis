@@ -473,17 +473,25 @@
     }
     // ... (Önceki fonksiyonlarının bittiği yer)
 
-    // ARAMA KISAYOLU: CTRL + E tuşlarına basınca arama çubuğuna odaklanır
+  // ARAMA KISAYOLU: Tarayıcı baskınlığını kırmak için geliştirilmiş versiyon
     document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.key.toLowerCase() === 'e') {
-            e.preventDefault(); // Tarayıcının varsayılan arama sayfasını açmasını engeller
+        // Ctrl + E kontrolü
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+            
+            // Tarayıcının kendi arama çubuğuna gitmesini durdurmaya çalış
+            e.preventDefault(); 
+            e.stopPropagation();
+
             const searchInput = document.getElementById('search-input');
             if (searchInput) {
-                searchInput.focus();
-                searchInput.select(); // Mevcut metni seçer ki direkt yeni bir şey yazabilesin
+                // Kısa bir gecikme ekleyerek tarayıcının odağını çalmasını engelliyoruz
+                setTimeout(() => {
+                    searchInput.focus();
+                    searchInput.select();
+                }, 10);
             }
         }
-    });
+    }, true); // "true" parametresi olay yakalamayı önceliğe alır
 
 </script>
 </body>
@@ -491,6 +499,7 @@
 </script>
 </body>
 </html>
+
 
 
 
