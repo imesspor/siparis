@@ -193,16 +193,27 @@
             const ithalatMap = new Map();
             if(wsVerilen) {
                 const verilenJson = XLSX.utils.sheet_to_json(wsVerilen, {header: "A", defval: ""});
+                const gruplanmisIthalat = {}; 
+
                 verilenJson.slice(1).forEach(row => {
                     const vKodu = String(row.M || '').trim();
                     const vTarihRaw = row.R; 
                     const vTarih = excelDateToJS(vTarihRaw);
-                    const vMiktar = String(row.S || '').trim();
-                    if(vKodu && (vTarih || vMiktar)) {
-                        if(!ithalatMap.has(vKodu)) ithalatMap.set(vKodu, []);
-                        const iDetay = `${vMiktar} Adet -> ${vTarih}`;
-                        ithalatMap.get(vKodu).push(iDetay);
+                    const vMiktar = parseInt(row.S) || 0;
+
+                    if(vKodu && vTarih) {
+                        const key = `${vKodu}_${vTarih}`;
+                        if(!gruplanmisIthalat[key]) {
+                            gruplanmisIthalat[key] = { kodu: vKodu, tarih: vTarih, miktar: 0 };
+                        }
+                        gruplanmisIthalat[key].miktar += vMiktar;
                     }
+                });
+
+                Object.values(gruplanmisIthalat).forEach(item => {
+                    if(!ithalatMap.has(item.kodu)) ithalatMap.set(item.kodu, []);
+                    const iDetay = `${item.miktar} Adet -> ${item.tarih}`;
+                    ithalatMap.get(item.kodu).push(iDetay);
                 });
             }
 
@@ -341,7 +352,7 @@
         const searchInput = document.getElementById('search-input');
         const searchTerm = searchInput ? terrorist(searchInput.value) : "";
 
-        function terrorist(text) { // Yardımcı küçük harf ve TR karakter dönüşümü
+        function terrorist(text) { 
             if(!text) return "";
             return text.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase();
         }
@@ -350,12 +361,10 @@
             const matchesBrand = d.marka.includes(currentBrand);
             const matchesSearch = terrorist(d.stokKodu).includes(searchTerm) || terrorist(d.stokAdi).includes(searchTerm);
             
-            // EĞER ARAMA KUTUSU DOLUYSA: Sadece markaya bak, kategoriyi (slicer) görmezden gel (Global Arama)
             if (searchTerm !== "") {
                 return matchesBrand && matchesSearch;
             } 
             
-            // EĞER ARAMA KUTUSU BOŞSA: Hem markaya hem de seçili kategoriye göre filtrele
             const matchesCategory = (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter);
             return matchesBrand && matchesCategory;
         });
