@@ -415,16 +415,14 @@
         }
 
         const wb = XLSX.utils.book_new();
-
-        // Markaları ayır
         const brands = ['PROFORCE', 'PANATTA'];
 
         brands.forEach(brand => {
             const brandData = criticalItems
                 .filter(item => item.marka.includes(brand))
                 .map((item, index) => {
-                    // İthalat kontrolü ve notu
-                    const ithalatNotu = item.ithalat > 0 ? item.ithalat : "MUADİL BAKILMALI";
+                    // İthalat kontrolü: Adet varsa miktar+tarih detayını yaz, yoksa muadil uyarısı ver
+                    const ithalatBilgisi = item.ithalat > 0 ? (item.ithalatDetay || item.ithalat) : "MUADİL BAKILMALI";
 
                     return {
                         "SIRA": index + 1,
@@ -435,7 +433,7 @@
                         "FİİLİ": item.fiili,
                         "SATIŞ": item.satis,
                         "KALAN (EKSİK)": item.kalan,
-                        "İTHALAT DURUMU": ithalatNotu,
+                        "İTHALAT VE TERMİN": ithalatBilgisi, // Hem miktar hem tarih detayını buraya basar
                         "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '',
                         "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
                         "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '',
@@ -449,12 +447,12 @@
             }
         });
 
-        // Eğer hiç veri eklenmemişse (iki markada da eksi yoksa)
         if (wb.SheetNames.length === 0) return alert("Raporlanacak veri bulunamadı!");
 
-        XLSX.writeFile(wb, "Eksi_Stok_Siparis_Raporu.xlsx");
+        XLSX.writeFile(wb, "Eksi_Stok_Detayli_Rapor.xlsx");
     }
 </script>
 </body>
 </html>
+
 
