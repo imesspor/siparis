@@ -406,53 +406,10 @@
         sortableRows = new Sortable(tbody, { animation: 150, handle: '.w-sort' });
     }
 
-    function downloadReport() {
-        // Kalanı 0'dan küçük olanları filtrele
-        const criticalItems = allData.filter(item => item.kalan < 0);
-
-        if (criticalItems.length === 0) {
-            return alert("Eksi bakiye veren (stokta kalmamış) ürün bulunamadı!");
-        }
-
-        const wb = XLSX.utils.book_new();
-        const brands = ['PROFORCE', 'PANATTA'];
-
-        brands.forEach(brand => {
-            const brandData = criticalItems
-                .filter(item => item.marka.includes(brand))
-                .map((item, index) => {
-                    // İthalat kontrolü: Adet varsa miktar+tarih detayını yaz, yoksa muadil uyarısı ver
-                    const ithalatBilgisi = item.ithalat > 0 ? (item.ithalatDetay || item.ithalat) : "MUADİL BAKILMALI";
-
-                    return {
-                        "SIRA": index + 1,
-                        "STOK KODU": item.stokKodu,
-                        "STOK ADI": item.stokAdi,
-                        "MARKA": item.marka,
-                        "FİYAT": formatCurrency(item.fiyat),
-                        "FİİLİ": item.fiili,
-                        "SATIŞ": item.satis,
-                        "KALAN (EKSİK)": item.kalan,
-                        "İTHALAT VE TERMİN": ithalatBilgisi, // Hem miktar hem tarih detayını buraya basar
-                        "SİP-1": localStorage.getItem(item.stokKodu + '_s1') || '',
-                        "SİP-2": localStorage.getItem(item.stokKodu + '_s2') || '',
-                        "SİP-3": localStorage.getItem(item.stokKodu + '_s3') || '',
-                        "SİP-4": localStorage.getItem(item.stokKodu + '_s4') || ''
-                    };
-                });
-
-            if (brandData.length > 0) {
-                const ws = XLSX.utils.json_to_sheet(brandData);
-                XLSX.utils.book_append_sheet(wb, ws, brand);
-            }
-        });
-
-        if (wb.SheetNames.length === 0) return alert("Raporlanacak veri bulunamadı!");
-
-        XLSX.writeFile(wb, "Eksi_Stok_Detayli_Rapor.xlsx");
-    }
+    function downlo
 </script>
 </body>
 </html>
+
 
 
