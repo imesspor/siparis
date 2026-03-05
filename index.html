@@ -137,38 +137,36 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 8px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         
-        /* Müşteri Link Stili */
         .cust-link { color: #2980b9; text-decoration: underline; cursor: pointer; font-weight: bold; }
         .cust-link:hover { color: #c0392b; }
 
         .preview-modal { width: 420% !important; max-width: 650px; }
         .preview-table { 
-    width: auto; /* İçeriğe göre daralması için auto yaptık */
-    min-width: 400px; /* Çok da büzülmesin */
-    border-collapse: collapse; 
-    margin-top: 10px; 
-    table-layout: fixed; 
-}
+            width: auto;
+            min-width: 400px;
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            table-layout: fixed; 
+        }
         .preview-table th, .preview-table td { 
-    padding: 3px 2px; 
-    border: 1px solid #ddd; 
-    font-size: 10px; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    white-space: nowrap; 
-    text-align: center;
-}
+            padding: 3px 2px; 
+            border: 1px solid #ddd; 
+            font-size: 10px; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+            text-align: center;
+        }
         
         .preview-table th { background: #f4f4f4; font-weight: bold; }
         .preview-table td { text-align: center; }
-        .preview-table td:nth-child(2) { text-align: left; padding-left: 3px; } /* Ürün adı sola yaslı */
+        .preview-table td:nth-child(2) { text-align: left; padding-left: 3px; }
 
-       /* Sütun genişlikleri - AD kısmını iyice kıstık */
-.preview-table th:nth-child(1) { width: 120px; }  /* KOD */
-.preview-table th:nth-child(2) { width: 350px; } /* AD (İstediğin gibi kısalttık) */
-.preview-table th:nth-child(3) { width: 50px; }  /* SİPARİŞ */
-.preview-table th:nth-child(4) { width: 50px; }  /* FİİLİ */
-.preview-table th:nth-child(5) { width: 50px; }  /* KALAN */
+        .preview-table th:nth-child(1) { width: 120px; }
+        .preview-table th:nth-child(2) { width: 350px; }
+        .preview-table th:nth-child(3) { width: 50px; }
+        .preview-table th:nth-child(4) { width: 50px; }
+        .preview-table th:nth-child(5) { width: 50px; }
 
         .modal-header { border-bottom: 2px solid var(--accent-blue); margin-bottom: 15px; padding-bottom: 5px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .modal-close { cursor: pointer; font-size: 20px; line-height: 1; font-weight: bold; }
@@ -192,7 +190,6 @@
             <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 SIRAYI İÇERİ AKTAR</button>
             <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
             <span id="notes-name" class="file-name-display"></span>
-           
         </div>
 
         <div class="brand-tabs">
@@ -390,6 +387,12 @@
                     resim: resimMap.get(kodu) || '', 
                     ithalatDetay: (ithalatMap.get(kodu) || []).join('\n'), 
                     satisListesi: siparisMap.get(kodu) || [],
+                    // --- DEPO SÜTUNLARI (GÜNCELLEME) ---
+                    depoL: parseInt(r.L) || 0,
+                    depoN: parseInt(r.N) || 0,
+                    depoO: parseInt(r.O) || 0,
+                    depoP: parseInt(r.P) || 0,
+                    // ------------------------------------
                     avgSatis: analiz.ortalama,
                     totalSatis: analiz.totalSatis,
                     stokOmru: analiz.ortalama > 0 ? (eldekiToplam / analiz.ortalama).toFixed(1) : "0.0",
@@ -494,29 +497,25 @@
             </div>
         `).join('') || '<div class="customer-item">Bulunamadı</div>';
     }
-function downloadCurrentSort() {
-    // Mevcut sıralı listeden sadece KOD ve SIRA bilgisini al
-    const sortData = allData.map((item, index) => ({
-        "STOK KODU": item.stokKodu,
-        "SIRA": index + 1
-    }));
 
-    const ws = XLSX.utils.json_to_sheet(sortData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Guncel_Siralamam");
-    
-    // Dosyayı indir
-    XLSX.writeFile(wb, `Guncel_Siralama_${new Date().toLocaleDateString()}.xlsx`);
-    alert("Güncel sıralamanız Excel olarak indirildi. Bu dosyayı diğer kullanıcılara gönderip 'SIRALAMA YÜKLE' kısmından yüklemelerini isteyebilirsiniz.");
-}
+    function downloadCurrentSort() {
+        const sortData = allData.map((item, index) => ({
+            "STOK KODU": item.stokKodu,
+            "SIRA": index + 1
+        }));
+        const ws = XLSX.utils.json_to_sheet(sortData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Guncel_Siralamam");
+        XLSX.writeFile(wb, `Guncel_Siralama_${new Date().toLocaleDateString()}.xlsx`);
+        alert("Güncel sıralamanız Excel olarak indirildi.");
+    }
+
     function previewCustomerList(e, custName) {
         if(e) e.stopPropagation();
         const previewBody = document.getElementById('preview-body');
         document.getElementById('preview-title').textContent = custName + "";
-        
         let html = `<button class="btn-excel-cust-big" onclick="downloadCustomerList(null, '${custName.replace(/'/g, "\\'")}')">📥 LİSTEYİ EXCEL OLARAK İNDİR</button>`;
         html += `<table class="preview-table"><thead><tr><th>KOD</th><th>AD</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
-            
         let hasData = false;
         allData.forEach(item => {
             const customerOrders = item.satisListesi?.filter(s => s.musteri === custName);
@@ -526,7 +525,6 @@ function downloadCurrentSort() {
                 html += `<tr><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td style="color:red">${totalAdet}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
             }
         });
-
         html += `</tbody></table>`;
         previewBody.innerHTML = hasData ? html : '<p>Sipariş bulunamadı.</p>';
         document.getElementById('preview-modal').style.display = 'flex';
@@ -567,13 +565,11 @@ function downloadCurrentSort() {
         const searchInput = document.getElementById('search-input');
         const slug = (t) => t ? t.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase() : "";
         const searchTerm = searchInput ? slug(searchInput.value) : "";
-        
         let filtered = allData.filter(d => {
             const mb = d.marka && d.marka.includes(currentBrand);
             const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
             return searchTerm !== "" ? (mb && ms) : (mb && (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter));
         });
-
         tbody.innerHTML = filtered.map(item => {
             const omurVal = parseFloat(item.stokOmru);
             const omurSimge = omurVal < 5 ? '⚠️' : '✅';
@@ -592,47 +588,48 @@ function downloadCurrentSort() {
                 <td class="col-stok-durumu" style="color:${item.stokDurumuRenk}">${item.stokDurumu || "DİĞER"}</td>
             </tr>`;
         }).join('');
-
         if(sortableRows) sortableRows.destroy();
-        
-        // --- GÜNCELLEDİĞİMİZ KISIM BURASI ---
         sortableRows = new Sortable(tbody, { 
             animation: 150, 
             handle: '.w-sort',
             onEnd: function() {
-                // Ekranda görünen yeni sıralamayı al
                 const newOrderIds = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
-                
-                // allData listesini bu yeni sıralamaya göre yeniden diz
                 const sortedData = [];
                 newOrderIds.forEach(id => {
                     const found = allData.find(d => d.stokKodu === id);
                     if(found) sortedData.push(found);
                 });
-
-                // Filtre dışı kalan (başka marka/kategori) ürünleri listenin sonuna ekle ki kaybolmasınlar
                 allData.forEach(item => {
                     if(!newOrderIds.includes(item.stokKodu)) {
                         sortedData.push(item);
                     }
                 });
-
-                // Ana listeyi güncelle ve hafızaya kaydet
                 allData = sortedData;
                 localStorage.setItem('masterInventoryData', JSON.stringify(allData));
-                console.log("Yeni sıralama kaydedildi.");
             }
         });
     }
 
-   function showDetail(stokKodu) {
+    function showDetail(stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if(!item) return;
         
         const totalReserved = item.satisListesi ? item.satisListesi.reduce((sum, s) => sum + (parseInt(s.adet) || 0), 0) : 0;
-        
-        // --- RENK AYARI BURADA BAŞLIYOR ---
         const kalanRenk = item.kalan > 0 ? "#00a859" : "#ff0000"; 
+
+        // --- DEPO KONTROLÜ (GÜNCELLEME) ---
+        let depoHtml = "";
+        const depolar = [
+            { isim: "ÖMERLİ", adet: item.depoL }, 
+            { isim: "SHOWROOM", adet: item.depoN },
+            { isim: "ŞİRKET", adet: item.depoO },
+            { isim: "TAMİR", adet: item.depoP }
+        ];
+        depolar.forEach(depo => {
+            if (parseInt(depo.adet) > 0) {
+                depoHtml += `<div style="font-size: 10px; color: #555; padding-left: 10px; border-bottom: 1px dashed #eee;">• ${depo.isim}: <strong>${depo.adet} Adet</strong></div>`;
+            }
+        });
         // ---------------------------------
 
         document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
@@ -640,7 +637,9 @@ function downloadCurrentSort() {
         
         bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis?.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>
-            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div></div>`; // <--- Renk buraya bağlandı
+            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
+            ${depoHtml}
+        </div>`;
 
         bodyHtml += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
         if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(line => bodyHtml += `<div class="info-row" style="color:#00a859">✔ ${line}</div>`);
