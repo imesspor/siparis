@@ -26,6 +26,7 @@
         .btn-action { border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; color: white; transition: opacity 0.2s; }
         .btn-action:hover { opacity: 0.8; }
         .btn-data { background-color: var(--accent-blue); }
+        
         .btn-notes { background-color: var(--accent-purple); }
         .btn-report { background-color: #2d3436; }
         .file-name-display { font-size: 10px; color: #666; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
@@ -116,9 +117,7 @@
         .btn-cust-download { background: #27ae60; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: bold; }
 
         .table-container { background: white; border-radius: 4px; border: 1px solid var(--border-color); overflow-x: auto; max-height: 78vh; }
-        
         table { width: 100%; border-collapse: collapse; min-width: 1200px; table-layout: auto; }
-        
         thead { background: #e9ecef; position: sticky; top: 0; z-index: 10; }
         th, td { padding: 2px 4px; border: 1px solid #dee2e6; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; height: 18px; text-align: center; font-weight: bold; }
         .col-stok-adi { text-align: left !important; padding-left: 4px; cursor: pointer; color: var(--accent-blue); }
@@ -138,51 +137,62 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 8px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         
-        /* ÖNİZLEME TABLOSU ÖZEL CSS */
-        .preview-modal { width: 85% !important; max-width: 1000px; }
-        .preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; } /* fixed sütun genişliğini zorunlu tutar */
+        /* Müşteri Link Stili */
+        .cust-link { color: #2980b9; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .cust-link:hover { color: #c0392b; }
+
+        .preview-modal { width: 420% !important; max-width: 650px; }
+        .preview-table { 
+    width: auto; /* İçeriğe göre daralması için auto yaptık */
+    min-width: 400px; /* Çok da büzülmesin */
+    border-collapse: collapse; 
+    margin-top: 10px; 
+    table-layout: fixed; 
+}
         .preview-table th, .preview-table td { 
-            padding: 8px 4px; 
-            border: 1px solid #ddd; 
-            font-size: 11px; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-        }
-        .preview-table th { background: #f4f4f4; text-align: center; font-weight: bold; }
+    padding: 3px 2px; 
+    border: 1px solid #ddd; 
+    font-size: 10px; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    text-align: center;
+}
+        
+        .preview-table th { background: #f4f4f4; font-weight: bold; }
         .preview-table td { text-align: center; }
-        .preview-table td:nth-child(2) { text-align: left; padding-left: 8px; } /* Stok Adı Sola Dayalı */
+        .preview-table td:nth-child(2) { text-align: left; padding-left: 3px; } /* Ürün adı sola yaslı */
 
-        /* Önizleme Sütun Genişlik Oranları */
-        .preview-table th:nth-child(1) { width: 15%; } /* Stok Kodu */
-        .preview-table th:nth-child(2) { width: 45%; } /* Stok Adı */
-        .preview-table th:nth-child(3) { width: 13%; } /* Ayrılan */
-        .preview-table th:nth-child(4) { width: 13%; } /* Fiili */
-        .preview-table th:nth-child(5) { width: 14%; } /* Kalan */
+       /* Sütun genişlikleri - AD kısmını iyice kıstık */
+.preview-table th:nth-child(1) { width: 120px; }  /* KOD */
+.preview-table th:nth-child(2) { width: 350px; } /* AD (İstediğin gibi kısalttık) */
+.preview-table th:nth-child(3) { width: 50px; }  /* SİPARİŞ */
+.preview-table th:nth-child(4) { width: 50px; }  /* FİİLİ */
+.preview-table th:nth-child(5) { width: 50px; }  /* KALAN */
 
-        .modal-header { border-bottom: 2px solid var(--accent-blue); margin-bottom: 15px; padding-bottom: 5px; font-size: 14px; display: flex; justify-content: space-between; }
-        .modal-close { cursor: pointer; font-size: 20px; line-height: 1; }
+        .modal-header { border-bottom: 2px solid var(--accent-blue); margin-bottom: 15px; padding-bottom: 5px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { cursor: pointer; font-size: 20px; line-height: 1; font-weight: bold; }
         .info-row { padding: 2px 0 !important; margin: 0 !important; font-size: 11px !important; border-bottom: 1px dashed #eee; line-height: 1.5; }
         .modal-section h4 { margin-top: 8px !important; margin-bottom: 4px !important; }
         
         .product-image { width: auto; max-width: 250px; max-height: 200px; display: block; margin: 0 auto 15px; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fff; }
-        @media (max-width: 600px) { #slicer-area { grid-template-columns: repeat(3, 1fr); } .search-container-in-slicer { grid-column: span 3; } }
-    
+        
+        .btn-excel-cust-big { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
         <div class="upload-section">
-            <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 DATA YÜKLE</button>
+            <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 VERİYİ YÜKLE</button>
             <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
             <span id="data-name" class="file-name-display"></span>
-
-            <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 SIRALAMA YÜKLE</button>
+            <button class="btn-action btn-report" onclick="downloadReport()">📥 ANALİZ RAPORU AL</button>
+            <button class="btn-action btn-notes" onclick="downloadCurrentSort()">📤 SIRALAMAYI PAYLAŞ</button>
+            <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 SIRAYI İÇERİ AKTAR</button>
             <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
             <span id="notes-name" class="file-name-display"></span>
-
-            <button class="btn-action btn-report" onclick="downloadReport()">📥 ANALİZ RAPORU AL</button>
+           
         </div>
 
         <div class="brand-tabs">
@@ -217,7 +227,7 @@
         </table>
     </div>
 
-    <div id="info-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div id="info-modal" class="modal-overlay" onclick="closeModal(event, 'info-modal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <span id="modal-title">Ürün Detayı</span>
@@ -227,7 +237,7 @@
         </div>
     </div>
 
-    <div id="preview-modal" class="modal-overlay" onclick="this.style.display='none'">
+    <div id="preview-modal" class="modal-overlay" onclick="closeModal(event, 'preview-modal')">
         <div class="modal-content preview-modal" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <span id="preview-title">Müşteri Sipariş Önizleme</span>
@@ -251,10 +261,7 @@
     function excelDateToJS(serial) {
         if(!serial || isNaN(serial)) return serial;
         let date = new Date(Math.round((serial - 25569) * 86400 * 1000));
-        let d = date.getDate().toString().padStart(2, '0');
-        let m = (date.getMonth() + 1).toString().padStart(2, '0');
-        let y = date.getFullYear();
-        return `${d}.${m}.${y}`;
+        return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
     }
 
     window.onload = function() {
@@ -400,7 +407,6 @@
 
             allData = Array.from(masterMap.values());
             saveAndRender();
-            alert("Veriler Güncellendi!");
         };
         reader.readAsBinaryString(file);
     });
@@ -422,7 +428,6 @@
                 allData.sort((a, b) => (orderMap.get(a.stokKodu) || 99999) - (orderMap.get(b.stokKodu) || 99999));
             }
             saveAndRender();
-            alert("Sıralama Güncellendi!");
         };
         reader.readAsBinaryString(file);
     });
@@ -464,59 +469,53 @@
     function toggleCustomerDropdown(e) {
         e.stopPropagation();
         const dropdown = document.getElementById('customer-dropdown');
-        const isVisible = dropdown.style.display === 'flex';
-        
-        if (!isVisible) {
-            dropdown.style.display = 'flex';
-            filterCustomers(); 
+        dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
+        if(dropdown.style.display === 'flex') {
+            filterCustomers();
             document.getElementById('cust-search-input').focus();
-        } else {
-            dropdown.style.display = 'none';
         }
     }
 
     function filterCustomers() {
         const searchTerm = document.getElementById('cust-search-input').value.toLowerCase();
         const listArea = document.getElementById('customer-list-area');
-        
         const customerSet = new Set();
         allData.forEach(item => {
-            if(item.satisListesi) {
-                item.satisListesi.forEach(s => customerSet.add(s.musteri));
-            }
+            if(item.satisListesi) item.satisListesi.forEach(s => customerSet.add(s.musteri));
         });
-
-        const filteredCustomers = Array.from(customerSet)
-            .filter(c => c.toLowerCase().includes(searchTerm))
-            .sort();
-
-        listArea.innerHTML = filteredCustomers.map(c => `
+        const filtered = Array.from(customerSet).filter(c => c.toLowerCase().includes(searchTerm)).sort();
+        listArea.innerHTML = filtered.map(c => `
             <div class="customer-item">
                 <span class="customer-name">${c}</span>
                 <div class="cust-actions">
-                    <button class="btn-cust-preview" onclick="previewCustomerList(event, '${c.replace(/'/g, "\\'")}')">GÖR</button>
+                    <button class="btn-cust-preview" onclick="previewCustomerList(event, '${c.replace(/'/g, "\\'")}')">ÖNİZLEME</button>
                     <button class="btn-cust-download" onclick="downloadCustomerList(event, '${c.replace(/'/g, "\\'")}')">İNDİR</button>
                 </div>
             </div>
-        `).join('') || '<div class="customer-item">Sonuç bulunamadı</div>';
+        `).join('') || '<div class="customer-item">Bulunamadı</div>';
     }
+function downloadCurrentSort() {
+    // Mevcut sıralı listeden sadece KOD ve SIRA bilgisini al
+    const sortData = allData.map((item, index) => ({
+        "STOK KODU": item.stokKodu,
+        "SIRA": index + 1
+    }));
 
+    const ws = XLSX.utils.json_to_sheet(sortData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Guncel_Siralamam");
+    
+    // Dosyayı indir
+    XLSX.writeFile(wb, `Guncel_Siralama_${new Date().toLocaleDateString()}.xlsx`);
+    alert("Güncel sıralamanız Excel olarak indirildi. Bu dosyayı diğer kullanıcılara gönderip 'SIRALAMA YÜKLE' kısmından yüklemelerini isteyebilirsiniz.");
+}
     function previewCustomerList(e, custName) {
-        e.stopPropagation();
+        if(e) e.stopPropagation();
         const previewBody = document.getElementById('preview-body');
-        document.getElementById('preview-title').textContent = custName + " - Sipariş Detayı";
+        document.getElementById('preview-title').textContent = custName + "";
         
-        let html = `<table class="preview-table">
-            <thead>
-                <tr>
-                    <th>STOK KODU</th>
-                    <th>STOK ADI</th>
-                    <th>AYRILAN</th>
-                    <th>FİİLİ</th>
-                    <th>KALAN</th>
-                </tr>
-            </thead>
-            <tbody>`;
+        let html = `<button class="btn-excel-cust-big" onclick="downloadCustomerList(null, '${custName.replace(/'/g, "\\'")}')">📥 LİSTEYİ EXCEL OLARAK İNDİR</button>`;
+        html += `<table class="preview-table"><thead><tr><th>KOD</th><th>AD</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
             
         let hasData = false;
         allData.forEach(item => {
@@ -524,45 +523,31 @@
             if(customerOrders && customerOrders.length > 0) {
                 hasData = true;
                 const totalAdet = customerOrders.reduce((sum, current) => sum + (parseInt(current.adet) || 0), 0);
-                html += `<tr>
-                    <td title="${item.stokKodu}">${item.stokKodu}</td>
-                    <td title="${item.stokAdi}">${item.stokAdi}</td>
-                    <td style="color:red; font-weight:bold;">${totalAdet}</td>
-                    <td>${item.fiili}</td>
-                    <td style="color:blue;">${item.kalan}</td>
-                </tr>`;
+                html += `<tr><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td style="color:red">${totalAdet}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
             }
         });
 
         html += `</tbody></table>`;
-        previewBody.innerHTML = hasData ? html : '<p>Bu müşteriye ait aktif sipariş bulunamadı.</p>';
+        previewBody.innerHTML = hasData ? html : '<p>Sipariş bulunamadı.</p>';
         document.getElementById('preview-modal').style.display = 'flex';
         document.getElementById('customer-dropdown').style.display = 'none'; 
     }
 
     function downloadCustomerList(e, custName) {
-        e.stopPropagation();
+        if(e) e.stopPropagation();
         const list = [];
         allData.forEach(item => {
-            const customerOrders = item.satisListesi?.filter(s => s.musteri === custName);
-            if(customerOrders && customerOrders.length > 0) {
-                const totalAdet = customerOrders.reduce((sum, current) => sum + (parseInt(current.adet) || 0), 0);
-                list.push({
-                    "STOK KODU": item.stokKodu,
-                    "STOK ADI": item.stokAdi,
-                    "MARKA": item.marka,
-                    "AYRILAN ADET": totalAdet,
-                    "FİİLİ STOK": item.fiili,
-                    "KALAN STOK": item.kalan
-                });
+            const orders = item.satisListesi?.filter(s => s.musteri === custName);
+            if(orders && orders.length > 0) {
+                const totalAdet = orders.reduce((sum, current) => sum + (parseInt(current.adet) || 0), 0);
+                list.push({ "KOD": item.stokKodu, "AD": item.stokAdi, "SİPARİŞ": totalAdet, "FİİLİ": item.fiili, "KALAN": item.kalan });
             }
         });
-
         if(list.length > 0) {
             const ws = XLSX.utils.json_to_sheet(list);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Sipariş Listesi");
-            XLSX.writeFile(wb, `${custName}_Siparis_Listesi.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Siparis");
+            XLSX.writeFile(wb, `${custName}_Siparis.xlsx`);
         }
     }
 
@@ -609,45 +594,79 @@
         }).join('');
 
         if(sortableRows) sortableRows.destroy();
-        sortableRows = new Sortable(tbody, { animation: 150, handle: '.w-sort' });
+        
+        // --- GÜNCELLEDİĞİMİZ KISIM BURASI ---
+        sortableRows = new Sortable(tbody, { 
+            animation: 150, 
+            handle: '.w-sort',
+            onEnd: function() {
+                // Ekranda görünen yeni sıralamayı al
+                const newOrderIds = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
+                
+                // allData listesini bu yeni sıralamaya göre yeniden diz
+                const sortedData = [];
+                newOrderIds.forEach(id => {
+                    const found = allData.find(d => d.stokKodu === id);
+                    if(found) sortedData.push(found);
+                });
+
+                // Filtre dışı kalan (başka marka/kategori) ürünleri listenin sonuna ekle ki kaybolmasınlar
+                allData.forEach(item => {
+                    if(!newOrderIds.includes(item.stokKodu)) {
+                        sortedData.push(item);
+                    }
+                });
+
+                // Ana listeyi güncelle ve hafızaya kaydet
+                allData = sortedData;
+                localStorage.setItem('masterInventoryData', JSON.stringify(allData));
+                console.log("Yeni sıralama kaydedildi.");
+            }
+        });
     }
 
-    function showDetail(stokKodu) {
+   function showDetail(stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if(!item) return;
-        document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
-        let bodyHtml = '';
-        if(item.resim) bodyHtml += `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">`;
         
-        bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ</h4>`;
-        bodyHtml += `<div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>`;
+        const totalReserved = item.satisListesi ? item.satisListesi.reduce((sum, s) => sum + (parseInt(s.adet) || 0), 0) : 0;
+        
+        // --- RENK AYARI BURADA BAŞLIYOR ---
+        const kalanRenk = item.kalan > 0 ? "#00a859" : "#ff0000"; 
+        // ---------------------------------
+
+        document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
+        let bodyHtml = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
+        
+        bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis?.toFixed(2)})</h4>
+            <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>
+            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div></div>`; // <--- Renk buraya bağlandı
+
+        bodyHtml += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
+        if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(line => bodyHtml += `<div class="info-row" style="color:#00a859">✔ ${line}</div>`);
+        else bodyHtml += `<div class="info-row" style="color:#999">Gelecek ürün yok.</div>`;
         bodyHtml += `</div>`;
 
-        if(item.ithalatDetay) {
-            bodyHtml += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER</h4>`;
-            item.ithalatDetay.split('\n').forEach(line => bodyHtml += `<div class="info-row" style="color:#00a859">✔ ${line}</div>`);
-            bodyHtml += `</div>`;
-        }
+        bodyHtml += `<div class="modal-section"><h4>👥 SİPARİŞLER (${totalReserved})</h4>`;
         if(item.satisListesi && item.satisListesi.length > 0) {
-            bodyHtml += `<div class="modal-section"><h4>👥 SİPARİŞLER</h4>`;
-            item.satisListesi.forEach(s => bodyHtml += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - ${s.musteri}</div>`);
-            bodyHtml += `</div>`;
-        }
-        document.getElementById('modal-body').innerHTML = bodyHtml || '<p>Detay yok.</p>';
+            item.satisListesi.forEach(s => bodyHtml += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null, '${s.musteri.replace(/'/g, "\\'")}')">${s.musteri}</span></div>`);
+        } else bodyHtml += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
+        bodyHtml += `</div>`;
+
+        document.getElementById('modal-body').innerHTML = bodyHtml;
         document.getElementById('info-modal').style.display = 'flex';
     }
 
-    function closeModal(e) { if(e.target.id === 'info-modal') document.getElementById('info-modal').style.display = 'none'; }
+    function closeModal(e, id) { if(e.target.id === id) document.getElementById(id).style.display = 'none'; }
 
     function downloadReport() {
         if (!allData || allData.length === 0) return alert("Veri yok!");
-        const wb = XLSX.utils.book_new();
-        const rows = allData.map(it => [it.stokKodu, it.stokAdi, it.fiili, it.avgSatis, it.stokOmru, it.stokDurumu]);
+        const rows = allData.map(it => [it.stokKodu, it.stokAdi, it.fiili, it.avgSatis.toFixed(2), it.stokOmru, it.stokDurumu]);
         const ws = XLSX.utils.aoa_to_sheet([["KOD", "AD", "FIILI", "ORT", "OMUR", "DURUM"], ...rows]);
+        const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Rapor");
         XLSX.writeFile(wb, `Analiz_${new Date().toLocaleDateString()}.xlsx`);
     }
-    
 </script>
 </body>
 </html>
