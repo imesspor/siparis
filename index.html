@@ -121,9 +121,9 @@
             <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 VERİYİ YÜKLE</button>
             <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
             <span id="data-name" class="file-name-display"></span>
-            <button class="btn-action btn-report" onclick="downloadReport()">📥 ANALİZ RAPORU AL</button>
-            <button class="btn-action btn-notes" onclick="downloadCurrentSort()">📤 SIRALAMAYI PAYLAŞ</button>
-            <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 SIRAYI İÇERİ AKTAR</button>
+            <button class="btn-action btn-report" onclick="downloadReport()">📥 ÜRÜN RAPORU AL</button>
+            <button class="btn-action btn-notes" onclick="downloadCurrentSort()">📤 BİLGİLERİ DIŞARI AKTAR</button>
+            <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 BİLGİLERİ İÇERİ AL</button>
             <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
             <span id="notes-name" class="file-name-display"></span>
         </div>
@@ -419,25 +419,63 @@
     });
 
     document.getElementById('notes-file').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const workbook = XLSX.read(evt.target.result, {type: 'binary'});
+        
+        // --- 1. Ürün Sırası ve Manuel Siparişleri Al ---
+        const itemSheet = workbook.Sheets["Urun_Duzen_Ve_Siparis"];
+        if(itemSheet) {
+            const itemData = XLSX.utils.sheet_to_json(itemSheet);
             const orderMap = new Map();
-            jsonData.forEach(row => {
+            
+            itemData.forEach(row => {
                 const kodu = String(row["STOK KODU"] || "").trim();
                 const sira = row["SIRA"];
-                if(kodu && sira !== undefined) orderMap.set(kodu, parseInt(sira));
+                const mSiparis = row["MANUEL_SIPARIS"] || 0;
+                
+                if(kodu) {
+                    orderMap.set(kodu, { sira: parseInt(sira), manuel: parseInt(mSiparis) });
+                    // Manuel sipariş haritasını (localStorage için) güncelle
+                    manuelSiparisMap[kodu] = parseInt(mSiparis);
+                }
             });
-            if(orderMap.size > 0) {
-                allData.sort((a, b) => (orderMap.get(a.stokKodu) || 99999) - (orderMap.get(b.stokKodu) || 99999));
-            }
-            saveAndRender();
-        };
-        reader.readAsBinaryString(file);
-    });
+
+            // Listeyi yeni sıraya göre diz ve manuel siparişleri işle
+            allData.sort((a, b) => {
+                const infoA = orderMap.get(a.stokKodu);
+                const infoB = orderMap.get(b.stokKodu);
+                return (infoA ? infoA.sira : 99999) - (infoB ? infoB.sira : 99999);
+            });
+
+            allData.forEach(item => {
+                const info = orderMap.get(item.stokKodu);
+                if(info) item.manuelSiparis = info.manuel;
+            });
+        }
+
+        // --- 2. Kategori Sıralamalarını Al ---
+        const slicerSheet = workbook.Sheets["Kategori_Siralamasi"];
+        if(slicerSheet) {
+            const slicerData = XLSX.utils.sheet_to_json(slicerSheet);
+            const newSlicerMap = {};
+            slicerData.forEach(row => {
+                if(!newSlicerMap[row.MARKA]) newSlicerMap[row.MARKA] = [];
+                newSlicerMap[row.MARKA].push(row.KATEGORI);
+            });
+            slicerOrderMap = newSlicerMap;
+            localStorage.setItem('slicerOrderData', JSON.stringify(slicerOrderMap));
+        }
+
+        // Tüm değişiklikleri kaydet ve ekranı yenile
+        saveManuelSiparisMap();
+        saveAndRender();
+        alert("Tüm verileriniz başarıyla diğer bilgisayardan aktarıldı!");
+    };
+    reader.readAsBinaryString(file);
+});
 
     function saveAndRender() {
         localStorage.setItem('masterInventoryData', JSON.stringify(allData));
@@ -540,16 +578,34 @@
     }
 
     function downloadCurrentSort() {
-        const sortData = allData.map((item, index) => ({
-            "STOK KODU": item.stokKodu,
-            "SIRA": index + 1
-        }));
-        const ws = XLSX.utils.json_to_sheet(sortData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Guncel_Siralamam");
-        XLSX.writeFile(wb, `Guncel_Siralama_${new Date().toLocaleDateString()}.xlsx`);
-        alert("Güncel sıralamanız Excel olarak indirildi.");
-    }
+    // 1. Ürün Sıralaması ve Manuel Siparişler
+    const combinedData = allData.map((item, index) => ({
+        "STOK KODU": item.stokKodu,
+        "SIRA": index + 1,
+        "MANUEL_SIPARIS": item.manuelSiparis || 0
+    }));
+
+    // 2. Slicer (Kategori) Sıralamaları
+    const slicerData = [];
+    Object.keys(slicerOrderMap).forEach(brand => {
+        slicerOrderMap[brand].forEach((cat, idx) => {
+            slicerData.push({ "MARKA": brand, "KATEGORI": cat, "KAT_SIRA": idx + 1 });
+        });
+    });
+
+    const wb = XLSX.utils.book_new();
+    
+    // Ürün verilerini içeren sayfa
+    const wsItems = XLSX.utils.json_to_sheet(combinedData);
+    XLSX.utils.book_append_sheet(wb, wsItems, "Urun_Duzen_Ve_Siparis");
+    
+    // Kategori sıralarını içeren sayfa
+    const wsSlicers = XLSX.utils.json_to_sheet(slicerData);
+    XLSX.utils.book_append_sheet(wb, wsSlicers, "Kategori_Siralamasi");
+
+    XLSX.writeFile(wb, `Sistem_Yedek_${new Date().toLocaleDateString()}.xlsx`);
+    alert("Tüm değişiklikleriniz (Sıralama, Manuel Siparişler ve Kategoriler) Excel olarak paketlendi.");
+}
 
     function previewCustomerList(e, custName) {
         if(e) e.stopPropagation();
@@ -773,4 +829,3 @@
 </div>
 </body>
 </html>
-
