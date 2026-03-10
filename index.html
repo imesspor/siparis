@@ -150,7 +150,7 @@
                     <th class="col-satis" style="width: 55px;">SATIŞ</th>
                     <th class="col-kalan" style="width: 55px;">KALAN</th>
                     <th class="col-ithalat" style="width: 60px;">İTHALAT</th>
-                    <th class="col-manuel" style="width: 70px;">MANUEL SİP.</th>
+                    <th class="col-manuel" style="width: 70px;">SİPARİŞ</th>
                     <th class="col-avg" style="width: 80px;">AYLIK ORT.</th>
                     <th class="col-omur" style="width: 80px;">STOK ÖMRÜ</th>
                     <th class="col-oneri" style="width: 80px;">SİP. ÖNERİ</th>
@@ -678,7 +678,7 @@
         bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis?.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>
             <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
-            <div class="info-row" style="color:#2980b9"><strong>MANUEL SİPARİŞ:</strong> ${item.manuelSiparis || 0}</div>
+            <div class="info-row" style="color:#2980b9"><strong>SİPARİŞ:</strong> ${item.manuelSiparis || 0}</div>
             ${depoHtml}
         </div>`;
 
@@ -773,3 +773,4 @@
 </div>
 </body>
 </html>
+
