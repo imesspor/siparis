@@ -41,74 +41,15 @@
         .slicer-btn { height: 26px; background: white; border: 1px solid #adb5bd; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 3px; overflow: hidden; transition: all 0.2s; color: #495057; text-align: center; }
         .slicer-btn.active { background: var(--accent-blue); color: white; border-color: #1e272e; }
         
-        .search-container-in-slicer { 
-            display: flex; 
-            align-items: center; 
-            background: white; 
-            border: 1px solid var(--accent-blue); 
-            border-radius: 4px; 
-            padding: 0; 
-            height: 28px; 
-            grid-column: span 3; 
-            position: relative;
-            overflow: visible;
-        }
-        .search-input { 
-            flex: 1; 
-            border: none; 
-            outline: none; 
-            font-size: 11px; 
-            font-weight: bold; 
-            padding: 0 10px;
-            color: #273c75;
-        }
-        .btn-customer-trigger { 
-            background: #273c75; 
-            height: 100%; 
-            padding: 0 12px; 
-            border: none; 
-            color: white; 
-            font-size: 10px; 
-            font-weight: bold;
-            cursor: pointer; 
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: background 0.2s;
-        }
+        .search-container-in-slicer { display: flex; align-items: center; background: white; border: 1px solid var(--accent-blue); border-radius: 4px; padding: 0; height: 28px; grid-column: span 3; position: relative; overflow: visible; }
+        .search-input { flex: 1; border: none; outline: none; font-size: 11px; font-weight: bold; padding: 0 10px; color: #273c75; }
+        .btn-customer-trigger { background: #273c75; height: 100%; padding: 0 12px; border: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
         .btn-customer-trigger:hover { background: #1e272e; }
 
-        .customer-dropdown { 
-            position: absolute; 
-            top: 32px; 
-            right: 0; 
-            background: white; 
-            border: 1px solid var(--border-color); 
-            border-radius: 6px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
-            z-index: 1000; 
-            min-width: 320px; 
-            display: none; 
-            flex-direction: column;
-        }
-        .cust-search-wrapper {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            background: #f8f9fa;
-            border-radius: 6px 6px 0 0;
-        }
-        .cust-inner-search {
-            width: 100%;
-            padding: 6px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 11px;
-            box-sizing: border-box;
-        }
-        .customer-list-area {
-            max-height: 350px;
-            overflow-y: auto;
-        }
+        .customer-dropdown { position: absolute; top: 32px; right: 0; background: white; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; min-width: 320px; display: none; flex-direction: column; }
+        .cust-search-wrapper { padding: 10px; border-bottom: 1px solid #eee; background: #f8f9fa; border-radius: 6px 6px 0 0; }
+        .cust-inner-search { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; box-sizing: border-box; }
+        .customer-list-area { max-height: 350px; overflow-y: auto; }
         .customer-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f1f1; }
         .customer-item:hover { background: #f0f7ff; }
         .customer-name { flex: 1; padding-right: 10px; font-weight: bold; color: #2c3e50; }
@@ -125,6 +66,8 @@
         .col-satis { background-color: #fcf3cb !important; }
         .col-kalan { background-color: #f6fcc8 !important; }
         .col-ithalat { background-color: #def8e1 !important; }
+        /* MANUEL SİPARİŞ STİLİ */
+        .col-manuel { background-color: #dff9fb !important; color: #2980b9; cursor: pointer; }
         .col-avg { background-color: #e3f2fd !important; }
         .col-omur { background-color: #f3e5f5 !important; }
         .col-oneri { background-color: #fff9c4 !important; }
@@ -141,47 +84,27 @@
         .cust-link:hover { color: #c0392b; }
 
         .preview-modal { width: 420% !important; max-width: 650px; }
-        .preview-table { 
-            width: auto;
-            min-width: 400px;
-            border-collapse: collapse; 
-            margin-top: 10px; 
-            table-layout: fixed; 
-        }
-        .preview-table th, .preview-table td { 
-            padding: 3px 2px; 
-            border: 1px solid #ddd; 
-            font-size: 10px; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-            text-align: center;
-        }
-        
+        .preview-table { width: auto; min-width: 400px; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        .preview-table th, .preview-table td { padding: 3px 2px; border: 1px solid #ddd; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .preview-table th { background: #f4f4f4; font-weight: bold; }
-        .preview-table td { text-align: center; }
         .preview-table td:nth-child(2) { text-align: left; padding-left: 3px; }
-
         .preview-table th:nth-child(1) { width: 120px; }
         .preview-table th:nth-child(2) { width: 350px; }
-        .preview-table th:nth-child(3) { width: 50px; }
-        .preview-table th:nth-child(4) { width: 50px; }
-        .preview-table th:nth-child(5) { width: 50px; }
+        .preview-table th:nth-child(3), .preview-table th:nth-child(4), .preview-table th:nth-child(5) { width: 50px; }
 
         .modal-header { border-bottom: 2px solid var(--accent-blue); margin-bottom: 15px; padding-bottom: 5px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .modal-close { cursor: pointer; font-size: 20px; line-height: 1; font-weight: bold; }
         .info-row { padding: 2px 0 !important; margin: 0 !important; font-size: 11px !important; border-bottom: 1px dashed #eee; line-height: 1.5; }
         .modal-section h4 { margin-top: 8px !important; margin-bottom: 4px !important; }
-        
         .product-image { width: auto; max-width: 250px; max-height: 200px; display: block; margin: 0 auto 15px; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fff; }
-        
         .btn-excel-cust-big { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="upload-section">
+        <div class="upload-section" style="flex:1;">
+            <img src="https://cdn.imagevisit.com/2026/03/10/2.png" alt="Logo" style="height:32px; width:auto; object-fit:contain; margin-right:6px;">
             <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 VERİYİ YÜKLE</button>
             <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
             <span id="data-name" class="file-name-display"></span>
@@ -214,6 +137,7 @@
                     <th class="col-satis" style="width: 55px;">SATIŞ</th>
                     <th class="col-kalan" style="width: 55px;">KALAN</th>
                     <th class="col-ithalat" style="width: 60px;">İTHALAT</th>
+                    <th class="col-manuel" style="width: 70px;">MANUEL SİP.</th>
                     <th class="col-avg" style="width: 80px;">AYLIK ORT.</th>
                     <th class="col-omur" style="width: 80px;">STOK ÖMRÜ</th>
                     <th class="col-oneri" style="width: 80px;">SİP. ÖNERİ</th>
@@ -259,6 +183,17 @@
         if(!serial || isNaN(serial)) return serial;
         let date = new Date(Math.round((serial - 25569) * 86400 * 1000));
         return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+    }
+
+    // --- MANUEL SİPARİŞ GÜNCELLEME ---
+    function updateManuelSiparis(stokKodu) {
+        const item = allData.find(d => d.stokKodu === stokKodu);
+        if (!item) return;
+        let yeniDeger = prompt(`${item.stokAdi} için manuel sipariş adedi:`, item.manuelSiparis || 0);
+        if (yeniDeger !== null) {
+            item.manuelSiparis = parseInt(yeniDeger) || 0;
+            saveAndRender();
+        }
     }
 
     window.onload = function() {
@@ -387,12 +322,10 @@
                     resim: resimMap.get(kodu) || '', 
                     ithalatDetay: (ithalatMap.get(kodu) || []).join('\n'), 
                     satisListesi: siparisMap.get(kodu) || [],
-                    // --- DEPO SÜTUNLARI (GÜNCELLEME) ---
                     depoL: parseInt(r.L) || 0,
                     depoN: parseInt(r.N) || 0,
                     depoO: parseInt(r.O) || 0,
                     depoP: parseInt(r.P) || 0,
-                    // ------------------------------------
                     avgSatis: analiz.ortalama,
                     totalSatis: analiz.totalSatis,
                     stokOmru: analiz.ortalama > 0 ? (eldekiToplam / analiz.ortalama).toFixed(1) : "0.0",
@@ -402,10 +335,17 @@
                 });
             });
 
+            // Master data güncellenirken eski manuel sipariş notlarını koru
             const masterMap = new Map(allData.map(item => [item.stokKodu, item]));
             uniqueIncomingData.forEach((newItem, kodu) => {
-                if (masterMap.has(kodu)) Object.assign(masterMap.get(kodu), newItem);
-                else masterMap.set(kodu, newItem);
+                if (masterMap.has(kodu)) {
+                    const existingItem = masterMap.get(kodu);
+                    newItem.manuelSiparis = existingItem.manuelSiparis || 0; // Eski veriyi aktar
+                    Object.assign(existingItem, newItem);
+                } else {
+                    newItem.manuelSiparis = 0;
+                    masterMap.set(kodu, newItem);
+                }
             });
 
             allData = Array.from(masterMap.values());
@@ -582,6 +522,7 @@
                 <td class="col-satis">${item.satis}</td>
                 <td class="col-kalan">${item.kalan}</td>
                 <td class="col-ithalat">${item.ithalat}</td>
+                <td class="col-manuel" onclick="updateManuelSiparis('${item.stokKodu}')">${item.manuelSiparis || 0}</td>
                 <td class="col-avg">${item.avgSatis ? item.avgSatis.toFixed(2) : '0.00'}</td>
                 <td class="col-omur">${item.stokOmru} Ay ${omurSimge}</td>
                 <td class="col-oneri" style="color:${item.ihtiyacAdet > 0 ? 'red' : 'green'}">${item.ihtiyacAdet} Adet</td>
@@ -617,7 +558,6 @@
         const totalReserved = item.satisListesi ? item.satisListesi.reduce((sum, s) => sum + (parseInt(s.adet) || 0), 0) : 0;
         const kalanRenk = item.kalan > 0 ? "#00a859" : "#ff0000"; 
 
-        // --- DEPO KONTROLÜ (GÜNCELLEME) ---
         let depoHtml = "";
         const depolar = [
             { isim: "ÖMERLİ", adet: item.depoL }, 
@@ -630,7 +570,6 @@
                 depoHtml += `<div style="font-size: 10px; color: #555; padding-left: 10px; border-bottom: 1px dashed #eee;">• ${depo.isim}: <strong>${depo.adet} Adet</strong></div>`;
             }
         });
-        // ---------------------------------
 
         document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
         let bodyHtml = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
@@ -638,6 +577,7 @@
         bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis?.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>
             <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
+            <div class="info-row" style="color:#2980b9"><strong>MANUEL SİPARİŞ:</strong> ${item.manuelSiparis || 0}</div>
             ${depoHtml}
         </div>`;
 
@@ -660,8 +600,8 @@
 
     function downloadReport() {
         if (!allData || allData.length === 0) return alert("Veri yok!");
-        const rows = allData.map(it => [it.stokKodu, it.stokAdi, it.fiili, it.avgSatis.toFixed(2), it.stokOmru, it.stokDurumu]);
-        const ws = XLSX.utils.aoa_to_sheet([["KOD", "AD", "FIILI", "ORT", "OMUR", "DURUM"], ...rows]);
+        const rows = allData.map(it => [it.stokKodu, it.stokAdi, it.fiili, it.avgSatis.toFixed(2), it.stokOmru, it.manuelSiparis || 0, it.stokDurumu]);
+        const ws = XLSX.utils.aoa_to_sheet([["KOD", "AD", "FIILI", "ORT", "OMUR", "MANUEL SIPARIS", "DURUM"], ...rows]);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Rapor");
         XLSX.writeFile(wb, `Analiz_${new Date().toLocaleDateString()}.xlsx`);
