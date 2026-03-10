@@ -79,9 +79,9 @@
         .col-satis { background-color: #fffbea !important; }
         .col-kalan { background-color: #f6fff0 !important; }
         .col-ithalat { background-color: #f0fff6 !important; }
-        /* MANUEL SİPARİŞ STİLİ */
         .col-manuel { background-color: #f0fbff !important; color: #2980b9; cursor: pointer; }
-        .manuel-input { width: 50px; border: 1.5px solid var(--accent-blue); border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-blue); background: #f0f6ff; padding: 0; outline: none; font-family: inherit; }        .col-avg { background-color: #f0f7ff !important; }
+        .manuel-input { width: 50px; border: 1.5px solid var(--accent-blue); border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-blue); background: #f0f6ff; padding: 0; outline: none; font-family: inherit; }
+        .col-avg { background-color: #f0f7ff !important; }
         .col-omur { background-color: #faf0ff !important; }
         .col-oneri { background-color: #fffdf0 !important; }
         .col-stok-durumu { background-color: #f8f9fc !important; font-size: 10px !important; }
@@ -92,14 +92,15 @@
         .modal-content { background: var(--bg-white); padding: 24px; border-radius: 12px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); }
         .cust-link { color: var(--accent-blue); text-decoration: underline; cursor: pointer; font-weight: 700; }
         .cust-link:hover { color: var(--panatta-color); }
-        .preview-modal { width: 420% !important; max-width: 650px; }
-        .preview-table { width: auto; min-width: 400px; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        .preview-modal { width: 90% !important; max-width: 800px; }
+        .preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         .preview-table th, .preview-table td { padding: 4px 4px; border: 1px solid var(--border-light); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .preview-table th { background: var(--bg-main); font-weight: 800; color: var(--text-mid); }
-        .preview-table td:nth-child(2) { text-align: left; padding-left: 5px; }
-        .preview-table th:nth-child(1) { width: 120px; }
-        .preview-table th:nth-child(2) { width: 350px; }
-        .preview-table th:nth-child(3), .preview-table th:nth-child(4), .preview-table th:nth-child(5) { width: 50px; }
+        .preview-table td:nth-child(3) { text-align: left; padding-left: 5px; }
+        .preview-table th:nth-child(1) { width: 80px; }
+        .preview-table th:nth-child(2) { width: 120px; }
+        .preview-table th:nth-child(3) { width: auto; }
+        .preview-table th:nth-child(4), .preview-table th:nth-child(5), .preview-table th:nth-child(6) { width: 60px; }
         .modal-header { border-bottom: 2px solid var(--accent-blue-light); margin-bottom: 16px; padding-bottom: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; color: var(--text-dark); }
         .modal-close { cursor: pointer; font-size: 22px; line-height: 1; font-weight: 400; color: var(--text-muted); transition: color 0.15s; }
         .modal-close:hover { color: var(--panatta-color); }
@@ -193,15 +194,12 @@
     }
 
     function excelDateToJS(serial) {
-        if(!serial || isNaN(serial)) return serial;
+        if(!serial || isNaN(serial)) return serial || "";
         let date = new Date(Math.round((serial - 25569) * 86400 * 1000));
         return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
     }
 
-    // --- MANUEL SİPARİŞ: Ayrı localStorage key ile kalıcı saklama ---
     let manuelSiparisMap = JSON.parse(localStorage.getItem('manuelSiparisData') || '{}');
-
-    // --- SLİCER SIRALAMA: Marka bazlı kalıcı sıralama ---
     let slicerOrderMap = JSON.parse(localStorage.getItem('slicerOrderData') || '{}');
 
     function saveSlicerOrder(brand, orderedCats) {
@@ -212,7 +210,6 @@
     function getOrderedCategories(brand, rawCats) {
         const saved = slicerOrderMap[brand];
         if (!saved || saved.length === 0) return rawCats;
-        // Kaydedilen sırayı uygula, yeni kategori varsa sona ekle
         const ordered = saved.filter(c => rawCats.includes(c));
         rawCats.forEach(c => { if (!ordered.includes(c)) ordered.push(c); });
         return ordered;
@@ -234,7 +231,6 @@
         });
     }
 
-    // --- MANUEL SİPARİŞ: Inline düzenleme (ekran açılmaz) ---
     function editManuelSiparis(td, stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if (!item) return;
@@ -327,10 +323,21 @@
                     const sKodu = String(row.L || '').trim();
                     const sMusteri = String(row.J || '').trim();
                     const sAdet = String(row.R || '').trim();
+                    // J sütunundaki müşteriye göre C sütunundan tarih bilgisini çekiyoruz
+                    const sTarih = excelDateToJS(row.C); 
+                    
                     if(sKodu && sMusteri) {
                         if(!siparisMap.has(sKodu)) siparisMap.set(sKodu, []);
-                        siparisMap.get(sKodu).push({ musteri: sMusteri, adet: sAdet });
+                        siparisMap.get(sKodu).push({ 
+                            musteri: sMusteri, 
+                            adet: sAdet, 
+                            tarih: sTarih,
+                            rawDate: row.C 
+                        });
                     }
+                });
+                siparisMap.forEach((list) => {
+                    list.sort((a, b) => (a.rawDate || 0) - (b.rawDate || 0));
                 });
             }
 
@@ -398,12 +405,11 @@
                 });
             });
 
-            // Master data güncellenirken eski manuel sipariş notlarını koru
             const masterMap = new Map(allData.map(item => [item.stokKodu, item]));
             uniqueIncomingData.forEach((newItem, kodu) => {
                 if (masterMap.has(kodu)) {
                     const existingItem = masterMap.get(kodu);
-                    newItem.manuelSiparis = existingItem.manuelSiparis || 0; // Eski veriyi aktar
+                    newItem.manuelSiparis = existingItem.manuelSiparis || 0;
                     Object.assign(existingItem, newItem);
                 } else {
                     newItem.manuelSiparis = 0;
@@ -419,63 +425,51 @@
     });
 
     document.getElementById('notes-file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-        
-        // --- 1. Ürün Sırası ve Manuel Siparişleri Al ---
-        const itemSheet = workbook.Sheets["Urun_Duzen_Ve_Siparis"];
-        if(itemSheet) {
-            const itemData = XLSX.utils.sheet_to_json(itemSheet);
-            const orderMap = new Map();
-            
-            itemData.forEach(row => {
-                const kodu = String(row["STOK KODU"] || "").trim();
-                const sira = row["SIRA"];
-                const mSiparis = row["MANUEL_SIPARIS"] || 0;
-                
-                if(kodu) {
-                    orderMap.set(kodu, { sira: parseInt(sira), manuel: parseInt(mSiparis) });
-                    // Manuel sipariş haritasını (localStorage için) güncelle
-                    manuelSiparisMap[kodu] = parseInt(mSiparis);
-                }
-            });
-
-            // Listeyi yeni sıraya göre diz ve manuel siparişleri işle
-            allData.sort((a, b) => {
-                const infoA = orderMap.get(a.stokKodu);
-                const infoB = orderMap.get(b.stokKodu);
-                return (infoA ? infoA.sira : 99999) - (infoB ? infoB.sira : 99999);
-            });
-
-            allData.forEach(item => {
-                const info = orderMap.get(item.stokKodu);
-                if(info) item.manuelSiparis = info.manuel;
-            });
-        }
-
-        // --- 2. Kategori Sıralamalarını Al ---
-        const slicerSheet = workbook.Sheets["Kategori_Siralamasi"];
-        if(slicerSheet) {
-            const slicerData = XLSX.utils.sheet_to_json(slicerSheet);
-            const newSlicerMap = {};
-            slicerData.forEach(row => {
-                if(!newSlicerMap[row.MARKA]) newSlicerMap[row.MARKA] = [];
-                newSlicerMap[row.MARKA].push(row.KATEGORI);
-            });
-            slicerOrderMap = newSlicerMap;
-            localStorage.setItem('slicerOrderData', JSON.stringify(slicerOrderMap));
-        }
-
-        // Tüm değişiklikleri kaydet ve ekranı yenile
-        saveManuelSiparisMap();
-        saveAndRender();
-        alert("Tüm verileriniz başarıyla diğer bilgisayardan aktarıldı!");
-    };
-    reader.readAsBinaryString(file);
-});
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const workbook = XLSX.read(evt.target.result, {type: 'binary'});
+            const itemSheet = workbook.Sheets["Urun_Duzen_Ve_Siparis"];
+            if(itemSheet) {
+                const itemData = XLSX.utils.sheet_to_json(itemSheet);
+                const orderMap = new Map();
+                itemData.forEach(row => {
+                    const kodu = String(row["STOK KODU"] || "").trim();
+                    const sira = row["SIRA"];
+                    const mSiparis = row["MANUEL_SIPARIS"] || 0;
+                    if(kodu) {
+                        orderMap.set(kodu, { sira: parseInt(sira), manuel: parseInt(mSiparis) });
+                        manuelSiparisMap[kodu] = parseInt(mSiparis);
+                    }
+                });
+                allData.sort((a, b) => {
+                    const infoA = orderMap.get(a.stokKodu);
+                    const infoB = orderMap.get(b.stokKodu);
+                    return (infoA ? infoA.sira : 99999) - (infoB ? infoB.sira : 99999);
+                });
+                allData.forEach(item => {
+                    const info = orderMap.get(item.stokKodu);
+                    if(info) item.manuelSiparis = info.manuel;
+                });
+            }
+            const slicerSheet = workbook.Sheets["Kategori_Siralamasi"];
+            if(slicerSheet) {
+                const slicerData = XLSX.utils.sheet_to_json(slicerSheet);
+                const newSlicerMap = {};
+                slicerData.forEach(row => {
+                    if(!newSlicerMap[row.MARKA]) newSlicerMap[row.MARKA] = [];
+                    newSlicerMap[row.MARKA].push(row.KATEGORI);
+                });
+                slicerOrderMap = newSlicerMap;
+                localStorage.setItem('slicerOrderData', JSON.stringify(slicerOrderMap));
+            }
+            saveManuelSiparisMap();
+            saveAndRender();
+            alert("Tüm verileriniz başarıyla diğer bilgisayardan aktarıldı!");
+        };
+        reader.readAsBinaryString(file);
+    });
 
     function saveAndRender() {
         localStorage.setItem('masterInventoryData', JSON.stringify(allData));
@@ -511,29 +505,17 @@
             </div>
         </div>`;
 
-        // Drag & drop sıralama
         let dragSrc = null;
         const btns = container.querySelectorAll('.slicer-btn[draggable="true"]');
         btns.forEach(btn => {
-            btn.addEventListener('dragstart', function(e) {
-                dragSrc = this;
-                this.style.opacity = '0.5';
-            });
+            btn.addEventListener('dragstart', function(e) { dragSrc = this; this.style.opacity = '0.5'; });
             btn.addEventListener('dragend', function() {
                 this.style.opacity = '1';
-                // Yeni sırayı kaydet
-                const newOrder = [...container.querySelectorAll('.slicer-btn[data-cat]')]
-                    .map(b => b.getAttribute('data-cat'))
-                    .filter(c => c !== 'HEPSİ');
+                const newOrder = [...container.querySelectorAll('.slicer-btn[data-cat]')].map(b => b.getAttribute('data-cat')).filter(c => c !== 'HEPSİ');
                 saveSlicerOrder(currentBrand, newOrder);
             });
-            btn.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.style.borderStyle = 'dashed';
-            });
-            btn.addEventListener('dragleave', function() {
-                this.style.borderStyle = '';
-            });
+            btn.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderStyle = 'dashed'; });
+            btn.addEventListener('dragleave', function() { this.style.borderStyle = ''; });
             btn.addEventListener('drop', function(e) {
                 e.preventDefault();
                 this.style.borderStyle = '';
@@ -578,48 +560,41 @@
     }
 
     function downloadCurrentSort() {
-    // 1. Ürün Sıralaması ve Manuel Siparişler
-    const combinedData = allData.map((item, index) => ({
-        "STOK KODU": item.stokKodu,
-        "SIRA": index + 1,
-        "MANUEL_SIPARIS": item.manuelSiparis || 0
-    }));
-
-    // 2. Slicer (Kategori) Sıralamaları
-    const slicerData = [];
-    Object.keys(slicerOrderMap).forEach(brand => {
-        slicerOrderMap[brand].forEach((cat, idx) => {
-            slicerData.push({ "MARKA": brand, "KATEGORI": cat, "KAT_SIRA": idx + 1 });
+        const combinedData = allData.map((item, index) => ({
+            "STOK KODU": item.stokKodu,
+            "SIRA": index + 1,
+            "MANUEL_SIPARIS": item.manuelSiparis || 0
+        }));
+        const slicerData = [];
+        Object.keys(slicerOrderMap).forEach(brand => {
+            slicerOrderMap[brand].forEach((cat, idx) => {
+                slicerData.push({ "MARKA": brand, "KATEGORI": cat, "KAT_SIRA": idx + 1 });
+            });
         });
-    });
-
-    const wb = XLSX.utils.book_new();
-    
-    // Ürün verilerini içeren sayfa
-    const wsItems = XLSX.utils.json_to_sheet(combinedData);
-    XLSX.utils.book_append_sheet(wb, wsItems, "Urun_Duzen_Ve_Siparis");
-    
-    // Kategori sıralarını içeren sayfa
-    const wsSlicers = XLSX.utils.json_to_sheet(slicerData);
-    XLSX.utils.book_append_sheet(wb, wsSlicers, "Kategori_Siralamasi");
-
-    XLSX.writeFile(wb, `Sistem_Yedek_${new Date().toLocaleDateString()}.xlsx`);
-    alert("Tüm değişiklikleriniz (Sıralama, Manuel Siparişler ve Kategoriler) Excel olarak paketlendi.");
-}
+        const wb = XLSX.utils.book_new();
+        const wsItems = XLSX.utils.json_to_sheet(combinedData);
+        XLSX.utils.book_append_sheet(wb, wsItems, "Urun_Duzen_Ve_Siparis");
+        const wsSlicers = XLSX.utils.json_to_sheet(slicerData);
+        XLSX.utils.book_append_sheet(wb, wsSlicers, "Kategori_Siralamasi");
+        XLSX.writeFile(wb, `Sistem_Yedek_${new Date().toLocaleDateString()}.xlsx`);
+        alert("Tüm değişiklikleriniz Excel olarak paketlendi.");
+    }
 
     function previewCustomerList(e, custName) {
         if(e) e.stopPropagation();
         const previewBody = document.getElementById('preview-body');
         document.getElementById('preview-title').textContent = custName + "";
         let html = `<button class="btn-excel-cust-big" onclick="downloadCustomerList(null, '${custName.replace(/'/g, "\\'")}')">📥 LİSTEYİ EXCEL OLARAK İNDİR</button>`;
-        html += `<table class="preview-table"><thead><tr><th>KOD</th><th>AD</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
+        html += `<table class="preview-table"><thead><tr><th>TARİH</th><th>KOD</th><th>AD</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
         let hasData = false;
         allData.forEach(item => {
             const customerOrders = item.satisListesi?.filter(s => s.musteri === custName);
             if(customerOrders && customerOrders.length > 0) {
                 hasData = true;
                 const totalAdet = customerOrders.reduce((sum, current) => sum + (parseInt(current.adet) || 0), 0);
-                html += `<tr><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td style="color:red">${totalAdet}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
+                // Müşterinin o stok kodundaki ilk siparişinin tarihini alıyoruz
+                const siparisTarihi = customerOrders[0].tarih || "-"; 
+                html += `<tr><td>${siparisTarihi}</td><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td style="color:red">${totalAdet}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
             }
         });
         html += `</tbody></table>`;
@@ -635,7 +610,7 @@
             const orders = item.satisListesi?.filter(s => s.musteri === custName);
             if(orders && orders.length > 0) {
                 const totalAdet = orders.reduce((sum, current) => sum + (parseInt(current.adet) || 0), 0);
-                list.push({ "KOD": item.stokKodu, "AD": item.stokAdi, "SİPARİŞ": totalAdet, "FİİLİ": item.fiili, "KALAN": item.kalan });
+                list.push({ "TARİH": orders[0].tarih || "-", "KOD": item.stokKodu, "AD": item.stokAdi, "SİPARİŞ": totalAdet, "FİİLİ": item.fiili, "KALAN": item.kalan });
             }
         });
         if(list.length > 0) {
@@ -688,8 +663,7 @@
         }).join('');
         if(sortableRows) sortableRows.destroy();
         sortableRows = new Sortable(tbody, { 
-            animation: 150, 
-            handle: '.w-sort',
+            animation: 150, handle: '.w-sort',
             onEnd: function() {
                 const newOrderIds = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
                 const sortedData = [];
@@ -697,11 +671,7 @@
                     const found = allData.find(d => d.stokKodu === id);
                     if(found) sortedData.push(found);
                 });
-                allData.forEach(item => {
-                    if(!newOrderIds.includes(item.stokKodu)) {
-                        sortedData.push(item);
-                    }
-                });
+                allData.forEach(item => { if(!newOrderIds.includes(item.stokKodu)) sortedData.push(item); });
                 allData = sortedData;
                 localStorage.setItem('masterInventoryData', JSON.stringify(allData));
             }
@@ -711,33 +681,20 @@
     function showDetail(stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if(!item) return;
-        
         const totalReserved = item.satisListesi ? item.satisListesi.reduce((sum, s) => sum + (parseInt(s.adet) || 0), 0) : 0;
         const kalanRenk = item.kalan > 0 ? "#00a859" : "#ff0000"; 
-
         let depoHtml = "";
-        const depolar = [
-            { isim: "ÖMERLİ", adet: item.depoL }, 
-            { isim: "SHOWROOM", adet: item.depoN },
-            { isim: "ŞİRKET", adet: item.depoO },
-            { isim: "TAMİR", adet: item.depoP }
-        ];
-        depolar.forEach(depo => {
-            if (parseInt(depo.adet) > 0) {
-                depoHtml += `<div style="font-size: 10px; color: #555; padding-left: 10px; border-bottom: 1px dashed #eee;">• ${depo.isim}: <strong>${depo.adet} Adet</strong></div>`;
-            }
-        });
+        const depolar = [{ isim: "ÖMERLİ", adet: item.depoL }, { isim: "SHOWROOM", adet: item.depoN }, { isim: "ŞİRKET", adet: item.depoO }, { isim: "TAMİR", adet: item.depoP }];
+        depolar.forEach(depo => { if (parseInt(depo.adet) > 0) depoHtml += `<div style="font-size: 10px; color: #555; padding-left: 10px; border-bottom: 1px dashed #eee;">• ${depo.isim}: <strong>${depo.adet} Adet</strong></div>`; });
 
         document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
         let bodyHtml = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
-        
         bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis?.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>
             <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
             <div class="info-row" style="color:#2980b9"><strong>SİPARİŞ:</strong> ${item.manuelSiparis || 0}</div>
             ${depoHtml}
         </div>`;
-
         bodyHtml += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
         if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(line => bodyHtml += `<div class="info-row" style="color:#00a859">✔ ${line}</div>`);
         else bodyHtml += `<div class="info-row" style="color:#999">Gelecek ürün yok.</div>`;
@@ -745,7 +702,10 @@
 
         bodyHtml += `<div class="modal-section"><h4>👥 SİPARİŞLER (${totalReserved})</h4>`;
         if(item.satisListesi && item.satisListesi.length > 0) {
-            item.satisListesi.forEach(s => bodyHtml += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null, '${s.musteri.replace(/'/g, "\\'")}')">${s.musteri}</span></div>`);
+            item.satisListesi.forEach(s => {
+                // J sütunundaki müşterinin yanına C sütunundaki tarih parantez içinde eklendi
+                bodyHtml += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null, '${s.musteri.replace(/'/g, "\\'")}')">${s.musteri}</span> (${s.tarih || "-"})</div>`;
+            });
         } else bodyHtml += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
         bodyHtml += `</div>`;
 
@@ -754,63 +714,28 @@
     }
 
     function closeModal(e, id) { if(e.target.id === id) document.getElementById(id).style.display = 'none'; }
-
-    function downloadReport() {
-        const modal = document.getElementById('brand-select-modal');
-        modal.style.display = 'flex';
-    }
-
-    function closeBrandModal(marka) {
-        document.getElementById('brand-select-modal').style.display = 'none';
-        downloadReportForBrand(marka);
-    }
+    function downloadReport() { document.getElementById('brand-select-modal').style.display = 'flex'; }
+    function closeBrandModal(marka) { document.getElementById('brand-select-modal').style.display = 'none'; downloadReportForBrand(marka); }
 
     function downloadReportForBrand(secilenMarka) {
         if (!allData || allData.length === 0) return alert("Veri yok!");
         const header = ["STOK KODU", "STOK ADI", "MARKA", "KATEGORİ", "FİYAT", "FİİLİ STOK", "SATIŞ", "KALAN", "İTHALAT", "MANUEL SİPARİŞ", "AYLIK ORT.", "STOK ÖMRÜ (AY)", "SİPARİŞ ÖNERİSİ", "STOK DURUMU", "İTHALAT DETAY"];
-        function itemToRow(it) {
-            return [
-                it.stokKodu, it.stokAdi, it.marka, it.ozelKod5, it.fiyat,
-                it.fiili, it.satis, it.kalan, it.ithalat, it.manuelSiparis || 0,
-                it.avgSatis ? parseFloat(it.avgSatis.toFixed(2)) : 0,
-                it.stokOmru, it.ihtiyacAdet, it.stokDurumu, it.ithalatDetay || ''
-            ];
-        }
+        function itemToRow(it) { return [it.stokKodu, it.stokAdi, it.marka, it.ozelKod5, it.fiyat, it.fiili, it.satis, it.kalan, it.ithalat, it.manuelSiparis || 0, it.avgSatis ? parseFloat(it.avgSatis.toFixed(2)) : 0, it.stokOmru, it.ihtiyacAdet, it.stokDurumu, it.ithalatDetay || '']; }
         const wb = XLSX.utils.book_new();
-        function cleanCatName(cat) {
-            return cat.replace(/^\d+-/, '').substring(0, 31);
-        }
-        function addColoredSheet(wb, ws, sheetName, tabColor) {
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
-            // Set tab color via SheetView
-            if (!ws['!opts']) ws['!opts'] = {};
-            ws['!tabcolor'] = tabColor;
-        }
         const usedNames = new Set();
-        function uniqueName(base) {
-            let name = base; let c = 2;
-            while (usedNames.has(name)) { name = base.substring(0, 28) + c++; }
-            usedNames.add(name);
-            return name;
-        }
+        function uniqueName(base) { let name = base; let c = 2; while (usedNames.has(name)) { name = base.substring(0, 28) + c++; } usedNames.add(name); return name; }
+        
         [secilenMarka].forEach(brand => {
             const brandData = allData.filter(d => d.marka && d.marka.includes(brand));
             if (brandData.length === 0) return;
-            const tabColor = brand === 'PROFORCE' ? '00a859' : 'FF0000';
-            // Marka TÜM sayfası
             const wsAll = XLSX.utils.aoa_to_sheet([header, ...brandData.map(itemToRow)]);
-            wsAll['!tabcolor'] = tabColor;
-            const allName = uniqueName(brand === 'PROFORCE' ? 'PRO-TÜM' : 'PAN-TÜM');
-            XLSX.utils.book_append_sheet(wb, wsAll, allName);
-            // Kategori sayfaları
+            XLSX.utils.book_append_sheet(wb, wsAll, uniqueName(brand === 'PROFORCE' ? 'PRO-TÜM' : 'PAN-TÜM'));
             const categories = [...new Set(brandData.map(d => d.ozelKod5).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'tr', {numeric: true}));
             categories.forEach(cat => {
                 const catData = brandData.filter(d => d.ozelKod5 === cat);
                 if (catData.length === 0) return;
                 const ws = XLSX.utils.aoa_to_sheet([header, ...catData.map(itemToRow)]);
-                ws['!tabcolor'] = tabColor;
-                const sheetName = uniqueName(cleanCatName(cat));
-                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                XLSX.utils.book_append_sheet(wb, ws, uniqueName(cat.replace(/^\d+-/, '').substring(0, 31)));
             });
         });
         XLSX.writeFile(wb, `Analiz_Raporu_${new Date().toLocaleDateString('tr-TR')}.xlsx`);
