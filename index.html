@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stok & Sipariş Takip Pro</title>
+    <link rel="icon" type="image/png" href="https://i.ibb.co/kV5hBdbW/1.png">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -68,7 +69,7 @@
         .col-ithalat { background-color: #def8e1 !important; }
         /* MANUEL SİPARİŞ STİLİ */
         .col-manuel { background-color: #dff9fb !important; color: #2980b9; cursor: pointer; }
-        .col-avg { background-color: #e3f2fd !important; }
+        .manuel-input { width: 50px; border: 1px solid #2980b9; border-radius: 3px; text-align: center; font-size: 11px; font-weight: bold; color: #2980b9; background: #dff9fb; padding: 0; outline: none; }        .col-avg { background-color: #e3f2fd !important; }
         .col-omur { background-color: #f3e5f5 !important; }
         .col-oneri { background-color: #fff9c4 !important; }
         .col-stok-durumu { background-color: #f1f2f6 !important; font-size: 10px !important; }
@@ -185,21 +186,50 @@
         return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
     }
 
-    // --- MANUEL SİPARİŞ GÜNCELLEME ---
-    function updateManuelSiparis(stokKodu) {
+    // --- MANUEL SİPARİŞ: Ayrı localStorage key ile kalıcı saklama ---
+    let manuelSiparisMap = JSON.parse(localStorage.getItem('manuelSiparisData') || '{}');
+
+    function saveManuelSiparisMap() {
+        localStorage.setItem('manuelSiparisData', JSON.stringify(manuelSiparisMap));
+    }
+
+    function applyManuelSiparisToData() {
+        allData.forEach(item => {
+            if (manuelSiparisMap[item.stokKodu] !== undefined) {
+                item.manuelSiparis = manuelSiparisMap[item.stokKodu];
+            }
+        });
+    }
+
+    // --- MANUEL SİPARİŞ: Inline düzenleme (ekran açılmaz) ---
+    function editManuelSiparis(td, stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if (!item) return;
-        let yeniDeger = prompt(`${item.stokAdi} için manuel sipariş adedi:`, item.manuelSiparis || 0);
-        if (yeniDeger !== null) {
-            item.manuelSiparis = parseInt(yeniDeger) || 0;
-            saveAndRender();
+        const mevcutDeger = item.manuelSiparis || 0;
+        td.innerHTML = `<input class="manuel-input" type="number" value="${mevcutDeger}">`;
+        const input = td.querySelector('input');
+        input.focus();
+        input.select();
+        function kaydet() {
+            const yeni = parseInt(input.value) || 0;
+            item.manuelSiparis = yeni;
+            manuelSiparisMap[stokKodu] = yeni;
+            saveManuelSiparisMap();
+            localStorage.setItem('masterInventoryData', JSON.stringify(allData));
+            td.innerHTML = yeni;
         }
+        input.addEventListener('blur', kaydet);
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') input.blur();
+            if (e.key === 'Escape') { td.innerHTML = mevcutDeger; }
+        });
     }
 
     window.onload = function() {
         const savedData = localStorage.getItem('masterInventoryData');
         if (savedData) {
             allData = JSON.parse(savedData);
+            applyManuelSiparisToData();
             switchBrand(currentBrand);
         }
     };
@@ -349,6 +379,7 @@
             });
 
             allData = Array.from(masterMap.values());
+            applyManuelSiparisToData();
             saveAndRender();
         };
         reader.readAsBinaryString(file);
@@ -522,7 +553,7 @@
                 <td class="col-satis">${item.satis}</td>
                 <td class="col-kalan">${item.kalan}</td>
                 <td class="col-ithalat">${item.ithalat}</td>
-                <td class="col-manuel" onclick="updateManuelSiparis('${item.stokKodu}')">${item.manuelSiparis || 0}</td>
+                <td class="col-manuel" onclick="editManuelSiparis(this, '${item.stokKodu}')">${item.manuelSiparis || 0}</td>
                 <td class="col-avg">${item.avgSatis ? item.avgSatis.toFixed(2) : '0.00'}</td>
                 <td class="col-omur">${item.stokOmru} Ay ${omurSimge}</td>
                 <td class="col-oneri" style="color:${item.ihtiyacAdet > 0 ? 'red' : 'green'}">${item.ihtiyacAdet} Adet</td>
@@ -577,6 +608,7 @@
         bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis?.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>
             <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
+            <div class="info-row" style="color:#2980b9"><strong>MANUEL SİPARİŞ:</strong> ${item.manuelSiparis || 0}</div>
             ${depoHtml}
         </div>`;
 
@@ -598,14 +630,76 @@
     function closeModal(e, id) { if(e.target.id === id) document.getElementById(id).style.display = 'none'; }
 
     function downloadReport() {
+        const modal = document.getElementById('brand-select-modal');
+        modal.style.display = 'flex';
+    }
+
+    function closeBrandModal(marka) {
+        document.getElementById('brand-select-modal').style.display = 'none';
+        downloadReportForBrand(marka);
+    }
+
+    function downloadReportForBrand(secilenMarka) {
         if (!allData || allData.length === 0) return alert("Veri yok!");
-        const rows = allData.map(it => [it.stokKodu, it.stokAdi, it.fiili, it.avgSatis.toFixed(2), it.stokOmru, it.manuelSiparis || 0, it.stokDurumu]);
-        const ws = XLSX.utils.aoa_to_sheet([["KOD", "AD", "FIILI", "ORT", "OMUR", "MANUEL SIPARIS", "DURUM"], ...rows]);
+        const header = ["STOK KODU", "STOK ADI", "MARKA", "KATEGORİ", "FİYAT", "FİİLİ STOK", "SATIŞ", "KALAN", "İTHALAT", "MANUEL SİPARİŞ", "AYLIK ORT.", "STOK ÖMRÜ (AY)", "SİPARİŞ ÖNERİSİ", "STOK DURUMU", "İTHALAT DETAY"];
+        function itemToRow(it) {
+            return [
+                it.stokKodu, it.stokAdi, it.marka, it.ozelKod5, it.fiyat,
+                it.fiili, it.satis, it.kalan, it.ithalat, it.manuelSiparis || 0,
+                it.avgSatis ? parseFloat(it.avgSatis.toFixed(2)) : 0,
+                it.stokOmru, it.ihtiyacAdet, it.stokDurumu, it.ithalatDetay || ''
+            ];
+        }
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Rapor");
-        XLSX.writeFile(wb, `Analiz_${new Date().toLocaleDateString()}.xlsx`);
+        function cleanCatName(cat) {
+            return cat.replace(/^\d+-/, '').substring(0, 31);
+        }
+        function addColoredSheet(wb, ws, sheetName, tabColor) {
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            // Set tab color via SheetView
+            if (!ws['!opts']) ws['!opts'] = {};
+            ws['!tabcolor'] = tabColor;
+        }
+        const usedNames = new Set();
+        function uniqueName(base) {
+            let name = base; let c = 2;
+            while (usedNames.has(name)) { name = base.substring(0, 28) + c++; }
+            usedNames.add(name);
+            return name;
+        }
+        [secilenMarka].forEach(brand => {
+            const brandData = allData.filter(d => d.marka && d.marka.includes(brand));
+            if (brandData.length === 0) return;
+            const tabColor = brand === 'PROFORCE' ? '00a859' : 'FF0000';
+            // Marka TÜM sayfası
+            const wsAll = XLSX.utils.aoa_to_sheet([header, ...brandData.map(itemToRow)]);
+            wsAll['!tabcolor'] = tabColor;
+            const allName = uniqueName(brand === 'PROFORCE' ? 'PRO-TÜM' : 'PAN-TÜM');
+            XLSX.utils.book_append_sheet(wb, wsAll, allName);
+            // Kategori sayfaları
+            const categories = [...new Set(brandData.map(d => d.ozelKod5).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'tr', {numeric: true}));
+            categories.forEach(cat => {
+                const catData = brandData.filter(d => d.ozelKod5 === cat);
+                if (catData.length === 0) return;
+                const ws = XLSX.utils.aoa_to_sheet([header, ...catData.map(itemToRow)]);
+                ws['!tabcolor'] = tabColor;
+                const sheetName = uniqueName(cleanCatName(cat));
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            });
+        });
+        XLSX.writeFile(wb, `Analiz_Raporu_${new Date().toLocaleDateString('tr-TR')}.xlsx`);
     }
 </script>
+
+<div id="brand-select-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:10px; padding:30px; text-align:center; box-shadow:0 5px 20px rgba(0,0,0,0.3); min-width:280px;">
+        <div style="font-size:14px; font-weight:bold; margin-bottom:20px;">Hangi markanın raporunu indirmek istiyorsunuz?</div>
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <button onclick="closeBrandModal('PROFORCE')" style="background:#00a859; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer;">PROFORCE</button>
+            <button onclick="closeBrandModal('PANATTA')" style="background:#ff0000; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer;">PANATTA</button>
+        </div>
+        <div style="margin-top:12px;"><button onclick="document.getElementById('brand-select-modal').style.display='none'" style="background:#eee; border:none; padding:6px 16px; border-radius:6px; cursor:pointer; font-size:11px;">İptal</button></div>
+    </div>
+</div>
 </body>
 </html>
-
