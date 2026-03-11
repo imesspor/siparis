@@ -6,17 +6,14 @@
     <title>Stok & Sipariş Takip Pro</title>
     <link rel="icon" type="image/png" href="https://i.ibb.co/kV5hBdbW/1.png">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
     <style>
         :root {
             --proforce-color: #00a859;
             --panatta-color: #e63946;
             --bg-main: #f4f6f9;
             --bg-white: #ffffff;
-            --slicer-bg: #eef1f6;
             --border-color: #dde2ec;
             --border-light: #eaecf2;
             --accent-blue: #3b5bdb;
@@ -29,9 +26,7 @@
             --shadow-md: 0 4px 16px rgba(60,70,100,0.12);
             --radius: 8px;
         }
-
         * { box-sizing: border-box; }
-
         body { font-family: 'DM Sans', 'Segoe UI', sans-serif; background-color: var(--bg-main); margin: 0; padding: 6px; color: var(--text-dark); font-weight: 500; }
         .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 6px; background: var(--bg-white); padding: 6px 16px; border-radius: var(--radius); box-shadow: var(--shadow-sm); gap: 8px; border: 1px solid var(--border-color); }
         .upload-section { display: flex; align-items: center; gap: 8px; font-size: 11px; }
@@ -84,7 +79,8 @@
         .col-avg { background-color: #f0f7ff !important; }
         .col-omur { background-color: #faf0ff !important; }
         .col-oneri { background-color: #fffdf0 !important; }
-        .col-stok-durumu { background-color: #f8f9fc !important; font-size: 10px !important; }
+        .col-stok-durumu { background-color: #f8f9fc !important; font-size: 10px !important; cursor: pointer; }
+        .col-stok-durumu:hover { opacity: 0.8; text-decoration: underline; }
         .critical-row td { color: #e63946 !important; font-weight: 800 !important; }
         tr:hover td { background-color: #f5f8ff !important; }
         .w-sort { width: 25px; cursor: move; color: var(--border-color); text-align: center; font-size: 16px; }
@@ -94,7 +90,7 @@
         .cust-link:hover { color: var(--panatta-color); }
         .preview-modal { width: 90% !important; max-width: 800px; }
         .preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-        .preview-table th, .preview-table td { padding: 4px 4px; border: 1px solid var(--border-light); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+        .preview-table th, .preview-table td { padding: 4px; border: 1px solid var(--border-light); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .preview-table th { background: var(--bg-main); font-weight: 800; color: var(--text-mid); }
         .preview-table td:nth-child(3) { text-align: left; padding-left: 5px; }
         .preview-table th:nth-child(1) { width: 80px; }
@@ -112,81 +108,117 @@
         ::-webkit-scrollbar-track { background: var(--bg-main); }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #b0bbd4; }
+
+        /* ── Aylık Satış Modal ── */
+        .satis-modal-content { width: 420px !important; max-width: 95vw; }
+        .satis-urun-baslik { font-size: 11px; color: var(--text-mid); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+        .satis-ay-row { display: flex; align-items: center; padding: 5px 8px; margin-bottom: 3px; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 5px; font-size: 11px; gap: 8px; }
+        .satis-ay-label { color: var(--text-mid); font-weight: 700; min-width: 75px; }
+        .satis-bar-wrap { flex: 1; height: 6px; background: #e2e8f8; border-radius: 3px; overflow: hidden; }
+        .satis-bar-fill { height: 100%; background: linear-gradient(90deg, #3b5bdb, #748ffc); border-radius: 3px; }
+        .satis-ay-adet { font-weight: 800; color: var(--accent-blue); min-width: 70px; text-align: right; white-space: nowrap; }
+        .satis-ay-adet.sifir { color: #bbb; font-weight: 500; }
+        .satis-toplam { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin-top: 10px; background: var(--accent-blue); color: white; border-radius: 6px; font-size: 12px; font-weight: 800; }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="upload-section" style="flex:1;">
-            <img src="https://i.ibb.co/kV5hBdbW/1.png" alt="Logo" style="height:32px; width:auto; object-fit:contain; margin-right:6px;">
-            <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 VERİYİ YÜKLE</button>
-            <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
-            <span id="data-name" class="file-name-display"></span>
-            <button class="btn-action btn-report" onclick="downloadReport()">📥 ÜRÜN RAPORU AL</button>
-            <button class="btn-action btn-notes" onclick="downloadCurrentSort()">📤 BİLGİLERİ DIŞARI AKTAR</button>
-            <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 BİLGİLERİ İÇERİ AL</button>
-            <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
-            <span id="notes-name" class="file-name-display"></span>
+<div class="top-bar">
+    <div class="upload-section" style="flex:1;">
+        <img src="https://i.ibb.co/kV5hBdbW/1.png" alt="Logo" style="height:32px; width:auto; object-fit:contain; margin-right:6px;">
+        <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 VERİYİ YÜKLE</button>
+        <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
+        <span id="data-name" class="file-name-display"></span>
+        <button class="btn-action btn-report" onclick="downloadReport()">📥 ÜRÜN RAPORU AL</button>
+        <button class="btn-action btn-notes" onclick="downloadCurrentSort()">📤 BİLGİLERİ DIŞARI AKTAR</button>
+        <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 BİLGİLERİ İÇERİ AL</button>
+        <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
+        <span id="notes-name" class="file-name-display"></span>
+    </div>
+    <div class="brand-tabs">
+        <button id="btn-proforce" class="tab-btn proforce active" onclick="switchBrand('PROFORCE')">PROFORCE</button>
+        <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
+    </div>
+</div>
+
+<div class="slicer-wrapper">
+    <div id="slicer-area"></div>
+</div>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th style="width:25px;">#</th>
+                <th style="width:85px;">STOK KODU</th>
+                <th style="width:auto;">STOK ADI</th>
+                <th style="width:70px;">FİYAT</th>
+                <th class="col-fiili" style="width:55px;">FİİLİ</th>
+                <th class="col-satis" style="width:55px;">SATIŞ</th>
+                <th class="col-kalan" style="width:55px;">KALAN</th>
+                <th class="col-ithalat" style="width:60px;">İTHALAT</th>
+                <th class="col-manuel" style="width:70px;">SİPARİŞ</th>
+                <th class="col-avg" style="width:80px;">AYLIK ORT.</th>
+                <th class="col-omur" style="width:80px;">STOK ÖMRÜ</th>
+                <th class="col-oneri" style="width:80px;">SİP. ÖNERİ</th>
+                <th class="col-stok-durumu" style="width:120px;" title="Aylık satış geçmişi için tıklayın">STOK DURUMU 📅</th>
+            </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
+</div>
+
+<!-- Ürün Detay Modal -->
+<div id="info-modal" class="modal-overlay" onclick="closeModal(event,'info-modal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <span id="modal-title">Ürün Detayı</span>
+            <span class="modal-close" onclick="document.getElementById('info-modal').style.display='none'">&times;</span>
         </div>
+        <div id="modal-body"></div>
+    </div>
+</div>
 
-        <div class="brand-tabs">
-            <button id="btn-proforce" class="tab-btn proforce active" onclick="switchBrand('PROFORCE')">PROFORCE</button>
-            <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
+<!-- Müşteri Önizleme Modal -->
+<div id="preview-modal" class="modal-overlay" onclick="closeModal(event,'preview-modal')">
+    <div class="modal-content preview-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <span id="preview-title">Müşteri Sipariş Önizleme</span>
+            <span class="modal-close" onclick="document.getElementById('preview-modal').style.display='none'">&times;</span>
         </div>
+        <div id="preview-body"></div>
     </div>
+</div>
 
-    <div class="slicer-wrapper">
-        <div id="slicer-area"></div>
-    </div>
-
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 25px;">#</th>
-                    <th style="width: 85px;">STOK KODU</th>
-                    <th style="width: auto;">STOK ADI</th>
-                    <th style="width: 70px;">FİYAT</th>
-                    <th class="col-fiili" style="width: 55px;">FİİLİ</th>
-                    <th class="col-satis" style="width: 55px;">SATIŞ</th>
-                    <th class="col-kalan" style="width: 55px;">KALAN</th>
-                    <th class="col-ithalat" style="width: 60px;">İTHALAT</th>
-                    <th class="col-manuel" style="width: 70px;">SİPARİŞ</th>
-                    <th class="col-avg" style="width: 80px;">AYLIK ORT.</th>
-                    <th class="col-omur" style="width: 80px;">STOK ÖMRÜ</th>
-                    <th class="col-oneri" style="width: 80px;">SİP. ÖNERİ</th>
-                    <th class="col-stok-durumu" style="width: 120px;">STOK DURUMU</th>
-                </tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-        </table>
-    </div>
-
-    <div id="info-modal" class="modal-overlay" onclick="closeModal(event, 'info-modal')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <span id="modal-title">Ürün Detayı</span>
-                <span class="modal-close" onclick="document.getElementById('info-modal').style.display='none'">&times;</span>
-            </div>
-            <div id="modal-body"></div>
+<!-- Aylık Satış Geçmişi Modal -->
+<div id="satis-modal" class="modal-overlay" onclick="closeModal(event,'satis-modal')">
+    <div class="modal-content satis-modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <span id="satis-modal-title">📅 Aylık Satış Geçmişi</span>
+            <span class="modal-close" onclick="document.getElementById('satis-modal').style.display='none'">&times;</span>
         </div>
+        <div id="satis-modal-body"></div>
     </div>
-
-    <div id="preview-modal" class="modal-overlay" onclick="closeModal(event, 'preview-modal')">
-        <div class="modal-content preview-modal" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <span id="preview-title">Müşteri Sipariş Önizleme</span>
-                <span class="modal-close" onclick="document.getElementById('preview-modal').style.display='none'">&times;</span>
-            </div>
-            <div id="preview-body"></div>
-        </div>
-    </div>
+</div>
 
 <script>
-    let allData = [];
-    let currentBrand = 'PROFORCE'; 
+    let allData      = [];
+    let currentBrand = 'PROFORCE';
     let currentFilter = 'HEPSİ';
     let sortableRows = null;
+    // stokKodu -> [ {ay:'2024/03', adet:5}, ... ]
+    let aylikSatisMap = new Map();
+
+    // Excel sütun harfi üret: 0=A,1=B,...,25=Z,26=AA,27=AB,...
+    function colLetter(idx) {
+        let s = '';
+        let n = idx;
+        while (n >= 0) {
+            s = String.fromCharCode(65 + (n % 26)) + s;
+            n = Math.floor(n / 26) - 1;
+        }
+        return s;
+    }
 
     function formatCurrency(val) {
         if (isNaN(val) || val === null || val === '') return '0,00';
@@ -194,13 +226,13 @@
     }
 
     function excelDateToJS(serial) {
-        if(!serial || isNaN(serial)) return serial || "";
-        let date = new Date(Math.round((serial - 25569) * 86400 * 1000));
-        return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+        if(!serial || isNaN(serial)) return serial || '';
+        const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+        return `${date.getDate().toString().padStart(2,'0')}.${(date.getMonth()+1).toString().padStart(2,'0')}.${date.getFullYear()}`;
     }
 
     let manuelSiparisMap = JSON.parse(localStorage.getItem('manuelSiparisData') || '{}');
-    let slicerOrderMap = JSON.parse(localStorage.getItem('slicerOrderData') || '{}');
+    let slicerOrderMap   = JSON.parse(localStorage.getItem('slicerOrderData')   || '{}');
 
     function saveSlicerOrder(brand, orderedCats) {
         slicerOrderMap[brand] = orderedCats;
@@ -215,9 +247,7 @@
         return ordered;
     }
 
-    function cleanLabel(cat) {
-        return cat.replace(/^\d+-/, '');
-    }
+    function cleanLabel(cat) { return cat.replace(/^\d+-/, ''); }
 
     function saveManuelSiparisMap() {
         localStorage.setItem('manuelSiparisData', JSON.stringify(manuelSiparisMap));
@@ -225,9 +255,8 @@
 
     function applyManuelSiparisToData() {
         allData.forEach(item => {
-            if (manuelSiparisMap[item.stokKodu] !== undefined) {
+            if (manuelSiparisMap[item.stokKodu] !== undefined)
                 item.manuelSiparis = manuelSiparisMap[item.stokKodu];
-            }
         });
     }
 
@@ -237,8 +266,7 @@
         const mevcutDeger = item.manuelSiparis || 0;
         td.innerHTML = `<input class="manuel-input" type="number" value="${mevcutDeger}">`;
         const input = td.querySelector('input');
-        input.focus();
-        input.select();
+        input.focus(); input.select();
         function kaydet() {
             const yeni = parseInt(input.value) || 0;
             item.manuelSiparis = yeni;
@@ -248,13 +276,19 @@
             td.innerHTML = yeni;
         }
         input.addEventListener('blur', kaydet);
-        input.addEventListener('keydown', function(e) {
+        input.addEventListener('keydown', e => {
             if (e.key === 'Enter') input.blur();
-            if (e.key === 'Escape') { td.innerHTML = mevcutDeger; }
+            if (e.key === 'Escape') td.innerHTML = mevcutDeger;
         });
     }
 
     window.onload = function() {
+        // Aylık satış haritasını geri yükle
+        try {
+            const raw = localStorage.getItem('aylikSatisData');
+            if (raw) aylikSatisMap = new Map(Object.entries(JSON.parse(raw)));
+        } catch(e) { aylikSatisMap = new Map(); }
+
         const savedData = localStorage.getItem('masterInventoryData');
         if (savedData) {
             allData = JSON.parse(savedData);
@@ -263,154 +297,225 @@
         }
     };
 
+    // =============================================
+    // EXCEL YÜKLEME
+    // =============================================
     document.getElementById('excel-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
         document.getElementById('data-name').textContent = file.name;
         const reader = new FileReader();
         reader.onload = function(evt) {
-            const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-            const wsStok = workbook.Sheets["ANLIK_STOK_DATA"];
-            if(!wsStok) return alert("ANLIK_STOK_DATA sayfası bulunamadı!");
-            const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: "A", defval: ""});
-            
-            const wsGorsel = workbook.Sheets["GÖRSEL"];
+            const wb = XLSX.read(evt.target.result, {type: 'binary'});
+
+            // ANLIK_STOK_DATA
+            const wsStok = wb.Sheets['ANLIK_STOK_DATA'];
+            if(!wsStok) return alert('ANLIK_STOK_DATA sayfası bulunamadı!');
+            const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: 'A', defval: ''});
+
+            // GÖRSEL
             const resimMap = new Map();
+            const wsGorsel = wb.Sheets['GÖRSEL'];
             if(wsGorsel) {
-                const gorselJson = XLSX.utils.sheet_to_json(wsGorsel, {header: "A", defval: ""});
-                gorselJson.slice(1).forEach(row => {
-                    const gKodu = String(row.A || '').trim();
-                    const gLink = String(row.C || '').trim();
-                    if(gKodu) resimMap.set(gKodu, gLink);
+                XLSX.utils.sheet_to_json(wsGorsel, {header: 'A', defval: ''}).slice(1).forEach(row => {
+                    const k = String(row.A || '').trim();
+                    const v = String(row.C || '').trim();
+                    if(k) resimMap.set(k, v);
                 });
             }
 
-            const wsGecmis = workbook.Sheets["GEÇMİŞ SATIŞ"];
+            // ─────────────────────────────────────────────
+            // GEÇMİŞ SATIŞ
+            // Satır 1 (index 0): Başlıklar — A=Stok Kodu, B=Stok Açıklaması,
+            //                               C=2024/03, D=2024/04, ..., Z, AA, ...
+            // Satır 2+ (index 1+): Veriler
+            // ─────────────────────────────────────────────
             const satisAnalizMap = new Map();
+            aylikSatisMap = new Map();
+
+            const wsGecmis = wb.Sheets['GEÇMİŞ SATIŞ'];
             if(wsGecmis) {
-                const gecmisJson = XLSX.utils.sheet_to_json(wsGecmis, {header: "A", defval: 0});
-                gecmisJson.slice(1).forEach(row => {
+                // Satır 6 (index=5) = başlık (C6=2024/03, D6=2024/04 ...)
+                // Satır 7 (index=6) = ilk veri satırı, A7 = stok kodu referans
+                const allRowsStr = XLSX.utils.sheet_to_json(wsGecmis, {header: 'A', defval: ''});
+                const allRowsNum = XLSX.utils.sheet_to_json(wsGecmis, {header: 'A', defval: 0});
+
+                const BASLIK_IDX = 5; // 6. satır (0-indexed)
+                const VERI_IDX   = 6; // 7. satır (0-indexed)
+
+                const hRow = allRowsStr[BASLIK_IDX] || {};
+
+                // Ay başlığını düzgün formata çevir
+                // Excel'de sayısal tarih (ör: 45717) veya metin (ör: "2024/03") olabilir
+                function formatAyBaslik(raw) {
+                    const s = String(raw || '').trim();
+                    if(s === '' || s === '0') return '';
+                    // Zaten 2024/03 formatındaysa direkt döndür
+                    if(/^\d{4}\/\d{2}$/.test(s) || /^\d{4}-\d{2}$/.test(s)) return s.replace('-','/');
+                    // Sadece sayıysa Excel serial date olabilir — XLSX bunu zaten string'e çeviriyor
+                    // Ama bazen yıl/ay bilgisi kaybolup sadece ay numarası kalabilir
+                    // Bu durumda ham sayıyı olduğu gibi göster ama tarih formatına çevir
+                    const num = parseFloat(s);
+                    if(!isNaN(num) && num > 0 && num < 13) {
+                        // Sadece ay numarası gelmiş — şimdilik olduğu gibi bırak
+                        return s;
+                    }
+                    // Excel serial date (40000+) ise tarihe çevir
+                    if(!isNaN(num) && num > 40000) {
+                        const d = new Date(Math.round((num - 25569) * 86400 * 1000));
+                        const yil = d.getFullYear();
+                        const ay  = String(d.getMonth() + 1).padStart(2, '0');
+                        return yil + '/' + ay;
+                    }
+                    return s;
+                }
+
+                // C'den başlayarak dolu olan tüm ay sütunlarını al
+                // Ayrıca ham cell değerini de kontrol et (sayısal tarih için)
+                const ws = wsGecmis;
+                const ayKolonlari = [];
+                for(let i = 2; i <= 200; i++) {
+                    const harf   = colLetter(i);
+                    // Önce ham cell'e bak (sayısal tarih hücreleri için)
+                    const cellAddr = harf + (BASLIK_IDX + 1); // Excel 1-indexed
+                    const cell = ws[cellAddr];
+                    let baslik = '';
+                    if(cell) {
+                        if(cell.t === 'n' && cell.v > 40000) {
+                            // Sayısal tarih
+                            baslik = formatAyBaslik(cell.v);
+                        } else if(cell.w) {
+                            // Hücrenin görüntülenen değeri (formatted)
+                            baslik = formatAyBaslik(cell.w);
+                        } else {
+                            baslik = formatAyBaslik(cell.v);
+                        }
+                    } else {
+                        baslik = formatAyBaslik(hRow[harf]);
+                    }
+                    if(baslik === '') {
+                        if(i > 27) break; // AA sonrası boşsa dur
+                        continue;
+                    }
+                    ayKolonlari.push({ harf, baslik });
+                }
+
+                // 7. satırdan (index=6) itibaren veri oku, A sütunu = stok kodu
+                allRowsNum.slice(VERI_IDX).forEach(row => {
                     const kodu = String(row.A || '').trim();
                     if(!kodu) return;
-                    let satislar = [];
-                    let toplamSatisVaktiBoyunca = 0;
-                    let baslangicBulundu = false;
-                    for(let i = 2; i <= 26; i++) {
-                        let sutunHarfi = i <= 25 ? String.fromCharCode(65 + i) : "AA";
-                        let val = parseFloat(row[sutunHarfi]) || 0;
-                        toplamSatisVaktiBoyunca += val;
-                        if(val > 0) baslangicBulundu = true;
-                        if(baslangicBulundu) satislar.push(val);
-                    }
+
+                    let satislar  = [];
+                    let toplamTum = 0;
+                    let basladi   = false;
+                    const detay   = [];
+
+                    ayKolonlari.forEach(({ harf, baslik }) => {
+                        const val = Math.round(parseFloat(row[harf]) || 0);
+                        toplamTum += val;
+                        if(val > 0) basladi = true;
+                        if(basladi) satislar.push(val);
+                        detay.push({ ay: baslik, adet: val });
+                    });
+
+                    aylikSatisMap.set(kodu, detay);
+
                     if(satislar.length > 0) {
-                        const toplamSatis = satislar.reduce((a, b) => a + b, 0);
-                        satisAnalizMap.set(kodu, { 
-                            ortalama: toplamSatis / satislar.length, 
-                            aktifAy: satislar.length,
-                            totalSatis: toplamSatisVaktiBoyunca 
-                        });
+                        const top = satislar.reduce((a,b) => a+b, 0);
+                        satisAnalizMap.set(kodu, { ortalama: top / satislar.length, aktifAy: satislar.length, totalSatis: toplamTum });
                     } else {
                         satisAnalizMap.set(kodu, { ortalama: 0, aktifAy: 0, totalSatis: 0 });
                     }
                 });
+
+                // localStorage'a kaydet
+                const obj = {};
+                aylikSatisMap.forEach((v,k) => { obj[k] = v; });
+                localStorage.setItem('aylikSatisData', JSON.stringify(obj));
             }
 
-            const wsSiparis = workbook.Sheets["ALINAN SİPARİŞLER DETAY"];
+            // ALINAN SİPARİŞLER DETAY
             const siparisMap = new Map();
+            const wsSiparis = wb.Sheets['ALINAN SİPARİŞLER DETAY'];
             if(wsSiparis) {
-                const siparisJson = XLSX.utils.sheet_to_json(wsSiparis, {header: "A", defval: ""});
-                siparisJson.slice(1).forEach(row => {
-                    const sKodu = String(row.L || '').trim();
+                XLSX.utils.sheet_to_json(wsSiparis, {header: 'A', defval: ''}).slice(1).forEach(row => {
+                    const sKodu    = String(row.L || '').trim();
                     const sMusteri = String(row.J || '').trim();
-                    const sAdet = String(row.R || '').trim();
+                    const sAdet    = String(row.R || '').trim();
                     // J sütunundaki müşteriye göre C sütunundan tarih bilgisini çekiyoruz
-                    const sTarih = excelDateToJS(row.C); 
-                    
+                    const sTarih   = excelDateToJS(row.C);
                     if(sKodu && sMusteri) {
                         if(!siparisMap.has(sKodu)) siparisMap.set(sKodu, []);
-                        siparisMap.get(sKodu).push({ 
-                            musteri: sMusteri, 
-                            adet: sAdet, 
-                            tarih: sTarih,
-                            rawDate: row.C 
-                        });
+                        siparisMap.get(sKodu).push({ musteri: sMusteri, adet: sAdet, tarih: sTarih, rawDate: row.C });
                     }
                 });
-                siparisMap.forEach((list) => {
-                    list.sort((a, b) => (a.rawDate || 0) - (b.rawDate || 0));
-                });
+                siparisMap.forEach(list => list.sort((a,b) => (a.rawDate||0)-(b.rawDate||0)));
             }
 
-            const wsVerilen = workbook.Sheets["VERİLEN SİPARİŞ DETAY"];
+            // VERİLEN SİPARİŞ DETAY
             const ithalatMap = new Map();
+            const wsVerilen = wb.Sheets['VERİLEN SİPARİŞ DETAY'];
             if(wsVerilen) {
-                const verilenJson = XLSX.utils.sheet_to_json(wsVerilen, {header: "A", defval: ""});
-                const gruplanmisIthalat = {}; 
-                verilenJson.slice(1).forEach(row => {
-                    const vKodu = String(row.M || '').trim();
-                    const vTarih = excelDateToJS(row.R);
+                const gruplanmis = {};
+                XLSX.utils.sheet_to_json(wsVerilen, {header: 'A', defval: ''}).slice(1).forEach(row => {
+                    const vKodu   = String(row.M || '').trim();
+                    const vTarih  = excelDateToJS(row.R);
                     const vMiktar = parseInt(row.S) || 0;
                     if(vKodu && vTarih) {
                         const key = `${vKodu}_${vTarih}`;
-                        if(!gruplanmisIthalat[key]) gruplanmisIthalat[key] = { kodu: vKodu, tarih: vTarih, miktar: 0 };
-                        gruplanmisIthalat[key].miktar += vMiktar;
+                        if(!gruplanmis[key]) gruplanmis[key] = { kodu: vKodu, tarih: vTarih, miktar: 0 };
+                        gruplanmis[key].miktar += vMiktar;
                     }
                 });
-                Object.values(gruplanmisIthalat).forEach(item => {
+                Object.values(gruplanmis).forEach(item => {
                     if(!ithalatMap.has(item.kodu)) ithalatMap.set(item.kodu, []);
                     ithalatMap.get(item.kodu).push(`${item.miktar} Adet → ${item.tarih}`);
                 });
             }
 
-            const uniqueIncomingData = new Map();
+            // Ana veri oluştur
+            const uniqueIncoming = new Map();
             stokJson.slice(1).forEach(r => {
                 const kodu = String(r.A || '').trim();
-                if (kodu === "" || kodu.toLowerCase() === "stok kodu") return;
-                const analiz = satisAnalizMap.get(kodu) || { ortalama: 0, aktifAy: 0, totalSatis: 0 };
-                const fiili = parseInt(r.H) || 0;
-                const ithalat = parseInt(r.K) || 0;
-                const eldekiToplam = fiili + ithalat;
-                const hedefStok = analiz.ortalama * 5;
-                
-                let durum = "DİĞER";
-                let renk = "#333";
-                if(fiili > 0 && analiz.totalSatis === 0) { durum = "🛑 DURAN STOK"; renk = "#e74c3c"; }
-                else if(analiz.ortalama > 5) { durum = "⭐ HIZLI SİRKÜLASYON"; renk = "#2ecc71"; }
-                else if(analiz.ortalama >= 2) { durum = "📈 NORMAL"; renk = "#3498db"; }
-                else if(analiz.ortalama > 0) { durum = "⏳ YAVAŞ HAREKET"; renk = "#f39c12"; }
+                if (!kodu || kodu.toLowerCase() === 'stok kodu') return;
+                const analiz       = satisAnalizMap.get(kodu) || { ortalama: 0, aktifAy: 0, totalSatis: 0 };
+                const fiili        = parseInt(r.H) || 0;
+                const ithalat      = parseInt(r.K) || 0;
+                const eldeki       = fiili + ithalat;
+                const hedef        = analiz.ortalama * 5;
 
-                uniqueIncomingData.set(kodu, {
+                let durum = 'DİĞER', renk = '#333';
+                if(fiili > 0 && analiz.totalSatis === 0)  { durum = '🛑 DURAN STOK';        renk = '#e74c3c'; }
+                else if(analiz.ortalama > 5)              { durum = '⭐ HIZLI SİRKÜLASYON'; renk = '#2ecc71'; }
+                else if(analiz.ortalama >= 2)             { durum = '📈 NORMAL';             renk = '#3498db'; }
+                else if(analiz.ortalama > 0)              { durum = '⏳ YAVAŞ HAREKET';      renk = '#f39c12'; }
+
+                uniqueIncoming.set(kodu, {
                     stokKodu: kodu,
-                    stokAdi: String(r.B || ''),
-                    marka: String(r.C || '').toUpperCase(),
+                    stokAdi:  String(r.B || ''),
+                    marka:    String(r.C || '').toUpperCase(),
                     ozelKod5: String(r.F || 'DİĞER'),
-                    fiyat: parseFloat(String(r.G).replace(',', '.')) || 0,
-                    fiili: fiili,
-                    satis: parseInt(r.I) || 0,
-                    kalan: parseInt(r.J) || 0,
-                    ithalat: ithalat,
-                    resim: resimMap.get(kodu) || '', 
-                    ithalatDetay: (ithalatMap.get(kodu) || []).join('\n'), 
+                    fiyat:    parseFloat(String(r.G).replace(',','.')) || 0,
+                    fiili, satis: parseInt(r.I)||0, kalan: parseInt(r.J)||0, ithalat,
+                    resim:        resimMap.get(kodu) || '',
+                    ithalatDetay: (ithalatMap.get(kodu)||[]).join('\n'),
                     satisListesi: siparisMap.get(kodu) || [],
-                    depoL: parseInt(r.L) || 0,
-                    depoN: parseInt(r.N) || 0,
-                    depoO: parseInt(r.O) || 0,
-                    depoP: parseInt(r.P) || 0,
-                    avgSatis: analiz.ortalama,
+                    depoL: parseInt(r.L)||0, depoN: parseInt(r.N)||0,
+                    depoO: parseInt(r.O)||0, depoP: parseInt(r.P)||0,
+                    avgSatis:   analiz.ortalama,
                     totalSatis: analiz.totalSatis,
-                    stokOmru: analiz.ortalama > 0 ? (eldekiToplam / analiz.ortalama).toFixed(1) : "0.0",
-                    ihtiyacAdet: hedefStok > eldekiToplam ? Math.ceil(hedefStok - eldekiToplam) : 0,
-                    stokDurumu: durum,
-                    stokDurumuRenk: renk
+                    stokOmru:   analiz.ortalama > 0 ? (eldeki / analiz.ortalama).toFixed(1) : '0.0',
+                    ihtiyacAdet: hedef > eldeki ? Math.ceil(hedef - eldeki) : 0,
+                    stokDurumu: durum, stokDurumuRenk: renk
                 });
             });
 
             const masterMap = new Map(allData.map(item => [item.stokKodu, item]));
-            uniqueIncomingData.forEach((newItem, kodu) => {
+            uniqueIncoming.forEach((newItem, kodu) => {
                 if (masterMap.has(kodu)) {
-                    const existingItem = masterMap.get(kodu);
-                    newItem.manuelSiparis = existingItem.manuelSiparis || 0;
-                    Object.assign(existingItem, newItem);
+                    const ex = masterMap.get(kodu);
+                    newItem.manuelSiparis = ex.manuelSiparis || 0;
+                    Object.assign(ex, newItem);
                 } else {
                     newItem.manuelSiparis = 0;
                     masterMap.set(kodu, newItem);
@@ -430,43 +535,43 @@
         const reader = new FileReader();
         reader.onload = function(evt) {
             const workbook = XLSX.read(evt.target.result, {type: 'binary'});
-            const itemSheet = workbook.Sheets["Urun_Duzen_Ve_Siparis"];
+            const itemSheet = workbook.Sheets['Urun_Duzen_Ve_Siparis'];
             if(itemSheet) {
                 const itemData = XLSX.utils.sheet_to_json(itemSheet);
                 const orderMap = new Map();
                 itemData.forEach(row => {
-                    const kodu = String(row["STOK KODU"] || "").trim();
-                    const sira = row["SIRA"];
-                    const mSiparis = row["MANUEL_SIPARIS"] || 0;
+                    const kodu = String(row['STOK KODU'] || '').trim();
+                    const sira = row['SIRA'];
+                    const mSiparis = row['MANUEL_SIPARIS'] || 0;
                     if(kodu) {
                         orderMap.set(kodu, { sira: parseInt(sira), manuel: parseInt(mSiparis) });
                         manuelSiparisMap[kodu] = parseInt(mSiparis);
                     }
                 });
-                allData.sort((a, b) => {
-                    const infoA = orderMap.get(a.stokKodu);
-                    const infoB = orderMap.get(b.stokKodu);
-                    return (infoA ? infoA.sira : 99999) - (infoB ? infoB.sira : 99999);
+                allData.sort((a,b) => {
+                    const iA = orderMap.get(a.stokKodu);
+                    const iB = orderMap.get(b.stokKodu);
+                    return (iA ? iA.sira : 99999) - (iB ? iB.sira : 99999);
                 });
                 allData.forEach(item => {
                     const info = orderMap.get(item.stokKodu);
                     if(info) item.manuelSiparis = info.manuel;
                 });
             }
-            const slicerSheet = workbook.Sheets["Kategori_Siralamasi"];
+            const slicerSheet = workbook.Sheets['Kategori_Siralamasi'];
             if(slicerSheet) {
                 const slicerData = XLSX.utils.sheet_to_json(slicerSheet);
-                const newSlicerMap = {};
+                const newMap = {};
                 slicerData.forEach(row => {
-                    if(!newSlicerMap[row.MARKA]) newSlicerMap[row.MARKA] = [];
-                    newSlicerMap[row.MARKA].push(row.KATEGORI);
+                    if(!newMap[row.MARKA]) newMap[row.MARKA] = [];
+                    newMap[row.MARKA].push(row.KATEGORI);
                 });
-                slicerOrderMap = newSlicerMap;
+                slicerOrderMap = newMap;
                 localStorage.setItem('slicerOrderData', JSON.stringify(slicerOrderMap));
             }
             saveManuelSiparisMap();
             saveAndRender();
-            alert("Tüm verileriniz başarıyla diğer bilgisayardan aktarıldı!");
+            alert('Tüm verileriniz başarıyla diğer bilgisayardan aktarıldı!');
         };
         reader.readAsBinaryString(file);
     });
@@ -478,7 +583,7 @@
     }
 
     function switchBrand(brand) {
-        currentBrand = brand;
+        currentBrand  = brand;
         currentFilter = 'HEPSİ';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`btn-${brand.toLowerCase()}`).classList.add('active');
@@ -489,42 +594,41 @@
     function initSlicers() {
         const container = document.getElementById('slicer-area');
         let rawCats = [...new Set(allData.filter(d => d.marka && d.marka.includes(currentBrand)).map(d => d.ozelKod5))];
-        rawCats.sort((a, b) => a.localeCompare(b, 'tr', {numeric: true}));
+        rawCats.sort((a,b) => a.localeCompare(b,'tr',{numeric:true}));
         let categories = getOrderedCategories(currentBrand, rawCats);
 
-        container.innerHTML = `<div class="slicer-btn ${currentFilter === 'HEPSİ' ? 'active' : ''}" onclick="filterCategory('HEPSİ')" data-cat="HEPSİ">HEPSİ</div>` +
-        categories.map(cat => `<div class="slicer-btn ${currentFilter === cat ? 'active' : ''}" onclick="filterCategory('${cat}')" data-cat="${cat}" draggable="true" style="cursor:grab;">${cleanLabel(cat)}</div>`).join('') + 
-        `<div class="search-container-in-slicer">
-            <input type="text" id="search-input" class="search-input" placeholder="URUN ARA..." oninput="renderTable()">
-            <button class="btn-customer-trigger" onclick="toggleCustomerDropdown(event)">👥 MÜŞTERİLER</button>
-            <div id="customer-dropdown" class="customer-dropdown">
-                <div class="cust-search-wrapper">
-                    <input type="text" id="cust-search-input" class="cust-inner-search" placeholder="Müşteri veya Sipariş Ara..." oninput="filterCustomers()">
+        container.innerHTML =
+            `<div class="slicer-btn ${currentFilter==='HEPSİ'?'active':''}" onclick="filterCategory('HEPSİ')" data-cat="HEPSİ">HEPSİ</div>` +
+            categories.map(cat =>
+                `<div class="slicer-btn ${currentFilter===cat?'active':''}" onclick="filterCategory('${cat}')" data-cat="${cat}" draggable="true" style="cursor:grab;">${cleanLabel(cat)}</div>`
+            ).join('') +
+            `<div class="search-container-in-slicer">
+                <input type="text" id="search-input" class="search-input" placeholder="ÜRÜN ARA..." oninput="renderTable()">
+                <button class="btn-customer-trigger" onclick="toggleCustomerDropdown(event)">👥 MÜŞTERİLER</button>
+                <div id="customer-dropdown" class="customer-dropdown">
+                    <div class="cust-search-wrapper">
+                        <input type="text" id="cust-search-input" class="cust-inner-search" placeholder="Müşteri veya Sipariş Ara..." oninput="filterCustomers()">
+                    </div>
+                    <div id="customer-list-area" class="customer-list-area"></div>
                 </div>
-                <div id="customer-list-area" class="customer-list-area"></div>
-            </div>
-        </div>`;
+            </div>`;
 
         let dragSrc = null;
-        const btns = container.querySelectorAll('.slicer-btn[draggable="true"]');
-        btns.forEach(btn => {
-            btn.addEventListener('dragstart', function(e) { dragSrc = this; this.style.opacity = '0.5'; });
-            btn.addEventListener('dragend', function() {
+        container.querySelectorAll('.slicer-btn[draggable="true"]').forEach(btn => {
+            btn.addEventListener('dragstart', function() { dragSrc = this; this.style.opacity = '0.5'; });
+            btn.addEventListener('dragend',   function() {
                 this.style.opacity = '1';
                 const newOrder = [...container.querySelectorAll('.slicer-btn[data-cat]')].map(b => b.getAttribute('data-cat')).filter(c => c !== 'HEPSİ');
                 saveSlicerOrder(currentBrand, newOrder);
             });
-            btn.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderStyle = 'dashed'; });
-            btn.addEventListener('dragleave', function() { this.style.borderStyle = ''; });
-            btn.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.style.borderStyle = '';
+            btn.addEventListener('dragover',  function(e) { e.preventDefault(); this.style.borderStyle = 'dashed'; });
+            btn.addEventListener('dragleave', function()  { this.style.borderStyle = ''; });
+            btn.addEventListener('drop',      function(e) {
+                e.preventDefault(); this.style.borderStyle = '';
                 if (dragSrc && dragSrc !== this) {
-                    const allBtns = [...container.querySelectorAll('.slicer-btn[draggable="true"]')];
-                    const srcIdx = allBtns.indexOf(dragSrc);
-                    const tgtIdx = allBtns.indexOf(this);
-                    if (srcIdx < tgtIdx) this.after(dragSrc);
-                    else this.before(dragSrc);
+                    const all = [...container.querySelectorAll('.slicer-btn[draggable="true"]')];
+                    if (all.indexOf(dragSrc) > all.indexOf(this)) this.before(dragSrc);
+                    else this.after(dragSrc);
                 }
             });
         });
@@ -532,147 +636,174 @@
 
     function toggleCustomerDropdown(e) {
         e.stopPropagation();
-        const dropdown = document.getElementById('customer-dropdown');
-        dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
-        if(dropdown.style.display === 'flex') {
-            filterCustomers();
-            document.getElementById('cust-search-input').focus();
-        }
+        const dd = document.getElementById('customer-dropdown');
+        dd.style.display = dd.style.display === 'flex' ? 'none' : 'flex';
+        if(dd.style.display === 'flex') { filterCustomers(); document.getElementById('cust-search-input').focus(); }
     }
 
     function filterCustomers() {
         const searchTerm = document.getElementById('cust-search-input').value.toLowerCase();
-        const listArea = document.getElementById('customer-list-area');
+        const listArea   = document.getElementById('customer-list-area');
         const customerSet = new Set();
-        allData.forEach(item => {
-            if(item.satisListesi) item.satisListesi.forEach(s => customerSet.add(s.musteri));
-        });
+        allData.forEach(item => { if(item.satisListesi) item.satisListesi.forEach(s => customerSet.add(s.musteri)); });
         const filtered = Array.from(customerSet).filter(c => c.toLowerCase().includes(searchTerm)).sort();
         listArea.innerHTML = filtered.map(c => `
             <div class="customer-item">
                 <span class="customer-name">${c}</span>
                 <div class="cust-actions">
-                    <button class="btn-cust-preview" onclick="previewCustomerList(event, '${c.replace(/'/g, "\\'")}')">ÖNİZLEME</button>
-                    <button class="btn-cust-download" onclick="downloadCustomerList(event, '${c.replace(/'/g, "\\'")}')">İNDİR</button>
+                    <button class="btn-cust-preview" onclick="previewCustomerList(event,'${c.replace(/'/g,"\\'")}')">ÖNİZLEME</button>
+                    <button class="btn-cust-download" onclick="downloadCustomerList(event,'${c.replace(/'/g,"\\'")}')">İNDİR</button>
                 </div>
-            </div>
-        `).join('') || '<div class="customer-item">Bulunamadı</div>';
+            </div>`).join('') || '<div class="customer-item">Bulunamadı</div>';
     }
 
     function downloadCurrentSort() {
-        const combinedData = allData.map((item, index) => ({
-            "STOK KODU": item.stokKodu,
-            "SIRA": index + 1,
-            "MANUEL_SIPARIS": item.manuelSiparis || 0
-        }));
+        const combinedData = allData.map((item, idx) => ({'STOK KODU': item.stokKodu, 'SIRA': idx+1, 'MANUEL_SIPARIS': item.manuelSiparis||0}));
         const slicerData = [];
-        Object.keys(slicerOrderMap).forEach(brand => {
-            slicerOrderMap[brand].forEach((cat, idx) => {
-                slicerData.push({ "MARKA": brand, "KATEGORI": cat, "KAT_SIRA": idx + 1 });
-            });
-        });
-        const wb = XLSX.utils.book_new();
-        const wsItems = XLSX.utils.json_to_sheet(combinedData);
-        XLSX.utils.book_append_sheet(wb, wsItems, "Urun_Duzen_Ve_Siparis");
-        const wsSlicers = XLSX.utils.json_to_sheet(slicerData);
-        XLSX.utils.book_append_sheet(wb, wsSlicers, "Kategori_Siralamasi");
-        XLSX.writeFile(wb, `Sistem_Yedek_${new Date().toLocaleDateString()}.xlsx`);
-        alert("Tüm değişiklikleriniz Excel olarak paketlendi.");
+        Object.keys(slicerOrderMap).forEach(brand => { slicerOrderMap[brand].forEach((cat,idx) => slicerData.push({MARKA:brand,KATEGORI:cat,KAT_SIRA:idx+1})); });
+        const wb2 = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb2, XLSX.utils.json_to_sheet(combinedData), 'Urun_Duzen_Ve_Siparis');
+        XLSX.utils.book_append_sheet(wb2, XLSX.utils.json_to_sheet(slicerData),   'Kategori_Siralamasi');
+        XLSX.writeFile(wb2, `Sistem_Yedek_${new Date().toLocaleDateString()}.xlsx`);
+        alert('Tüm değişiklikleriniz Excel olarak paketlendi.');
     }
 
     function previewCustomerList(e, custName) {
         if(e) e.stopPropagation();
-        const previewBody = document.getElementById('preview-body');
-        document.getElementById('preview-title').textContent = custName + "";
-        let html = `<button class="btn-excel-cust-big" onclick="downloadCustomerList(null, '${custName.replace(/'/g, "\\'")}')">📥 LİSTEYİ EXCEL OLARAK İNDİR</button>`;
+        document.getElementById('preview-title').textContent = custName;
+        let html = `<button class="btn-excel-cust-big" onclick="downloadCustomerList(null,'${custName.replace(/'/g,"\\'")}')">📥 LİSTEYİ EXCEL OLARAK İNDİR</button>`;
         html += `<table class="preview-table"><thead><tr><th>TARİH</th><th>KOD</th><th>AD</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
         let hasData = false;
         allData.forEach(item => {
-            const customerOrders = item.satisListesi?.filter(s => s.musteri === custName);
-            if(customerOrders && customerOrders.length > 0) {
+            const orders = item.satisListesi.filter(s => s.musteri === custName);
+            if(orders.length > 0) {
                 hasData = true;
-                const totalAdet = customerOrders.reduce((sum, current) => sum + (parseInt(current.adet) || 0), 0);
+                const total = orders.reduce((s,c) => s + (parseInt(c.adet)||0), 0);
                 // Müşterinin o stok kodundaki ilk siparişinin tarihini alıyoruz
-                const siparisTarihi = customerOrders[0].tarih || "-"; 
-                html += `<tr><td>${siparisTarihi}</td><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td style="color:red">${totalAdet}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
+                html += `<tr><td>${orders[0].tarih||'-'}</td><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td style="color:red">${total}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
             }
         });
-        html += `</tbody></table>`;
-        previewBody.innerHTML = hasData ? html : '<p>Sipariş bulunamadı.</p>';
+        html += '</tbody></table>';
+        document.getElementById('preview-body').innerHTML = hasData ? html : '<p>Sipariş bulunamadı.</p>';
         document.getElementById('preview-modal').style.display = 'flex';
-        document.getElementById('customer-dropdown').style.display = 'none'; 
+        document.getElementById('customer-dropdown').style.display = 'none';
     }
 
     function downloadCustomerList(e, custName) {
         if(e) e.stopPropagation();
         const list = [];
         allData.forEach(item => {
-            const orders = item.satisListesi?.filter(s => s.musteri === custName);
-            if(orders && orders.length > 0) {
-                const totalAdet = orders.reduce((sum, current) => sum + (parseInt(current.adet) || 0), 0);
-                list.push({ "TARİH": orders[0].tarih || "-", "KOD": item.stokKodu, "AD": item.stokAdi, "SİPARİŞ": totalAdet, "FİİLİ": item.fiili, "KALAN": item.kalan });
+            const orders = item.satisListesi.filter(s => s.musteri === custName);
+            if(orders.length > 0) {
+                const total = orders.reduce((s,c) => s+(parseInt(c.adet)||0), 0);
+                list.push({'TARİH': orders[0].tarih||'-','KOD':item.stokKodu,'AD':item.stokAdi,'SİPARİŞ':total,'FİİLİ':item.fiili,'KALAN':item.kalan});
             }
         });
         if(list.length > 0) {
-            const ws = XLSX.utils.json_to_sheet(list);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Siparis");
-            XLSX.writeFile(wb, `${custName}_Siparis.xlsx`);
+            const ws2 = XLSX.utils.json_to_sheet(list);
+            const wb2 = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb2, ws2, 'Siparis');
+            XLSX.writeFile(wb2, `${custName}_Siparis.xlsx`);
         }
     }
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
         const dd = document.getElementById('customer-dropdown');
         if(dd && !dd.contains(e.target)) dd.style.display = 'none';
     });
 
-    function filterCategory(cat) {
-        currentFilter = cat;
-        initSlicers();
-        renderTable();
+    function filterCategory(cat) { currentFilter = cat; initSlicers(); renderTable(); }
+
+    // =============================================
+    // AYLIK SATIŞ POPUP
+    // =============================================
+    function showAylikSatis(stokKodu) {
+        const item     = allData.find(d => d.stokKodu === stokKodu);
+        const aylikData = aylikSatisMap.get(stokKodu);
+        const modal    = document.getElementById('satis-modal');
+        const title    = document.getElementById('satis-modal-title');
+        const body     = document.getElementById('satis-modal-body');
+
+        if(item) {
+            title.innerHTML = `<span style="color:${item.stokDurumuRenk}">${item.stokDurumu||'DİĞER'}</span>`;
+        } else {
+            title.textContent = '📅 Aylık Satış Geçmişi';
+        }
+
+        if (!aylikData || aylikData.length === 0) {
+            body.innerHTML = `<div style="text-align:center;color:#8a94a6;padding:24px 0;font-size:12px;">
+                Bu ürün için geçmiş satış verisi bulunamadı.<br>
+                <small style="color:#bbb;">${stokKodu}</small>
+            </div>`;
+            modal.style.display = 'flex';
+            return;
+        }
+
+        const maxAdet = Math.max(...aylikData.map(d => d.adet), 1);
+        const toplam  = aylikData.reduce((s, d) => s + d.adet, 0);
+
+        let html = `<div class="satis-urun-baslik">
+            <strong>${stokKodu}</strong>${item ? ' — ' + item.stokAdi : ''}
+        </div>`;
+
+        aylikData.forEach(d => {
+            const pct = Math.round((d.adet / maxAdet) * 100);
+            html += `
+            <div class="satis-ay-row">
+                <span class="satis-ay-label">${d.ay}</span>
+                <div class="satis-bar-wrap">
+                    <div class="satis-bar-fill" style="width:${d.adet > 0 ? pct : 0}%"></div>
+                </div>
+                <span class="satis-ay-adet ${d.adet === 0 ? 'sifir' : ''}">${d.adet} ADET</span>
+            </div>`;
+        });
+
+        html += `<div class="satis-toplam"><span>📊 TOPLAM SATIŞ</span><span>${toplam} ADET</span></div>`;
+        body.innerHTML = html;
+        modal.style.display = 'flex';
     }
 
     function renderTable() {
-        const tbody = document.getElementById('table-body');
+        const tbody      = document.getElementById('table-body');
         const searchInput = document.getElementById('search-input');
-        const slug = (t) => t ? t.replace(/İ/g, "i").replace(/I/g, "ı").toLowerCase() : "";
-        const searchTerm = searchInput ? slug(searchInput.value) : "";
-        let filtered = allData.filter(d => {
+        const slug = t => t ? t.replace(/İ/g,'i').replace(/I/g,'ı').toLowerCase() : '';
+        const searchTerm = searchInput ? slug(searchInput.value) : '';
+        const filtered = allData.filter(d => {
             const mb = d.marka && d.marka.includes(currentBrand);
             const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
-            return searchTerm !== "" ? (mb && ms) : (mb && (currentFilter === 'HEPSİ' || d.ozelKod5 === currentFilter));
+            return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter==='HEPSİ' || d.ozelKod5===currentFilter));
         });
         tbody.innerHTML = filtered.map(item => {
-            const omurVal = parseFloat(item.stokOmru);
+            const omurVal   = parseFloat(item.stokOmru);
             const omurSimge = omurVal < 5 ? '⚠️' : '✅';
+            const safeKod   = item.stokKodu.replace(/'/g,"\\'");
             return `<tr data-id="${item.stokKodu}" class="${item.kalan <= 0 ? 'critical-row' : ''}">
-                <td class="w-sort">::</td>
+                <td class="w-sort">⠿</td>
                 <td>${item.stokKodu}</td>
-                <td class="col-stok-adi" onclick="showDetail('${item.stokKodu}')">${item.stokAdi}</td>
+                <td class="col-stok-adi" onclick="showDetail('${safeKod}')">${item.stokAdi}</td>
                 <td>${formatCurrency(item.fiyat)}</td>
                 <td class="col-fiili">${item.fiili}</td>
                 <td class="col-satis">${item.satis}</td>
                 <td class="col-kalan">${item.kalan}</td>
                 <td class="col-ithalat">${item.ithalat}</td>
-                <td class="col-manuel" onclick="editManuelSiparis(this, '${item.stokKodu}')">${item.manuelSiparis || 0}</td>
+                <td class="col-manuel" onclick="editManuelSiparis(this,'${safeKod}')">${item.manuelSiparis||0}</td>
                 <td class="col-avg">${item.avgSatis ? item.avgSatis.toFixed(2) : '0.00'}</td>
                 <td class="col-omur">${item.stokOmru} Ay ${omurSimge}</td>
-                <td class="col-oneri" style="color:${item.ihtiyacAdet > 0 ? 'red' : 'green'}">${item.ihtiyacAdet} Adet</td>
-                <td class="col-stok-durumu" style="color:${item.stokDurumuRenk}">${item.stokDurumu || "DİĞER"}</td>
+                <td class="col-oneri" style="color:${item.ihtiyacAdet>0?'red':'green'}">${item.ihtiyacAdet} Adet</td>
+                <td class="col-stok-durumu" style="color:${item.stokDurumuRenk}"
+                    onclick="showAylikSatis('${safeKod}')"
+                    title="Aylık satış geçmişini görmek için tıklayın">${item.stokDurumu||'DİĞER'}</td>
             </tr>`;
         }).join('');
         if(sortableRows) sortableRows.destroy();
-        sortableRows = new Sortable(tbody, { 
+        sortableRows = new Sortable(tbody, {
             animation: 150, handle: '.w-sort',
             onEnd: function() {
-                const newOrderIds = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
-                const sortedData = [];
-                newOrderIds.forEach(id => {
-                    const found = allData.find(d => d.stokKodu === id);
-                    if(found) sortedData.push(found);
-                });
-                allData.forEach(item => { if(!newOrderIds.includes(item.stokKodu)) sortedData.push(item); });
-                allData = sortedData;
+                const ids = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
+                const sorted = [];
+                ids.forEach(id => { const f = allData.find(d => d.stokKodu===id); if(f) sorted.push(f); });
+                allData.forEach(item => { if(!ids.includes(item.stokKodu)) sorted.push(item); });
+                allData = sorted;
                 localStorage.setItem('masterInventoryData', JSON.stringify(allData));
             }
         });
@@ -681,35 +812,31 @@
     function showDetail(stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if(!item) return;
-        const totalReserved = item.satisListesi ? item.satisListesi.reduce((sum, s) => sum + (parseInt(s.adet) || 0), 0) : 0;
-        const kalanRenk = item.kalan > 0 ? "#00a859" : "#ff0000"; 
-        let depoHtml = "";
-        const depolar = [{ isim: "ÖMERLİ", adet: item.depoL }, { isim: "SHOWROOM", adet: item.depoN }, { isim: "ŞİRKET", adet: item.depoO }, { isim: "TAMİR", adet: item.depoP }];
-        depolar.forEach(depo => { if (parseInt(depo.adet) > 0) depoHtml += `<div style="font-size: 10px; color: #555; padding-left: 10px; border-bottom: 1px dashed #eee;">• ${depo.isim}: <strong>${depo.adet} Adet</strong></div>`; });
+        const totalReserved = item.satisListesi ? item.satisListesi.reduce((s,x) => s+(parseInt(x.adet)||0), 0) : 0;
+        const kalanRenk = item.kalan > 0 ? '#00a859' : '#ff0000';
+        let depoHtml = '';
+        [{isim:'ÖMERLİ',adet:item.depoL},{isim:'SHOWROOM',adet:item.depoN},{isim:'ŞİRKET',adet:item.depoO},{isim:'TAMİR',adet:item.depoP}]
+            .forEach(d => { if(parseInt(d.adet)>0) depoHtml+=`<div style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim} <strong>${d.adet} Adet</strong></div>`; });
 
-        document.getElementById('modal-title').textContent = item.stokKodu + " - " + item.stokAdi;
-        let bodyHtml = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
-        bodyHtml += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis?.toFixed(2)})</h4>
-            <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum:</strong> ${item.stokDurumu}</div>
-            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
-            <div class="info-row" style="color:#2980b9"><strong>SİPARİŞ:</strong> ${item.manuelSiparis || 0}</div>
-            ${depoHtml}
-        </div>`;
-        bodyHtml += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
-        if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(line => bodyHtml += `<div class="info-row" style="color:#00a859">✔ ${line}</div>`);
-        else bodyHtml += `<div class="info-row" style="color:#999">Gelecek ürün yok.</div>`;
-        bodyHtml += `</div>`;
-
-        bodyHtml += `<div class="modal-section"><h4>👥 SİPARİŞLER (${totalReserved})</h4>`;
+        document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi;
+        let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
+        html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
+            <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum</strong> ${item.stokDurumu}</div>
+            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK</strong> ${item.kalan}</div>
+            <div class="info-row" style="color:#2980b9"><strong>SİPARİŞ</strong> ${item.manuelSiparis||0}</div>
+            ${depoHtml}</div>`;
+        html += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
+        if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(l => html+=`<div class="info-row" style="color:#00a859">✔ ${l}</div>`);
+        else html += `<div class="info-row" style="color:#999">Gelecek ürün yok.</div>`;
+        html += `</div><div class="modal-section"><h4>👥 SİPARİŞLER (${totalReserved})</h4>`;
         if(item.satisListesi && item.satisListesi.length > 0) {
             item.satisListesi.forEach(s => {
                 // J sütunundaki müşterinin yanına C sütunundaki tarih parantez içinde eklendi
-                bodyHtml += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null, '${s.musteri.replace(/'/g, "\\'")}')">${s.musteri}</span> (${s.tarih || "-"})</div>`;
+                html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}') ">${s.musteri}</span> (${s.tarih||'-'})</div>`;
             });
-        } else bodyHtml += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
-        bodyHtml += `</div>`;
-
-        document.getElementById('modal-body').innerHTML = bodyHtml;
+        } else html += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
+        html += '</div>';
+        document.getElementById('modal-body').innerHTML = html;
         document.getElementById('info-modal').style.display = 'flex';
     }
 
@@ -718,38 +845,36 @@
     function closeBrandModal(marka) { document.getElementById('brand-select-modal').style.display = 'none'; downloadReportForBrand(marka); }
 
     function downloadReportForBrand(secilenMarka) {
-        if (!allData || allData.length === 0) return alert("Veri yok!");
-        const header = ["STOK KODU", "STOK ADI", "MARKA", "KATEGORİ", "FİYAT", "FİİLİ STOK", "SATIŞ", "KALAN", "İTHALAT", "MANUEL SİPARİŞ", "AYLIK ORT.", "STOK ÖMRÜ (AY)", "SİPARİŞ ÖNERİSİ", "STOK DURUMU", "İTHALAT DETAY"];
-        function itemToRow(it) { return [it.stokKodu, it.stokAdi, it.marka, it.ozelKod5, it.fiyat, it.fiili, it.satis, it.kalan, it.ithalat, it.manuelSiparis || 0, it.avgSatis ? parseFloat(it.avgSatis.toFixed(2)) : 0, it.stokOmru, it.ihtiyacAdet, it.stokDurumu, it.ithalatDetay || '']; }
-        const wb = XLSX.utils.book_new();
-        const usedNames = new Set();
-        function uniqueName(base) { let name = base; let c = 2; while (usedNames.has(name)) { name = base.substring(0, 28) + c++; } usedNames.add(name); return name; }
-        
+        if (!allData || allData.length === 0) return alert('Veri yok!');
+        const header = ['STOK KODU','STOK ADI','MARKA','KATEGORİ','FİYAT','FİİLİ STOK','SATIŞ','KALAN','İTHALAT','MANUEL SİPARİŞ','AYLIK ORT.','STOK ÖMRÜ (AY)','SİPARİŞ ÖNERİSİ','STOK DURUMU','İTHALAT DETAY'];
+        const toRow = it => [it.stokKodu,it.stokAdi,it.marka,it.ozelKod5,it.fiyat,it.fiili,it.satis,it.kalan,it.ithalat,it.manuelSiparis||0,it.avgSatis?parseFloat(it.avgSatis.toFixed(2)):0,it.stokOmru,it.ihtiyacAdet,it.stokDurumu,it.ithalatDetay||''];
+        const wb2 = XLSX.utils.book_new();
+        const used = new Set();
+        const uName = base => { let n=base,c=2; while(used.has(n)){n=base.substring(0,28)+c++;} used.add(n); return n; };
         [secilenMarka].forEach(brand => {
-            const brandData = allData.filter(d => d.marka && d.marka.includes(brand));
-            if (brandData.length === 0) return;
-            const wsAll = XLSX.utils.aoa_to_sheet([header, ...brandData.map(itemToRow)]);
-            XLSX.utils.book_append_sheet(wb, wsAll, uniqueName(brand === 'PROFORCE' ? 'PRO-TÜM' : 'PAN-TÜM'));
-            const categories = [...new Set(brandData.map(d => d.ozelKod5).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'tr', {numeric: true}));
-            categories.forEach(cat => {
-                const catData = brandData.filter(d => d.ozelKod5 === cat);
-                if (catData.length === 0) return;
-                const ws = XLSX.utils.aoa_to_sheet([header, ...catData.map(itemToRow)]);
-                XLSX.utils.book_append_sheet(wb, ws, uniqueName(cat.replace(/^\d+-/, '').substring(0, 31)));
+            const bd = allData.filter(d => d.marka && d.marka.includes(brand));
+            if(!bd.length) return;
+            XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...bd.map(toRow)]), uName(brand==='PROFORCE'?'PRO-TÜM':'PAN-TÜM'));
+            [...new Set(bd.map(d=>d.ozelKod5).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true})).forEach(cat => {
+                const cd = bd.filter(d=>d.ozelKod5===cat);
+                if(!cd.length) return;
+                XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...cd.map(toRow)]), uName(cat.replace(/^\d+-/,'').substring(0,31)));
             });
         });
-        XLSX.writeFile(wb, `Analiz_Raporu_${new Date().toLocaleDateString('tr-TR')}.xlsx`);
+        XLSX.writeFile(wb2, `Analiz_Raporu_${new Date().toLocaleDateString('tr-TR')}.xlsx`);
     }
 </script>
 
-<div id="brand-select-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:white; border-radius:10px; padding:30px; text-align:center; box-shadow:0 5px 20px rgba(0,0,0,0.3); min-width:280px;">
-        <div style="font-size:14px; font-weight:bold; margin-bottom:20px;">Hangi markanın raporunu indirmek istiyorsunuz?</div>
-        <div style="display:flex; gap:12px; justify-content:center;">
-            <button onclick="closeBrandModal('PROFORCE')" style="background:#00a859; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer;">PROFORCE</button>
-            <button onclick="closeBrandModal('PANATTA')" style="background:#ff0000; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer;">PANATTA</button>
+<div id="brand-select-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
+    <div style="background:white;border-radius:10px;padding:30px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,0.3);min-width:280px;">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:20px;">Hangi markanın raporunu indirmek istiyorsunuz?</div>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <button onclick="closeBrandModal('PROFORCE')" style="background:#00a859;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">PROFORCE</button>
+            <button onclick="closeBrandModal('PANATTA')"  style="background:#ff0000;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">PANATTA</button>
         </div>
-        <div style="margin-top:12px;"><button onclick="document.getElementById('brand-select-modal').style.display='none'" style="background:#eee; border:none; padding:6px 16px; border-radius:6px; cursor:pointer; font-size:11px;">İptal</button></div>
+        <div style="margin-top:12px;">
+            <button onclick="document.getElementById('brand-select-modal').style.display='none'" style="background:#eee;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:11px;">İptal</button>
+        </div>
     </div>
 </div>
 </body>
