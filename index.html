@@ -88,7 +88,7 @@
         .modal-content { background: var(--bg-white); padding: 24px; border-radius: 12px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); }
         .cust-link { color: var(--accent-blue); text-decoration: underline; cursor: pointer; font-weight: 700; }
         .cust-link:hover { color: var(--panatta-color); }
-        .preview-modal { width: 90% !important; max-width: 800px; }
+        .preview-modal { width: 90% !important; max-width: 800px; z-index: 3000 !important; }
         .preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         .preview-table th, .preview-table td { padding: 4px; border: 1px solid var(--border-light); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .preview-table th { background: var(--bg-main); font-weight: 800; color: var(--text-mid); }
@@ -672,15 +672,16 @@
         if(e) e.stopPropagation();
         document.getElementById('preview-title').textContent = custName;
         let html = `<button class="btn-excel-cust-big" onclick="downloadCustomerList(null,'${custName.replace(/'/g,"\\'")}')">📥 LİSTEYİ EXCEL OLARAK İNDİR</button>`;
-        html += `<table class="preview-table"><thead><tr><th>TARİH</th><th>KOD</th><th>AD</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
+        html += `<table class="preview-table"><thead><tr><th>TARİH</th><th>KOD</th><th>AD</th><th>TEMSİLCİ</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
         let hasData = false;
         allData.forEach(item => {
             const orders = item.satisListesi.filter(s => s.musteri === custName);
             if(orders.length > 0) {
                 hasData = true;
                 const total = orders.reduce((s,c) => s + (parseInt(c.adet)||0), 0);
+                const temsilci = orders[0].temsilci || '-';
                 // Müşterinin o stok kodundaki ilk siparişinin tarihini alıyoruz
-                html += `<tr><td>${orders[0].tarih||'-'}</td><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td style="color:red">${total}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
+                html += `<tr><td>${orders[0].tarih||'-'}</td><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td>${temsilci}</td><td style="color:red">${total}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
             }
         });
         html += '</tbody></table>';
@@ -696,7 +697,7 @@
             const orders = item.satisListesi.filter(s => s.musteri === custName);
             if(orders.length > 0) {
                 const total = orders.reduce((s,c) => s+(parseInt(c.adet)||0), 0);
-                list.push({'TARİH': orders[0].tarih||'-','KOD':item.stokKodu,'AD':item.stokAdi,'SİPARİŞ':total,'FİİLİ':item.fiili,'KALAN':item.kalan});
+                list.push({'TARİH': orders[0].tarih||'-','KOD':item.stokKodu,'AD':item.stokAdi,'TEMSİLCİ':orders[0].temsilci||'-','SİPARİŞ':total,'FİİLİ':item.fiili,'KALAN':item.kalan});
             }
         });
         if(list.length > 0) {
@@ -840,7 +841,7 @@
         if(item.satisListesi && item.satisListesi.length > 0) {
             item.satisListesi.forEach(s => {
                 // J sütunundaki müşterinin yanına C sütunundaki tarih parantez içinde eklendi
-                html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}') ">${s.musteri}</span>${s.temsilci ? ' <span style="color:#8a94a6;font-size:10px;">('+s.temsilci+')</span>' : ''} (${s.tarih||'-'})</div>`;
+                html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}')">${s.musteri}</span>${s.temsilci ? ' <span style="color:#8a94a6;font-size:10px;">('+s.temsilci+')</span>' : ''} (${s.tarih||'-'})</div>`;
             });
         } else html += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
         html += '</div>';
