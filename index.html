@@ -446,7 +446,7 @@
                     const sTarih   = excelDateToJS(row.C);
                     if(sKodu && sMusteri) {
                         if(!siparisMap.has(sKodu)) siparisMap.set(sKodu, []);
-                        siparisMap.get(sKodu).push({ musteri: sMusteri, adet: sAdet, tarih: sTarih, rawDate: row.C });
+                        siparisMap.get(sKodu).push({ musteri: sMusteri, adet: sAdet, tarih: sTarih, rawDate: row.C, temsilci: String(row.F || '').trim() });
                     }
                 });
                 siparisMap.forEach(list => list.sort((a,b) => (a.rawDate||0)-(b.rawDate||0)));
@@ -718,11 +718,11 @@
     // AYLIK SATIŞ POPUP
     // =============================================
     function showAylikSatis(stokKodu) {
-        const item     = allData.find(d => d.stokKodu === stokKodu);
-        const aylikData = aylikSatisMap.get(stokKodu);
-        const modal    = document.getElementById('satis-modal');
-        const title    = document.getElementById('satis-modal-title');
-        const body     = document.getElementById('satis-modal-body');
+        const item    = allData.find(d => d.stokKodu === stokKodu);
+        const tumData = aylikSatisMap.get(stokKodu);
+        const modal   = document.getElementById('satis-modal');
+        const title   = document.getElementById('satis-modal-title');
+        const body    = document.getElementById('satis-modal-body');
 
         if(item) {
             title.innerHTML = `<span style="color:${item.stokDurumuRenk}">${item.stokDurumu||'DİĞER'}</span>`;
@@ -730,7 +730,7 @@
             title.textContent = '📅 Aylık Satış Geçmişi';
         }
 
-        if (!aylikData || aylikData.length === 0) {
+        if (!tumData || tumData.length === 0) {
             body.innerHTML = `<div style="text-align:center;color:#8a94a6;padding:24px 0;font-size:12px;">
                 Bu ürün için geçmiş satış verisi bulunamadı.<br>
                 <small style="color:#bbb;">${stokKodu}</small>
@@ -738,6 +738,13 @@
             modal.style.display = 'flex';
             return;
         }
+
+        // Genel Toplam, Ortalama gibi Excel özet satırlarını filtrele
+        const temizData = tumData.filter(d => !/toplam|ortalama|genel/i.test(String(d.ay)));
+
+        // İlk satışın yapıldığı aydan itibaren göster
+        const ilkSatis  = temizData.findIndex(d => d.adet > 0);
+        const aylikData = ilkSatis >= 0 ? temizData.slice(ilkSatis) : temizData;
 
         const maxAdet = Math.max(...aylikData.map(d => d.adet), 1);
         const toplam  = aylikData.reduce((s, d) => s + d.adet, 0);
@@ -748,13 +755,14 @@
 
         aylikData.forEach(d => {
             const pct = Math.round((d.adet / maxAdet) * 100);
+            const adet = Math.round(d.adet);
             html += `
             <div class="satis-ay-row">
                 <span class="satis-ay-label">${d.ay}</span>
                 <div class="satis-bar-wrap">
-                    <div class="satis-bar-fill" style="width:${d.adet > 0 ? pct : 0}%"></div>
+                    <div class="satis-bar-fill" style="width:${adet > 0 ? pct : 0}%"></div>
                 </div>
-                <span class="satis-ay-adet ${d.adet === 0 ? 'sifir' : ''}">${d.adet} ADET</span>
+                <span class="satis-ay-adet ${adet === 0 ? 'sifir' : ''}">${adet} ADET</span>
             </div>`;
         });
 
@@ -832,7 +840,7 @@
         if(item.satisListesi && item.satisListesi.length > 0) {
             item.satisListesi.forEach(s => {
                 // J sütunundaki müşterinin yanına C sütunundaki tarih parantez içinde eklendi
-                html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}') ">${s.musteri}</span> (${s.tarih||'-'})</div>`;
+                html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}') ">${s.musteri}</span>${s.temsilci ? ' <span style="color:#8a94a6;font-size:10px;">('+s.temsilci+')</span>' : ''} (${s.tarih||'-'})</div>`;
             });
         } else html += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
         html += '</div>';
