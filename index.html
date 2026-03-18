@@ -108,7 +108,7 @@
         ::-webkit-scrollbar-track { background: var(--bg-main); }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #b0bbd4; }
-
+ 
         /* ── Aylık Satış Modal ── */
         .satis-modal-content { width: 420px !important; max-width: 95vw; }
         .satis-urun-baslik { font-size: 11px; color: var(--text-mid); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
@@ -122,7 +122,7 @@
     </style>
 </head>
 <body>
-
+ 
 <div class="top-bar">
     <div class="upload-section" style="flex:1;">
         <img src="https://i.ibb.co/kV5hBdbW/1.png" alt="Logo" style="height:32px; width:auto; object-fit:contain; margin-right:6px;">
@@ -140,11 +140,11 @@
         <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
     </div>
 </div>
-
+ 
 <div class="slicer-wrapper">
     <div id="slicer-area"></div>
 </div>
-
+ 
 <div class="table-container">
     <table>
         <thead>
@@ -167,7 +167,7 @@
         <tbody id="table-body"></tbody>
     </table>
 </div>
-
+ 
 <!-- Ürün Detay Modal -->
 <div id="info-modal" class="modal-overlay" onclick="closeModal(event,'info-modal')">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -178,7 +178,7 @@
         <div id="modal-body"></div>
     </div>
 </div>
-
+ 
 <!-- Müşteri Önizleme Modal -->
 <div id="preview-modal" class="modal-overlay" onclick="closeModal(event,'preview-modal')">
     <div class="modal-content preview-modal" onclick="event.stopPropagation()">
@@ -189,7 +189,7 @@
         <div id="preview-body"></div>
     </div>
 </div>
-
+ 
 <!-- Aylık Satış Geçmişi Modal -->
 <div id="satis-modal" class="modal-overlay" onclick="closeModal(event,'satis-modal')">
     <div class="modal-content satis-modal-content" onclick="event.stopPropagation()">
@@ -200,15 +200,25 @@
         <div id="satis-modal-body"></div>
     </div>
 </div>
-
+ 
 <script>
     let allData      = [];
     let currentBrand = 'PROFORCE';
     let currentFilter = 'HEPSİ';
     let sortableRows = null;
+ 
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) { searchInput.focus(); searchInput.select(); }
+            return false;
+        }
+    }, true);
     // stokKodu -> [ {ay:'2024/03', adet:5}, ... ]
     let aylikSatisMap = new Map();
-
+ 
     // Excel sütun harfi üret: 0=A,1=B,...,25=Z,26=AA,27=AB,...
     function colLetter(idx) {
         let s = '';
@@ -219,26 +229,26 @@
         }
         return s;
     }
-
+ 
     function formatCurrency(val) {
         if (isNaN(val) || val === null || val === '') return '0,00';
         return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     }
-
+ 
     function excelDateToJS(serial) {
         if(!serial || isNaN(serial)) return serial || '';
         const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
         return `${date.getDate().toString().padStart(2,'0')}.${(date.getMonth()+1).toString().padStart(2,'0')}.${date.getFullYear()}`;
     }
-
+ 
     let manuelSiparisMap = JSON.parse(localStorage.getItem('manuelSiparisData') || '{}');
     let slicerOrderMap   = JSON.parse(localStorage.getItem('slicerOrderData')   || '{}');
-
+ 
     function saveSlicerOrder(brand, orderedCats) {
         slicerOrderMap[brand] = orderedCats;
         localStorage.setItem('slicerOrderData', JSON.stringify(slicerOrderMap));
     }
-
+ 
     function getOrderedCategories(brand, rawCats) {
         const saved = slicerOrderMap[brand];
         if (!saved || saved.length === 0) return rawCats;
@@ -246,20 +256,20 @@
         rawCats.forEach(c => { if (!ordered.includes(c)) ordered.push(c); });
         return ordered;
     }
-
+ 
     function cleanLabel(cat) { return cat.replace(/^\d+-/, ''); }
-
+ 
     function saveManuelSiparisMap() {
         localStorage.setItem('manuelSiparisData', JSON.stringify(manuelSiparisMap));
     }
-
+ 
     function applyManuelSiparisToData() {
         allData.forEach(item => {
             if (manuelSiparisMap[item.stokKodu] !== undefined)
                 item.manuelSiparis = manuelSiparisMap[item.stokKodu];
         });
     }
-
+ 
     function editManuelSiparis(td, stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if (!item) return;
@@ -281,14 +291,14 @@
             if (e.key === 'Escape') td.innerHTML = mevcutDeger;
         });
     }
-
+ 
     window.onload = function() {
         // Aylık satış haritasını geri yükle
         try {
             const raw = localStorage.getItem('aylikSatisData');
             if (raw) aylikSatisMap = new Map(Object.entries(JSON.parse(raw)));
         } catch(e) { aylikSatisMap = new Map(); }
-
+ 
         const savedData = localStorage.getItem('masterInventoryData');
         if (savedData) {
             allData = JSON.parse(savedData);
@@ -296,7 +306,7 @@
             switchBrand(currentBrand);
         }
     };
-
+ 
     // =============================================
     // EXCEL YÜKLEME
     // =============================================
@@ -307,12 +317,12 @@
         const reader = new FileReader();
         reader.onload = function(evt) {
             const wb = XLSX.read(evt.target.result, {type: 'binary'});
-
+ 
             // ANLIK_STOK_DATA
             const wsStok = wb.Sheets['ANLIK_STOK_DATA'];
             if(!wsStok) return alert('ANLIK_STOK_DATA sayfası bulunamadı!');
             const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: 'A', defval: ''});
-
+ 
             // GÖRSEL
             const resimMap = new Map();
             const wsGorsel = wb.Sheets['GÖRSEL'];
@@ -323,7 +333,7 @@
                     if(k) resimMap.set(k, v);
                 });
             }
-
+ 
             // ─────────────────────────────────────────────
             // GEÇMİŞ SATIŞ
             // Satır 1 (index 0): Başlıklar — A=Stok Kodu, B=Stok Açıklaması,
@@ -332,19 +342,19 @@
             // ─────────────────────────────────────────────
             const satisAnalizMap = new Map();
             aylikSatisMap = new Map();
-
+ 
             const wsGecmis = wb.Sheets['GEÇMİŞ SATIŞ'];
             if(wsGecmis) {
                 // Satır 6 (index=5) = başlık (C6=2024/03, D6=2024/04 ...)
                 // Satır 7 (index=6) = ilk veri satırı, A7 = stok kodu referans
                 const allRowsStr = XLSX.utils.sheet_to_json(wsGecmis, {header: 'A', defval: ''});
                 const allRowsNum = XLSX.utils.sheet_to_json(wsGecmis, {header: 'A', defval: 0});
-
+ 
                 const BASLIK_IDX = 5; // 6. satır (0-indexed)
                 const VERI_IDX   = 6; // 7. satır (0-indexed)
-
+ 
                 const hRow = allRowsStr[BASLIK_IDX] || {};
-
+ 
                 // Ay başlığını düzgün formata çevir
                 // Excel'de sayısal tarih (ör: 45717) veya metin (ör: "2024/03") olabilir
                 function formatAyBaslik(raw) {
@@ -369,7 +379,7 @@
                     }
                     return s;
                 }
-
+ 
                 // C'den başlayarak dolu olan tüm ay sütunlarını al
                 // Ayrıca ham cell değerini de kontrol et (sayısal tarih için)
                 const ws = wsGecmis;
@@ -399,17 +409,17 @@
                     }
                     ayKolonlari.push({ harf, baslik });
                 }
-
+ 
                 // 7. satırdan (index=6) itibaren veri oku, A sütunu = stok kodu
                 allRowsNum.slice(VERI_IDX).forEach(row => {
                     const kodu = String(row.A || '').trim();
                     if(!kodu) return;
-
+ 
                     let satislar  = [];
                     let toplamTum = 0;
                     let basladi   = false;
                     const detay   = [];
-
+ 
                     ayKolonlari.forEach(({ harf, baslik }) => {
                         const val = Math.round(parseFloat(row[harf]) || 0);
                         toplamTum += val;
@@ -417,9 +427,9 @@
                         if(basladi) satislar.push(val);
                         detay.push({ ay: baslik, adet: val });
                     });
-
+ 
                     aylikSatisMap.set(kodu, detay);
-
+ 
                     if(satislar.length > 0) {
                         const top = satislar.reduce((a,b) => a+b, 0);
                         satisAnalizMap.set(kodu, { ortalama: top / satislar.length, aktifAy: satislar.length, totalSatis: toplamTum });
@@ -427,13 +437,13 @@
                         satisAnalizMap.set(kodu, { ortalama: 0, aktifAy: 0, totalSatis: 0 });
                     }
                 });
-
+ 
                 // localStorage'a kaydet
                 const obj = {};
                 aylikSatisMap.forEach((v,k) => { obj[k] = v; });
                 localStorage.setItem('aylikSatisData', JSON.stringify(obj));
             }
-
+ 
             // ALINAN SİPARİŞLER DETAY
             const siparisMap = new Map();
             const wsSiparis = wb.Sheets['ALINAN SİPARİŞLER DETAY'];
@@ -451,7 +461,7 @@
                 });
                 siparisMap.forEach(list => list.sort((a,b) => (a.rawDate||0)-(b.rawDate||0)));
             }
-
+ 
             // VERİLEN SİPARİŞ DETAY
             const ithalatMap = new Map();
             const wsVerilen = wb.Sheets['VERİLEN SİPARİŞ DETAY'];
@@ -461,18 +471,19 @@
                     const vKodu   = String(row.M || '').trim();
                     const vTarih  = excelDateToJS(row.R);
                     const vMiktar = parseInt(row.S) || 0;
+                    const vRaw    = parseFloat(row.R) || 0;
                     if(vKodu && vTarih) {
                         const key = `${vKodu}_${vTarih}`;
-                        if(!gruplanmis[key]) gruplanmis[key] = { kodu: vKodu, tarih: vTarih, miktar: 0 };
+                        if(!gruplanmis[key]) gruplanmis[key] = { kodu: vKodu, tarih: vTarih, rawDate: vRaw, miktar: 0 };
                         gruplanmis[key].miktar += vMiktar;
                     }
                 });
-                Object.values(gruplanmis).forEach(item => {
+                Object.values(gruplanmis).sort((a, b) => a.rawDate - b.rawDate).forEach(item => {
                     if(!ithalatMap.has(item.kodu)) ithalatMap.set(item.kodu, []);
                     ithalatMap.get(item.kodu).push(`${item.miktar} Adet → ${item.tarih}`);
                 });
             }
-
+ 
             // Ana veri oluştur
             const uniqueIncoming = new Map();
             stokJson.slice(1).forEach(r => {
@@ -483,13 +494,13 @@
                 const ithalat      = parseInt(r.K) || 0;
                 const eldeki       = fiili + ithalat;
                 const hedef        = analiz.ortalama * 5;
-
+ 
                 let durum = 'DİĞER', renk = '#333';
                 if(fiili > 0 && analiz.totalSatis === 0)  { durum = '🛑 DURAN STOK';        renk = '#e74c3c'; }
                 else if(analiz.ortalama > 5)              { durum = '⭐ HIZLI SİRKÜLASYON'; renk = '#2ecc71'; }
                 else if(analiz.ortalama >= 2)             { durum = '📈 NORMAL';             renk = '#3498db'; }
                 else if(analiz.ortalama > 0)              { durum = '⏳ YAVAŞ HAREKET';      renk = '#f39c12'; }
-
+ 
                 uniqueIncoming.set(kodu, {
                     stokKodu: kodu,
                     stokAdi:  String(r.B || ''),
@@ -509,7 +520,7 @@
                     stokDurumu: durum, stokDurumuRenk: renk
                 });
             });
-
+ 
             const masterMap = new Map(allData.map(item => [item.stokKodu, item]));
             uniqueIncoming.forEach((newItem, kodu) => {
                 if (masterMap.has(kodu)) {
@@ -521,7 +532,7 @@
                     masterMap.set(kodu, newItem);
                 }
             });
-
+ 
             allData = Array.from(masterMap.values());
             applyManuelSiparisToData();
             saveAndRender();
@@ -529,7 +540,7 @@
         };
         reader.readAsBinaryString(file);
     });
-
+ 
     document.getElementById('notes-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -576,13 +587,13 @@
         };
         reader.readAsBinaryString(file);
     });
-
+ 
     function saveAndRender() {
         localStorage.setItem('masterInventoryData', JSON.stringify(allData));
         initSlicers();
         renderTable();
     }
-
+ 
     function switchBrand(brand) {
         currentBrand  = brand;
         currentFilter = 'HEPSİ';
@@ -591,13 +602,13 @@
         initSlicers();
         renderTable();
     }
-
+ 
     function initSlicers() {
         const container = document.getElementById('slicer-area');
         let rawCats = [...new Set(allData.filter(d => d.marka && d.marka.includes(currentBrand)).map(d => d.ozelKod5))];
         rawCats.sort((a,b) => a.localeCompare(b,'tr',{numeric:true}));
         let categories = getOrderedCategories(currentBrand, rawCats);
-
+ 
         container.innerHTML =
             `<div class="slicer-btn ${currentFilter==='HEPSİ'?'active':''}" onclick="filterCategory('HEPSİ')" data-cat="HEPSİ">HEPSİ</div>` +
             categories.map(cat =>
@@ -613,7 +624,7 @@
                     <div id="customer-list-area" class="customer-list-area"></div>
                 </div>
             </div>`;
-
+ 
         let dragSrc = null;
         container.querySelectorAll('.slicer-btn[draggable="true"]').forEach(btn => {
             btn.addEventListener('dragstart', function() { dragSrc = this; this.style.opacity = '0.5'; });
@@ -634,14 +645,14 @@
             });
         });
     }
-
+ 
     function toggleCustomerDropdown(e) {
         e.stopPropagation();
         const dd = document.getElementById('customer-dropdown');
         dd.style.display = dd.style.display === 'flex' ? 'none' : 'flex';
         if(dd.style.display === 'flex') { filterCustomers(); document.getElementById('cust-search-input').focus(); }
     }
-
+ 
     function filterCustomers() {
         const searchTerm = document.getElementById('cust-search-input').value.toLowerCase();
         const listArea   = document.getElementById('customer-list-area');
@@ -657,7 +668,7 @@
                 </div>
             </div>`).join('') || '<div class="customer-item">Bulunamadı</div>';
     }
-
+ 
     function downloadCurrentSort() {
         const combinedData = allData.map((item, idx) => ({'STOK KODU': item.stokKodu, 'SIRA': idx+1, 'MANUEL_SIPARIS': item.manuelSiparis||0}));
         const slicerData = [];
@@ -668,7 +679,7 @@
         XLSX.writeFile(wb2, `Sistem_Yedek_${new Date().toLocaleDateString()}.xlsx`);
         alert('Tüm değişiklikleriniz Excel olarak paketlendi.');
     }
-
+ 
     function previewCustomerList(e, custName) {
         if(e) e.stopPropagation();
         document.getElementById('preview-title').textContent = custName;
@@ -690,7 +701,7 @@
         document.getElementById('preview-modal').style.display = 'flex';
         document.getElementById('customer-dropdown').style.display = 'none';
     }
-
+ 
     function downloadCustomerList(e, custName) {
         if(e) e.stopPropagation();
         const list = [];
@@ -708,14 +719,14 @@
             XLSX.writeFile(wb2, `${custName}_Siparis.xlsx`);
         }
     }
-
+ 
     document.addEventListener('click', e => {
         const dd = document.getElementById('customer-dropdown');
         if(dd && !dd.contains(e.target)) dd.style.display = 'none';
     });
-
+ 
     function filterCategory(cat) { currentFilter = cat; initSlicers(); renderTable(); }
-
+ 
     // =============================================
     // AYLIK SATIŞ POPUP
     // =============================================
@@ -725,13 +736,13 @@
         const modal   = document.getElementById('satis-modal');
         const title   = document.getElementById('satis-modal-title');
         const body    = document.getElementById('satis-modal-body');
-
+ 
         if(item) {
             title.innerHTML = `<span style="color:${item.stokDurumuRenk}">${item.stokDurumu||'DİĞER'}</span>`;
         } else {
             title.textContent = '📅 Aylık Satış Geçmişi';
         }
-
+ 
         if (!tumData || tumData.length === 0) {
             body.innerHTML = `<div style="text-align:center;color:#8a94a6;padding:24px 0;font-size:12px;">
                 Bu ürün için geçmiş satış verisi bulunamadı.<br>
@@ -740,21 +751,21 @@
             modal.style.display = 'flex';
             return;
         }
-
+ 
         // Genel Toplam, Ortalama gibi Excel özet satırlarını filtrele
         const temizData = tumData.filter(d => !/toplam|ortalama|genel/i.test(String(d.ay)));
-
+ 
         // İlk satışın yapıldığı aydan itibaren göster
         const ilkSatis  = temizData.findIndex(d => d.adet > 0);
         const aylikData = ilkSatis >= 0 ? temizData.slice(ilkSatis) : temizData;
-
+ 
         const maxAdet = Math.max(...aylikData.map(d => d.adet), 1);
         const toplam  = aylikData.reduce((s, d) => s + d.adet, 0);
-
+ 
         let html = `<div class="satis-urun-baslik">
             <strong>${stokKodu}</strong>${item ? ' — ' + item.stokAdi : ''}
         </div>`;
-
+ 
         aylikData.forEach(d => {
             const pct = Math.round((d.adet / maxAdet) * 100);
             const adet = Math.round(d.adet);
@@ -767,12 +778,12 @@
                 <span class="satis-ay-adet ${adet === 0 ? 'sifir' : ''}">${adet} ADET</span>
             </div>`;
         });
-
+ 
         html += `<div class="satis-toplam"><span>📊 TOPLAM SATIŞ</span><span>${toplam} ADET</span></div>`;
         body.innerHTML = html;
         modal.style.display = 'flex';
     }
-
+ 
     function renderTable() {
         const tbody      = document.getElementById('table-body');
         const searchInput = document.getElementById('search-input');
@@ -818,7 +829,7 @@
             }
         });
     }
-
+ 
     function showDetail(stokKodu) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if(!item) return;
@@ -827,7 +838,7 @@
         let depoHtml = '';
         [{isim:'ÖMERLİ',adet:item.depoL},{isim:'SHOWROOM',adet:item.depoN},{isim:'ŞİRKET',adet:item.depoO},{isim:'TAMİR',adet:item.depoP}]
             .forEach(d => { if(parseInt(d.adet)>0) depoHtml+=`<div style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim} <strong>${d.adet} Adet</strong></div>`; });
-
+ 
         document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi;
         let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
@@ -849,11 +860,11 @@
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('info-modal').style.display = 'flex';
     }
-
+ 
     function closeModal(e, id) { if(e.target.id === id) document.getElementById(id).style.display = 'none'; }
     function downloadReport() { document.getElementById('brand-select-modal').style.display = 'flex'; }
     function closeBrandModal(marka) { document.getElementById('brand-select-modal').style.display = 'none'; downloadReportForBrand(marka); }
-
+ 
     function downloadReportForBrand(secilenMarka) {
         if (!allData || allData.length === 0) return alert('Veri yok!');
         const header = ['STOK KODU','STOK ADI','MARKA','KATEGORİ','FİYAT','FİİLİ STOK','SATIŞ','KALAN','İTHALAT','MANUEL SİPARİŞ','AYLIK ORT.','STOK ÖMRÜ (AY)','SİPARİŞ ÖNERİSİ','STOK DURUMU','İTHALAT DETAY'];
@@ -874,7 +885,7 @@
         XLSX.writeFile(wb2, `Analiz_Raporu_${new Date().toLocaleDateString('tr-TR')}.xlsx`);
     }
 </script>
-
+ 
 <div id="brand-select-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
     <div style="background:white;border-radius:10px;padding:30px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,0.3);min-width:280px;">
         <div style="font-size:14px;font-weight:bold;margin-bottom:20px;">Hangi markanın raporunu indirmek istiyorsunuz?</div>
