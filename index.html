@@ -525,6 +525,7 @@
             allData = Array.from(masterMap.values());
             applyManuelSiparisToData();
             saveAndRender();
+            alert('✅ Veriler başarıyla güncellendi!\n📦 Toplam ' + allData.length + ' adet ürün yüklendi.');
         };
         reader.readAsBinaryString(file);
     });
