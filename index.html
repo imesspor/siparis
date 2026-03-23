@@ -843,6 +843,7 @@
         let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum</strong> ${item.stokDurumu}</div>
+            <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? item.fiyat + ' ' + (item.marka && item.marka.includes('PANATTA') ? '€' : '$') : '-'}</div>
             <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK</strong> ${item.kalan}</div>
             <div class="info-row" style="color:#2980b9"><strong>SİPARİŞ</strong> ${item.manuelSiparis||0}</div>
             ${depoHtml}</div>`;
