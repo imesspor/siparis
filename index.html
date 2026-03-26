@@ -93,7 +93,7 @@
         .preview-modal { width: 90% !important; max-width: 800px; z-index: 3000 !important; }
         .preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         .preview-table th, .preview-table td { padding: 4px; border: 1px solid var(--border-light); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
-        .preview-table th { background: var(--bg-main); font-weight: 800; color: var(--text-mid); }
+        .preview-table th { background: var(--bg-main); font-weight: 800; color: var(--text-mid); text-align: center; }
         .preview-table td:nth-child(3) { text-align: left; padding-left: 5px; }
         .preview-table th:nth-child(1) { width: 80px; }
         .preview-table th:nth-child(2) { width: 120px; }
@@ -126,7 +126,7 @@
         .btn-sepete-ekle { background: linear-gradient(135deg, #00a859, #00c96a); color: white; border: none; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; font-family: inherit; transition: all 0.15s; }
         .btn-sepete-ekle:hover { background: linear-gradient(135deg, #008a48, #00a859); transform: translateY(-1px); }
         .btn-sepete-ekle.zaten-var { background: linear-gradient(135deg, #e63946, #ff6b6b); }
-        .adet-input-mini { width: 38px; border: 1.5px solid var(--accent-blue); border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-blue); background: #f0f6ff; padding: 0 2px; outline: none; font-family: inherit; height: 20px; }
+        .adet-input-mini { width: 60px; border: 1.5px solid var(--accent-blue); border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-blue); background: #f0f6ff; padding: 0 2px; outline: none; font-family: inherit; height: 20px; }
         .col-sepet { background-color: #f0fff4 !important; white-space: nowrap; }
 
         /* ── Sepet Butonu (sağ üst) ── */
@@ -141,8 +141,8 @@
         .btn-geri { background: var(--bg-main); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; color: var(--text-mid); font-family: inherit; transition: all 0.15s; }
         .btn-geri:hover { background: #e9ecf5; }
         .teklif-body { display: flex; gap: 12px; padding: 12px; min-height: calc(100vh - 56px); }
-        .teklif-sepet-col { flex: 2; min-width: 0; }
-        .teklif-ozet-col { width: 320px; flex-shrink: 0; }
+        .teklif-sepet-col { flex: 1; min-width: 0; }
+        .teklif-ozet-col { flex: 1; min-width: 0; flex-shrink: 0; }
         @media (max-width: 900px) { .teklif-body { flex-direction: column; } .teklif-ozet-col { width: 100%; } }
         .teklif-card { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-sm); }
         .teklif-urun-item { background: var(--bg-white); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
@@ -325,6 +325,12 @@
                 <div class="teklif-ozet-satir"><span>Ara Toplam:</span><span id="ozet-ara-toplam">0,00</span></div>
                 <div class="teklif-ozet-satir"><span>KDV (%20):</span><span id="ozet-kdv">0,00</span></div>
                 <div class="teklif-ozet-toplam"><span>GENEL TOPLAM:</span><span id="ozet-genel-toplam">0,00</span></div>
+                <div class="teklif-ozet-satir" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:6px;opacity:1;">
+                    <span>📉 Ort. İndirim:</span><span id="ozet-ort-indirim" style="color:#ffd43b;font-weight:800;">%0,00</span>
+                </div>
+                <div class="teklif-ozet-satir">
+                    <span>💰 Toplam İndirim Tutarı:</span><span id="ozet-indirim-tutar" style="color:#ffd43b;font-weight:800;">0,00</span>
+                </div>
             </div>
             <!-- Aksiyonlar -->
             <button class="teklif-action-btn btn-onizle" onclick="teklifOnizle()">👁 Önizle</button>
@@ -334,6 +340,7 @@
             <!-- Arşiv -->
             <div class="teklif-card" style="margin-top:10px;">
                 <div class="teklif-section-title">📁 Geçmiş Teklifler</div>
+                <input type="text" id="arsiv-arama" class="teklif-input-full" placeholder="Müşteri, tarih veya teklif numarası ara..." oninput="teklifArsivGoster()" style="margin-bottom:8px;">
                 <div id="teklif-arsiv-listesi"></div>
             </div>
         </div>
@@ -1026,15 +1033,30 @@
         } else if (alan === 'adet') {
             item.adet = parseInt(deger) || 1;
         } else if (alan === 'manuelFiyat') {
-            const fiyat = parseFloat(deger);
-            if (fiyat > 0) {
+            const selectedCurr = document.getElementById('teklif-para-birimi').value;
+            const fiyatStr = String(deger).replace(',', '.');
+            const fiyat = parseFloat(fiyatStr);
+            if (!isNaN(fiyat) && fiyat > 0) {
+                // Girilen fiyatı her zaman USD cinsinden base olarak sakla (paritenin korunması için)
+                let fiyatUSD;
+                if (selectedCurr === 'TL') fiyatUSD = fiyat / usdKur;
+                else if (selectedCurr === 'EUR') fiyatUSD = fiyat * (eurKur / usdKur);
+                else fiyatUSD = fiyat;
+                // manuelFiyat artık seçili para birimindeki değer olarak saklanır
                 item.manuelFiyat = fiyat;
+                item._manuelFiyatUSD = fiyatUSD; // kur senkrozu için USD bazını sakla
+                item._manuelFiyatCur = selectedCurr; // hangi para biriminde girildiği
                 // Tersten indirim hesapla
-                const selectedCurr = document.getElementById('teklif-para-birimi').value;
                 const listFiyat = hesaplaListeFiyat(item, selectedCurr);
-                item.indirim = Math.max(0, Math.min(100, ((listFiyat - fiyat) / listFiyat) * 100));
+                item.indirim = listFiyat > 0 ? ((listFiyat - fiyat) / listFiyat) * 100 : 0;
+                // Liste fiyatının üzerindeyse uyarı ver
+                if (fiyat > listFiyat) {
+                    showToast('⚠️ Girdiğiniz fiyat liste fiyatının üzerindedir!', '#f59f00');
+                }
             } else {
                 item.manuelFiyat = null;
+                item._manuelFiyatUSD = null;
+                item._manuelFiyatCur = null;
             }
         }
         teklifGuncelle();
@@ -1048,7 +1070,15 @@
     }
 
     function hesaplaUrunFiyat(item, cur) {
-        if (item.manuelFiyat !== null && item.manuelFiyat !== undefined) return item.manuelFiyat;
+        if (item.manuelFiyat !== null && item.manuelFiyat !== undefined) {
+            // Eğer USD bazı varsa kur senkronizasyonu uygula
+            if (item._manuelFiyatUSD != null) {
+                if (cur === 'TL') return item._manuelFiyatUSD * usdKur;
+                if (cur === 'EUR') return item._manuelFiyatUSD * (usdKur / eurKur);
+                return item._manuelFiyatUSD; // USD
+            }
+            return item.manuelFiyat;
+        }
         return hesaplaListeFiyat(item, cur) * (1 - item.indirim / 100);
     }
 
@@ -1075,17 +1105,34 @@
         liste.innerHTML = sepet.map(item => {
             const birimFiyat = hesaplaUrunFiyat(item, cur);
             const satirToplam = birimFiyat * item.adet;
+            const stokItem = allData.find(d => d.stokKodu === item.stokKodu);
+            const stokHtml = stokItem ? `
+                <span style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:11px;font-weight:700;margin-top:2px;">
+                    <span style="color:#e67700;">FİİLİ: <b>${stokItem.fiili||0}</b></span>
+                    <span style="color:#aaa;">|</span>
+                    <span style="color:#c92a2a;">SATIŞ: <b>${stokItem.satis||0}</b></span>
+                    <span style="color:#aaa;">|</span>
+                    <span style="color:${(stokItem.kalan||0) > 0 ? '#2f9e44' : '#c92a2a'};">KALAN: <b>${stokItem.kalan||0}</b></span>
+                    <span style="color:#aaa;">|</span>
+                    ${(stokItem.ithalat||0) > 0
+                        ? `<span style="color:#1971c2;">İTHALAT: <b>${stokItem.ithalat}</b></span>`
+                        : `<span style="color:#868e96;font-weight:600;">Sipariş Yok</span>`}
+                </span>` : '';
             return `
             <div class="teklif-urun-item">
                 <div class="teklif-urun-ust">
                     <img src="${item.resim || 'https://placehold.jp/52x52.png?text=YOK'}" class="teklif-urun-resim" onerror="this.src='https://placehold.jp/52x52.png?text=YOK'">
                     <div style="flex:1;min-width:0;">
-                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
                             <span class="teklif-urun-kod">${item.stokKodu}</span>
                             <span class="teklif-urun-adi">${item.stokAdi}</span>
+                            ${stokHtml}
                         </div>
                         <div style="font-size:10px;color:var(--text-muted);">
-                            Liste: <b>${formatCurrency(hesaplaListeFiyat(item, cur))} ${sembol}</b>
+                            ${item.isEur
+                              ? `Liste: <b>${formatCurrency(item.fiyat)} €</b> / <b>${formatCurrency(item.fiyat * eurKur)} ₺</b>`
+                              : `Liste: <b>${formatCurrency(item.fiyat)} $</b> / <b>${formatCurrency(item.fiyat * usdKur)} ₺</b>`
+                            }
                             ${item.marka ? ' | ' + item.marka : ''}
                         </div>
                     </div>
@@ -1121,11 +1168,16 @@
 
         // Özet
         const araToplam = sepet.reduce((s, i) => s + hesaplaUrunFiyat(i, cur) * i.adet, 0);
+        const listeToplam = sepet.reduce((s, i) => s + hesaplaListeFiyat(i, cur) * i.adet, 0);
+        const indirimTutari = listeToplam - araToplam;
+        const ortIndirim = listeToplam > 0 ? (indirimTutari / listeToplam) * 100 : 0;
         const kdv = araToplam * 0.20;
         const genelToplam = araToplam + kdv;
         document.getElementById('ozet-ara-toplam').textContent = formatCurrency(araToplam) + ' ' + sembol;
         document.getElementById('ozet-kdv').textContent = formatCurrency(kdv) + ' ' + sembol;
         document.getElementById('ozet-genel-toplam').textContent = formatCurrency(genelToplam) + ' ' + sembol;
+        document.getElementById('ozet-ort-indirim').textContent = '%' + formatCurrency(ortIndirim);
+        document.getElementById('ozet-indirim-tutar').textContent = formatCurrency(indirimTutari) + ' ' + sembol;
     }
 
     function topluIndirimUygula() {
@@ -1137,13 +1189,14 @@
     }
 
     function hedefToplamHesapla() {
-        const hedef = parseFloat(document.getElementById('hedef-toplam-input').value);
+        const rawVal = document.getElementById('hedef-toplam-input').value.trim().replace(',', '.');
+        const hedef = parseFloat(rawVal);
         if (!hedef || hedef <= 0 || sepet.length === 0) return showToast('Geçerli bir hedef girin!', '#e63946');
         const cur = document.getElementById('teklif-para-birimi').value;
         const listToplamKdvli = sepet.reduce((s, i) => s + hesaplaListeFiyat(i, cur) * i.adet * 1.20, 0);
         const hesaplananIndirim = (1 - (hedef / listToplamKdvli)) * 100;
         if (hesaplananIndirim < 0) return showToast('Hedef, liste fiyatından yüksek olamaz!', '#f59f00');
-        sepet.forEach(i => { i.indirim = parseFloat(hesaplananIndirim.toFixed(8)); i.manuelFiyat = null; });
+        sepet.forEach(i => { i.indirim = parseFloat(hesaplananIndirim.toFixed(8)); i.manuelFiyat = null; i._manuelFiyatUSD = null; });
         teklifGuncelle();
         showToast(`Hedef için %${formatCurrency(hesaplananIndirim)} indirim uygulandı`, '#3b5bdb');
     }
@@ -1203,9 +1256,19 @@
     function teklifArsivGoster() {
         const el = document.getElementById('teklif-arsiv-listesi');
         if (!el) return;
-        if (teklifArsiv.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">Kayıtlı teklif yok.</div>'; return; }
+        const aramaEl = document.getElementById('arsiv-arama');
+        const aramaTerm = aramaEl ? aramaEl.value.trim().toLocaleLowerCase('tr') : '';
+        const slug = s => String(s||'').replace(/İ/g,'i').replace(/I/g,'ı').toLocaleLowerCase('tr');
+        const filtrelenmis = aramaTerm
+            ? teklifArsiv.filter(t =>
+                slug(t.musteri).includes(slug(aramaTerm)) ||
+                slug(t.tarih).includes(slug(aramaTerm)) ||
+                slug(String(t.id)).includes(slug(aramaTerm))
+              )
+            : teklifArsiv;
+        if (filtrelenmis.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">' + (aramaTerm ? 'Sonuç bulunamadı.' : 'Kayıtlı teklif yok.') + '</div>'; return; }
         const cur = (document.getElementById('teklif-para-birimi') || {}).value || 'TL';
-        el.innerHTML = teklifArsiv.map(t => `
+        el.innerHTML = filtrelenmis.map(t => `
             <div class="arsiv-item">
                 <div class="arsiv-item-top">
                     <span class="arsiv-musteri">${t.musteri}</span>
@@ -1214,6 +1277,7 @@
                 <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">${t.tarih}</div>
                 <div class="arsiv-btns">
                     <button class="arsiv-btn" style="background:#eef2ff;color:var(--accent-blue);" onclick="teklifArsivOnizle(${t.id})">👁 Önizle</button>
+                    <button class="arsiv-btn" style="background:#fff8f0;color:#e67700;" onclick="arsivPDFIndir(${t.id})">📄 PDF İndir</button>
                     <button class="arsiv-btn" style="background:#f0fff4;color:#00a859;" onclick="teklifArsivdenYukle(${t.id})">📂 Aç</button>
                     <button class="arsiv-btn" style="background:#fff1f2;color:#e63946;" onclick="teklifArsivdenSil(${t.id})">🗑 Sil</button>
                 </div>
@@ -1223,6 +1287,23 @@
     function teklifArsivOnizle(id) {
         const t = teklifArsiv.find(x => x.id === id);
         if (t) onizleData(t.items, t.musteri, t.tarih, t.paraBirimi || 'TL');
+    }
+
+    async function arsivPDFIndir(id) {
+        const t = teklifArsiv.find(x => x.id === id);
+        if (!t) return;
+        const origSepet = sepet;
+        const origMusteri = document.getElementById('teklif-musteri').value;
+        const origCur = document.getElementById('teklif-para-birimi').value;
+        // Geçici olarak arşiv verisini aktifte yükle
+        sepet = JSON.parse(JSON.stringify(t.items));
+        document.getElementById('teklif-musteri').value = t.musteri;
+        document.getElementById('teklif-para-birimi').value = t.paraBirimi || 'TL';
+        await teklifPDFIndir();
+        // Eski duruma geri al
+        sepet = origSepet;
+        document.getElementById('teklif-musteri').value = origMusteri;
+        document.getElementById('teklif-para-birimi').value = origCur;
     }
 
     function teklifOnizle() {
@@ -1251,10 +1332,10 @@
                         <span style="font-size:11px;color:#888;">%${typeof i.indirim === 'number' ? i.indirim.toFixed(1) : i.indirim} İndirim</span>
                     </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:20px;text-align:right;">
-                    <div><div style="font-size:9px;color:#888;">Birim</div><span style="font-size:13px;font-weight:600;">${formatCurrency(birimFiyat)} ${sembol}</span></div>
-                    <div><div style="font-size:9px;color:#888;">Adet</div><span style="font-size:13px;font-weight:700;">${i.adet}</span></div>
-                    <div><div style="font-size:9px;color:#888;">Toplam</div><span style="font-size:14px;font-weight:800;">${formatCurrency(satirToplam)} ${sembol}</span></div>
+                <div style="display:flex;align-items:center;gap:20px;text-align:center;">
+                    <div style="min-width:80px;text-align:center;"><div style="font-size:9px;color:#888;text-align:center;">Birim</div><span style="font-size:13px;font-weight:600;display:block;text-align:center;">${formatCurrency(birimFiyat)} ${sembol}</span></div>
+                    <div style="min-width:40px;text-align:center;"><div style="font-size:9px;color:#888;text-align:center;">Adet</div><span style="font-size:13px;font-weight:700;display:block;text-align:center;">${i.adet}</span></div>
+                    <div style="min-width:80px;text-align:center;"><div style="font-size:9px;color:#888;text-align:center;">Toplam</div><span style="font-size:14px;font-weight:800;display:block;text-align:center;">${formatCurrency(satirToplam)} ${sembol}</span></div>
                 </div>
             </div>`;
         }).join('');
@@ -1337,15 +1418,12 @@
         doc.text(musteri.toUpperCase(), 15, 52);
         doc.line(15, 55, 195, 55);
 
-        const tableBody = sepet.map((i, index) => {
-            const unitPrice = hesaplaUrunFiyat(i, cur);
-            return [index + 1, i.stokKodu, "", i.stokAdi, `${formatCurrency(unitPrice)} ${sembol}`, i.adet, `${formatCurrency(unitPrice * i.adet)} ${sembol}`];
-        });
-
         const imagePromises = sepet.map(async (item) => {
             if (!item.resim) return null;
             try {
-                const response = await fetch(item.resim);
+                // CORS sorununu aşmak için cache-busting ve no-cors yerine credentials omit
+                const response = await fetch(item.resim, { mode: 'cors', credentials: 'omit' });
+                if (!response.ok) throw new Error('fetch failed');
                 const blob = await response.blob();
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -1353,7 +1431,24 @@
                     reader.onerror = reject;
                     reader.readAsDataURL(blob);
                 });
-            } catch (e) { return null; }
+            } catch (e) {
+                // Fallback: canvas üzerinden yükle
+                try {
+                    return await new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.naturalWidth || 100;
+                            canvas.height = img.naturalHeight || 100;
+                            canvas.getContext('2d').drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/jpeg', 0.85));
+                        };
+                        img.onerror = () => resolve(null);
+                        img.src = item.resim + (item.resim.includes('?') ? '&' : '?') + '_t=' + Date.now();
+                    });
+                } catch(e2) { return null; }
+            }
         });
         const loadedImages = await Promise.all(imagePromises);
 
@@ -1361,11 +1456,20 @@
             startY: 60,
             margin: { left: 15, right: 15, bottom: 25 },
             head: [['No', 'Kod', 'Resim', 'Ürün Özellikleri', 'İndirimli Fiyat', 'Adet', 'Toplam']],
-            body: tableBody,
+            body: sepet.map((i, index) => {
+                const indirimliF = hesaplaUrunFiyat(i, cur);
+                return [index + 1, i.stokKodu, "", i.stokAdi,
+                    `${formatCurrency(indirimliF)} ${sembol}`,
+                    i.adet,
+                    `${formatCurrency(indirimliF * i.adet)} ${sembol}`];
+            }),
             theme: 'striped',
-            styles: { font: 'Roboto', fontSize: 8, minCellHeight: 15, valign: 'middle' },
-            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0] },
-            columnStyles: { 2: { cellWidth: 20 }, 3: { cellWidth: 'auto' } },
+            styles: { font: 'Roboto', fontSize: 8, minCellHeight: 15, valign: 'middle', halign: 'center' },
+            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], halign: 'center' },
+            columnStyles: {
+                2: { cellWidth: 18 },
+                3: { cellWidth: 'auto', halign: 'left' }
+            },
             didDrawPage: (data) => { drawPageExtras(doc, data.pageNumber); },
             didDrawCell: (data) => {
                 if (data.column.index === 2 && data.cell.section === 'body') {
@@ -1424,7 +1528,7 @@
         const totalReserved = item.satisListesi ? item.satisListesi.reduce((s,x) => s+(parseInt(x.adet)||0), 0) : 0;
         const kalanRenk = item.kalan > 0 ? '#00a859' : '#ff0000';
         let depoHtml = '';
-        [{isim:'ÖMERLİ',adet:item.depoL},{isim:'SHOWROOM',adet:item.depoN},{isim:'ŞİRKET',adet:item.depoO},{isim:'TAMİR',adet:item.depoP}]
+        [{isim:'ÖMERLİ',adet:item.depoL},{isim:'SHOWROOM',adet:item.depoN},{isim:'TAMİR',adet:item.depoP}]
             .forEach(d => { if(parseInt(d.adet)>0) depoHtml+=`<div style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim} <strong>${d.adet} Adet</strong></div>`; });
 
         document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi;
@@ -1432,9 +1536,10 @@
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum</strong> ${item.stokDurumu}</div>
             <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.marka && item.marka.includes('PANATTA') ? '€' : '$') : '-'}</div>
+            <div class="info-row" style="font-weight:800;margin-top:6px;color:#1a1f36;"><strong>FİZİKİ STOK</strong> ${item.fiili}</div>
+            ${depoHtml}
             <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK</strong> ${item.kalan}</div>
-            <div class="info-row" style="color:#2980b9"><strong>SİPARİŞ</strong> ${item.manuelSiparis||0}</div>
-            ${depoHtml}</div>`;
+            </div>`;
         html += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
         if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(l => html+=`<div class="info-row" style="color:#00a859">✔ ${l}</div>`);
         else html += `<div class="info-row" style="color:#999">Gelecek ürün yok.</div>`;
