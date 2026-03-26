@@ -601,7 +601,7 @@
         document.getElementById('data-name').textContent = file.name;
         const reader = new FileReader();
         reader.onload = function(evt) {
-            const wb = XLSX.read(evt.target.result, {type: 'binary'});
+            const wb = XLSX.read(new Uint8Array(evt.target.result), {type: 'array'});
 
             const wsStok = wb.Sheets['ANLIK_STOK_DATA'];
             if(!wsStok) return alert('ANLIK_STOK_DATA sayfası bulunamadı!');
@@ -774,7 +774,7 @@
             saveAndRender();
             alert('✅ Veriler başarıyla güncellendi!\n📦 Toplam ' + allData.length + ' adet ürün yüklendi.');
         };
-        reader.readAsBinaryString(file);
+        reader.readAsArrayBuffer(file);
     });
 
     document.getElementById('notes-file').addEventListener('change', function(e) {
@@ -782,7 +782,7 @@
         if(!file) return;
         const reader = new FileReader();
         reader.onload = function(evt) {
-            const workbook = XLSX.read(evt.target.result, {type: 'binary'});
+            const workbook = XLSX.read(new Uint8Array(evt.target.result), {type: 'array'});
             const itemSheet = workbook.Sheets['Urun_Duzen_Ve_Siparis'];
             if(itemSheet) {
                 const itemData = XLSX.utils.sheet_to_json(itemSheet);
@@ -821,8 +821,7 @@
             saveAndRender();
             alert('Tüm verileriniz başarıyla diğer bilgisayardan aktarıldı!');
         };
-        reader.readAsBinaryString(file);
-    });
+        reader.readAsArrayBuffer(file);
 
     function saveAndRender() {
         localStorage.setItem('masterInventoryData', JSON.stringify(allData));
