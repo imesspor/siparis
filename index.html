@@ -1230,14 +1230,15 @@
             return minGun;
         }
 
+        const toplamKarsilama = kalan + ithalat;
         if (kalan >= istenenAdet) {
             return '<span class="stok-uyari-yesil">(UYGUN)</span>';
-        } else if (ithalat > 0) {
+        } else if (ithalat > 0 && toplamKarsilama >= istenenAdet) {
             const gun = enYakinIthalatGun();
             const gunYazi = gun !== null ? gun + ' GÜN' : 'YAKINDA';
             return '<span class="stok-uyari-mavi">(TERMİN: ' + gunYazi + ')</span>';
         } else {
-            return '<span class="stok-uyari-kirmizi">(STOK YOK DEĞİŞTİR)</span>';
+            return '<span class="stok-uyari-kirmizi">(STOK YOK / SİPARİŞ YOK)</span>';
         }
     }
 
