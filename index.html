@@ -1686,7 +1686,7 @@
         const totalReserved = item.satisListesi ? item.satisListesi.reduce((s,x) => s+(parseInt(x.adet)||0), 0) : 0;
         const kalanRenk = item.kalan > 0 ? '#00a859' : '#ff0000';
         let depoHtml = '';
-        [{isim:'ÖMERLİ',adet:item.depoL},{isim:'SHOWROOM',adet:item.depoN},{isim:'TAMİR',adet:item.depoP}]
+        [{isim:'ÖMERLİ:',adet:item.depoL},{isim:'SHOWROOM:',adet:item.depoN},{isim:'TAMİR:',adet:item.depoP}]
             .forEach(d => { if(parseInt(d.adet)>0) depoHtml+=`<div style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim} <strong>${d.adet} Adet</strong></div>`; });
 
         document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi;
