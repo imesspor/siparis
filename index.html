@@ -328,6 +328,8 @@
             🛒 TEKLİFE GİT
             <span class="sepet-badge" id="sepet-badge">0</span>
         </button>
+        <button class="btn-action" style="background:linear-gradient(135deg,#1971c2,#339af0);" onclick="document.getElementById('teklif-import-file').click()" title="PDF veya Excel teklif dosyası yükle">📥 TEKLİFİ İÇERİ AL</button>
+        <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
         <div class="brand-tabs">
             <button id="btn-proforce" class="tab-btn proforce active" onclick="switchBrand('PROFORCE')">PROFORCE</button>
             <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
@@ -441,13 +443,11 @@
             <div class="teklif-ozet-box" id="teklif-ozet-box">
                 <div class="teklif-ozet-satir"><span>Ara Toplam:</span><span id="ozet-ara-toplam">0,00</span></div>
                 <div class="teklif-ozet-satir"><span>KDV (%20):</span><span id="ozet-kdv">0,00</span></div>
-                <div class="teklif-ozet-toplam"><span>GENEL TOPLAM:</span><span id="ozet-genel-toplam">0,00</span></div>
+                <div class="teklif-ozet-toplam" style="font-size:12px;font-weight:800;"><span style="font-weight:800;">GENEL TOPLAM:</span><span id="ozet-genel-toplam" style="font-weight:800;">0,00</span></div>
                 <div class="teklif-ozet-satir" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:6px;opacity:1;">
                     <span>📉 Ort. İndirim:</span><span id="ozet-ort-indirim" style="color:#ffd43b;font-weight:800;">%0,00</span>
                 </div>
-                <div class="teklif-ozet-satir">
-                    <span>💰 Toplam İndirim Tutarı:</span><span id="ozet-indirim-tutar" style="color:#ffd43b;font-weight:800;">0,00</span>
-                </div>
+                <span id="ozet-indirim-tutar" style="display:none;">0,00</span>
             </div>
             <!-- Aksiyonlar -->
             <button class="teklif-action-btn btn-onizle" onclick="teklifOnizle()">👁 Önizle</button>
@@ -993,24 +993,32 @@
         document.getElementById('teklif-musteri').value = custName;
 
         urunler.forEach(({ item, adet }) => {
+            // Revize için güncel stok verisini allData'dan al
+            const canliItem = allData.find(d => d.stokKodu === item.stokKodu) || item;
             let ithalatNotu = '';
-            if(item.ithalatDetay) {
-                const satirlar = item.ithalatDetay.split('\n').filter(Boolean);
+            if(canliItem.ithalatDetay) {
+                const satirlar = canliItem.ithalatDetay.split('\n').filter(Boolean);
                 if(satirlar.length > 0) ithalatNotu = satirlar.join(' | ');
             }
             sepet.push({
                 id: Date.now() + Math.random(),
-                stokKodu: item.stokKodu,
-                stokAdi: item.stokAdi,
-                marka: item.marka || '',
-                isEur: (item.marka || '').includes('PANATTA'),
-                fiyat: item.fiyat,
-                resim: item.resim || '',
+                stokKodu: canliItem.stokKodu,
+                stokAdi: canliItem.stokAdi,
+                marka: canliItem.marka || '',
+                isEur: (canliItem.marka || '').includes('PANATTA'),
+                fiyat: canliItem.fiyat,
+                resim: canliItem.resim || '',
                 adet: adet,
                 indirim: 0,
                 manuelFiyat: null,
                 _ithalatNotu: ithalatNotu,
-                _revize: !!revize
+                _revize: !!revize,
+                _revizeStok: revize ? {
+                    fiili: canliItem.fiili,
+                    satis: canliItem.satis,
+                    kalan: canliItem.kalan,
+                    ithalat: canliItem.ithalat
+                } : null
             });
         });
 
@@ -1334,6 +1342,53 @@
         }
     }
 
+    // ── Stok Uyarı Etiketi (Revize Teklif) ──
+    // Revize teklifte müşterinin adedi zaten Satış sütununa dahil.
+    // Kalan değeri olduğu gibi kullanılır — düzeltme yapılmaz.
+    function stokUyariRevize(stokItem, istenenAdet) {
+        if (!stokItem) return '';
+        const kalan = stokItem.kalan || 0;
+        const ithalat = stokItem.ithalat || 0;
+
+        function enYakinIthalatGun() {
+            if (!stokItem.ithalatDetay) return null;
+            const satirlar = stokItem.ithalatDetay.split('\n').filter(Boolean);
+            let minGun = null;
+            const bugun = new Date(); bugun.setHours(0,0,0,0);
+            for (const s of satirlar) {
+                const m = s.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+                if (m) {
+                    const tarih = new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+                    tarih.setHours(0,0,0,0);
+                    const gun = Math.ceil((tarih - bugun) / (1000*60*60*24));
+                    if (gun >= 0 && (minGun === null || gun < minGun)) minGun = gun;
+                }
+            }
+            return minGun;
+        }
+
+        if (kalan < 0) {
+            // Eksiye düşmüş → fazla satılmış, çare gerekli
+            if (ithalat > 0 && (kalan + ithalat) >= istenenAdet) {
+                const gun = enYakinIthalatGun();
+                const gunYazi = gun !== null ? gun + ' GÜN' : 'YAKINDA';
+                return '<span style="background:#1971c2;color:white;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;white-space:nowrap;">⚠️ TERMİN: ' + gunYazi + '</span>';
+            }
+            return '<span style="background:#e63946;color:white;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;white-space:nowrap;">❌ STOK YOK / SİPARİŞ YOK</span>';
+        } else if (kalan >= istenenAdet || kalan === 0) {
+            // Kalan 0 = tam tamına karşılanmış (müşteri adedi zaten Satış'ta), kalan > adet = fazladan var
+            return '<span style="background:#2f9e44;color:white;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;white-space:nowrap;">✅ UYGUN</span>';
+        } else if (ithalat > 0 && (kalan + ithalat) >= istenenAdet) {
+            // Stok tek başına yetmiyor ama ithalatla kapanıyor
+            const gun = enYakinIthalatGun();
+            const gunYazi = gun !== null ? gun + ' GÜN' : 'YAKINDA';
+            return '<span style="background:#1971c2;color:white;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;white-space:nowrap;">⚠️ TERMİN: ' + gunYazi + '</span>';
+        } else {
+            // Kalan var ama yetersiz, ithalat da yetmiyor
+            return '<span style="background:#c92a2a;color:white;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;white-space:nowrap;">🚨 KRİTİK</span>';
+        }
+    }
+
     function teklifGuncelle() {
         const cur = document.getElementById('teklif-para-birimi') ? document.getElementById('teklif-para-birimi').value : 'TL';
         const sembol = sembolAl(cur);
@@ -1350,20 +1405,35 @@
         }
         bos.style.display = 'none';
 
-        liste.innerHTML = sepet.map(item => {
+        // Sepeti grup hiyerarşisine göre sırala (slicerOrderMap'teki sıraya göre)
+        const orderedCats = slicerOrderMap[currentBrand] || [];
+        const sepetSirali = [...sepet].sort((a, b) => {
+            const itemA = allData.find(d => d.stokKodu === a.stokKodu);
+            const itemB = allData.find(d => d.stokKodu === b.stokKodu);
+            const catA = itemA ? (itemA.ozelKod5 || '') : '';
+            const catB = itemB ? (itemB.ozelKod5 || '') : '';
+            const idxA = orderedCats.length ? (orderedCats.indexOf(catA) >= 0 ? orderedCats.indexOf(catA) : 9999) : catA.localeCompare(catB, 'tr', {numeric:true});
+            const idxB = orderedCats.length ? (orderedCats.indexOf(catB) >= 0 ? orderedCats.indexOf(catB) : 9999) : 0;
+            if (orderedCats.length) return idxA - idxB;
+            return catA.localeCompare(catB, 'tr', {numeric:true});
+        });
+
+        liste.innerHTML = sepetSirali.map(item => {
             const birimFiyat = hesaplaUrunFiyat(item, cur);
             const satirToplam = birimFiyat * item.adet;
             const stokItem = allData.find(d => d.stokKodu === item.stokKodu);
-            const stokHtml = stokItem ? `
+            // Revize teklif için _revizeStok varsa onu kullan, yoksa allData'dan al
+            const stokGoster = item._revize ? (item._revizeStok || stokItem) : stokItem;
+            const stokHtml = stokGoster ? `
                 <span style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:11px;font-weight:700;margin-top:2px;">
-                    <span style="color:#e67700;">FİİLİ: <b>${stokItem.fiili||0}</b></span>
+                    <span style="color:#e67700;">FİİLİ: <b>${stokGoster.fiili||0}</b></span>
                     <span style="color:#aaa;">|</span>
-                    <span style="color:#c92a2a;">SATIŞ: <b>${stokItem.satis||0}</b></span>
+                    <span style="color:#c92a2a;">SATIŞ: <b>${stokGoster.satis||0}</b></span>
                     <span style="color:#aaa;">|</span>
-                    <span style="color:${(stokItem.kalan||0) > 0 ? '#2f9e44' : '#c92a2a'};">KALAN: <b>${stokItem.kalan||0}</b></span>
+                    <span style="color:${(stokGoster.kalan||0) > 0 ? '#2f9e44' : '#c92a2a'};">KALAN: <b>${stokGoster.kalan||0}</b></span>
                     <span style="color:#aaa;">|</span>
-                    ${(stokItem.ithalat||0) > 0
-                        ? `<span style="color:#1971c2;">İTHALAT: <b>${stokItem.ithalat}</b></span>`
+                    ${(stokGoster.ithalat||0) > 0
+                        ? `<span style="color:#1971c2;">İTHALAT: <b>${stokGoster.ithalat}</b></span>`
                         : `<span style="color:#868e96;font-weight:600;">Sipariş Yok</span>`}
                 </span>` : '';
             return `
@@ -1374,7 +1444,7 @@
                         <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
                             <span class="teklif-urun-kod">${item.stokKodu}</span>
                             <span class="teklif-urun-adi">${item.stokAdi}</span>
-                            ${(stokItem && !item._revize) ? stokUyariHesapla(stokItem, item.adet) : (item._revize ? '<span style="background:#7950f2;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;">REVİZE</span>' : '')}
+                            ${(stokItem && !item._revize) ? stokUyariHesapla(stokItem, item.adet) : (item._revize ? '<span style="background:#7950f2;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;">REZERVE 🔄</span> ' + stokUyariRevize(stokItem, item.adet) : '')}
                             ${stokHtml}
                         </div>
                         <div style="font-size:10px;color:var(--text-muted);">
@@ -1458,6 +1528,9 @@
         document.getElementById('teklif-musteri').value = '';
         document.getElementById('toplu-indirim-input').value = '';
         document.getElementById('hedef-toplam-input').value = '';
+        // Aktif teklif başlık sıfırla
+        window._aktifTeklifId = null;
+        window._aktifTeklifBaslik = null;
         sepetBadgeGuncelle();
         // Tablodaki butonları sıfırla
         document.querySelectorAll('.btn-sepete-ekle.zaten-var').forEach(btn => {
@@ -1473,17 +1546,75 @@
         if (!musteri) return showToast('Müşteri adı girin!', '#e63946');
         const cur = document.getElementById('teklif-para-birimi').value;
         const genelToplam = sepet.reduce((s, i) => s + hesaplaUrunFiyat(i, cur) * i.adet, 0) * 1.20;
+
+        // Değişmedi kontrolü: mevcut bir teklif açıksa içerik aynı mı?
+        if (window._aktifTeklifId) {
+            const orijinal = teklifArsiv.find(x => x.id === window._aktifTeklifId);
+            if (orijinal) {
+                const eskiJson = JSON.stringify(orijinal.items.map(i => ({k: i.stokKodu, a: i.adet, f: i.manuelFiyat, ind: i.indirim})));
+                const yeniJson = JSON.stringify(sepet.map(i => ({k: i.stokKodu, a: i.adet, f: i.manuelFiyat, ind: i.indirim})));
+                if (eskiJson === yeniJson && orijinal.musteri === musteri && orijinal.paraBirimi === cur) {
+                    return showToast('⚠️ Mevcut teklif değişmedi — kayıt yapılmadı.', '#f59f00');
+                }
+            }
+        }
+
+        // Otomatik versiyonlama: Başlık üret
+        let baslik;
+        if (window._aktifTeklifId) {
+            // Mevcut bir teklifi revize ediyoruz → Rev01, Rev02...
+            const orijinal = teklifArsiv.find(x => x.id === window._aktifTeklifId);
+            const orijBaslik = orijinal ? (orijinal.baslik || orijinal.musteri) : musteri;
+            // Rev numarası var mı?
+            const revMatch = orijBaslik.match(/_Rev(\d+)$/i);
+            if (revMatch) {
+                const revNo = parseInt(revMatch[1]) + 1;
+                baslik = orijBaslik.replace(/_Rev\d+$/i, '') + '_Rev' + String(revNo).padStart(2, '0');
+            } else {
+                baslik = orijBaslik + '_Rev01';
+            }
+        } else {
+            // Yeni teklif: aynı müşteri adına kaç teklif var?
+            const benzer = teklifArsiv.filter(t => {
+                const b = t.baslik || t.musteri;
+                // Base isim (Rev ve TEKLİF numarası olmadan)
+                return b.replace(/_Rev\d+$/i, '').replace(/\s+TEKLİF-\d+$/, '') === musteri ||
+                       (t.musteri === musteri && !b.includes('_Rev'));
+            });
+            if (benzer.length === 0) {
+                baslik = musteri;
+            } else {
+                // TEKLİF-1, TEKLİF-2 vs.
+                const nums = benzer.map(t => {
+                    const b = t.baslik || t.musteri;
+                    const m = b.match(/TEKLİF-(\d+)$/);
+                    return m ? parseInt(m[1]) : 0;
+                });
+                const maxNum = Math.max(...nums, 0);
+                if (maxNum === 0 && benzer.length === 1 && !benzer[0].baslik?.includes('TEKLİF-')) {
+                    // İlk kayıt TEKLİF-1 olmadan kaydedilmiş, şimdi TEKLİF-1 yap önce, bunu TEKLİF-2 yap
+                    baslik = musteri + ' TEKLİF-2';
+                } else {
+                    baslik = musteri + ' TEKLİF-' + (maxNum + 1);
+                }
+            }
+        }
+
         teklifArsiv.unshift({
             id: Date.now(),
             musteri,
+            baslik,
             tarih: new Date().toLocaleString('tr-TR'),
             items: JSON.parse(JSON.stringify(sepet)),
             paraBirimi: cur,
             genelToplam
         });
         localStorage.setItem('teklif_arsiv', JSON.stringify(teklifArsiv));
+        // Yeni kaydı aktif teklif olarak işaretle
+        window._aktifTeklifId = teklifArsiv[0].id;
+        window._aktifTeklifBaslik = baslik;
         teklifArsivGoster();
-        showToast('✔ Teklif kaydedildi', '#00a859');
+        showToast('✔ Teklif kaydedildi: ' + baslik, '#00a859');
     }
 
     function teklifArsivdenYukle(id) {
@@ -1492,9 +1623,12 @@
         sepet = JSON.parse(JSON.stringify(t.items));
         document.getElementById('teklif-musteri').value = t.musteri;
         if (t.paraBirimi) document.getElementById('teklif-para-birimi').value = t.paraBirimi;
+        // Aktif teklif takibi
+        window._aktifTeklifId = t.id;
+        window._aktifTeklifBaslik = t.baslik || t.musteri;
         sepetBadgeGuncelle();
         teklifGuncelle();
-        showToast('Teklif yüklendi', '#3b5bdb');
+        showToast('Teklif yüklendi: ' + (t.baslik || t.musteri), '#3b5bdb');
     }
 
     function teklifArsivdenSil(id) {
@@ -1522,10 +1656,10 @@
         el.innerHTML = filtrelenmis.map(t => `
             <div class="arsiv-item">
                 <div class="arsiv-item-top">
-                    <span class="arsiv-musteri">${t.musteri}</span>
+                    <span class="arsiv-musteri">${t.baslik || t.musteri}</span>
                     <span class="arsiv-tutar">${formatCurrency(t.genelToplam)} ${sembolAl(t.paraBirimi || 'TL')}</span>
                 </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">${t.tarih}</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">${t.tarih}${t.baslik && t.baslik !== t.musteri ? ' · ' + t.musteri : ''}</div>
                 <div class="arsiv-btns">
                     <button class="arsiv-btn" style="background:#eef2ff;color:var(--accent-blue);" onclick="teklifArsivOnizle(${t.id})">👁 Önizle</button>
                     <button class="arsiv-btn" style="background:#fff8f0;color:#e67700;" onclick="arsivPDFIndir(${t.id})">📄 PDF İndir</button>
@@ -1630,6 +1764,10 @@
 
     async function teklifPDFIndir() {
         if (sepet.length === 0) return showToast('Sepet boş!', '#e63946');
+        return _teklifPDFOlustur(false);
+    }
+
+    async function _teklifPDFOlustur(stokDurumluMu) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
 
@@ -1669,7 +1807,21 @@
         doc.text(musteri.toUpperCase(), 15, 52);
         doc.line(15, 55, 195, 55);
 
-        const imagePromises = sepet.map(async (item) => {
+        // PDF için sepeti grup sırasına göre sırala
+        const pdfOrderedCats = slicerOrderMap[currentBrand] || [];
+        const sepetPDF = [...sepet].sort((a, b) => {
+            const iA = allData.find(d => d.stokKodu === a.stokKodu);
+            const iB = allData.find(d => d.stokKodu === b.stokKodu);
+            const cA = iA ? (iA.ozelKod5 || '') : '';
+            const cB = iB ? (iB.ozelKod5 || '') : '';
+            if (pdfOrderedCats.length) {
+                const iA2 = pdfOrderedCats.indexOf(cA); const iB2 = pdfOrderedCats.indexOf(cB);
+                return (iA2 >= 0 ? iA2 : 9999) - (iB2 >= 0 ? iB2 : 9999);
+            }
+            return cA.localeCompare(cB, 'tr', {numeric:true});
+        });
+
+        const imagePromises = sepetPDF.map(async (item) => {
             if (!item.resim) return null;
             try {
                 // CORS sorununu aşmak için cache-busting ve no-cors yerine credentials omit
@@ -1707,9 +1859,37 @@
             startY: 60,
             margin: { left: 15, right: 15, bottom: 25 },
             head: [['No', 'Kod', 'Resim', 'Ürün Özellikleri', 'İndirimli Fiyat', 'Adet', 'Toplam']],
-            body: sepet.map((i, index) => {
+            body: sepetPDF.map((i, index) => {
                 const indirimliF = hesaplaUrunFiyat(i, cur);
-                return [index + 1, i.stokKodu, "", i.stokAdi,
+                // Stok durumu bilgisini ürün adının altına ekle
+                let urunSatiri = i.stokAdi;
+                if (stokDurumluMu) {
+                    const si = allData.find(d => d.stokKodu === i.stokKodu);
+                    if (si) {
+                        const kalan = si.kalan || 0;
+                        const ithalat = si.ithalat || 0;
+                        let terminTarihleri = '';
+                        if (si.ithalatDetay) {
+                            const satirlar = si.ithalatDetay.split('\n').filter(Boolean);
+                            terminTarihleri = satirlar.map(s => {
+                                const m = s.match(/(\d{2}\.\d{2}\.\d{4})/);
+                                return m ? m[1] : '';
+                            }).filter(Boolean).join(' | ');
+                        }
+                        let durumYazi = '';
+                        if (kalan >= i.adet) {
+                            durumYazi = '✓ UYGUN (Stok: ' + kalan + ')';
+                        } else if (ithalat > 0 && (kalan + ithalat) >= i.adet) {
+                            durumYazi = '◷ TERMİN' + (terminTarihleri ? ': ' + terminTarihleri : '') + ' (Stok: ' + kalan + ')';
+                        } else if (kalan <= 0 || (kalan + ithalat) < i.adet) {
+                            durumYazi = '✗ STOK YOK / SİPARİŞ YOK';
+                        } else {
+                            durumYazi = '! KRİTİK (Stok: ' + kalan + ')';
+                        }
+                        urunSatiri = i.stokAdi + '\n' + durumYazi;
+                    }
+                }
+                return [index + 1, i.stokKodu, "", urunSatiri,
                     `${formatCurrency(indirimliF)} ${sembol}`,
                     i.adet,
                     `${formatCurrency(indirimliF * i.adet)} ${sembol}`];
@@ -1729,11 +1909,30 @@
                         try { doc.addImage(imageData, 'JPEG', data.cell.x + 2, data.cell.y + 2, 11, 11, undefined, 'FAST'); } catch(e) {}
                     }
                 }
+                // Stok durumu satırını renklendir
+                if (stokDurumluMu && data.column.index === 3 && data.cell.section === 'body') {
+                    const lines = data.cell.text;
+                    if (lines && lines.length > 1) {
+                        const durumSatir = lines[lines.length - 1] || '';
+                        let renk = [80, 80, 80];
+                        if (durumSatir.includes('UYGUN')) renk = [47, 158, 68];
+                        else if (durumSatir.includes('TERMİN')) renk = [25, 113, 194];
+                        else if (durumSatir.includes('STOK YOK') || durumSatir.includes('KRİTİK')) renk = [201, 42, 42];
+                        const x = data.cell.x + 2;
+                        const lineH = data.cell.styles.fontSize * 0.35;
+                        const y = data.cell.y + data.cell.height - lineH - 1.5;
+                        doc.setFontSize(7);
+                        doc.setTextColor(...renk);
+                        doc.text(durumSatir, x, y);
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFontSize(8);
+                    }
+                }
             }
         });
 
         let finalY = doc.lastAutoTable.finalY + 10;
-        const subtotal = sepet.reduce((s, i) => s + hesaplaUrunFiyat(i, cur) * i.adet, 0);
+        const subtotal = sepetPDF.reduce((s, i) => s + hesaplaUrunFiyat(i, cur) * i.adet, 0);
         if (finalY > 210) { doc.addPage(); finalY = 30; }
 
         doc.setFontSize(9);
@@ -1763,7 +1962,7 @@
         doc.text("Satıcı Onayı", 15, signY); doc.line(15, signY + 2, 60, signY + 2);
         doc.text("Müşteri Onayı", 135, signY); doc.line(135, signY + 2, 180, signY + 2);
 
-        const fileName = `${musteri.replace(/\s+/g, '_')}_Teklif.pdf`;
+        const fileName = `${musteri.replace(/\s+/g, '_')}_Teklif${stokDurumluMu ? '_Stok' : ''}.pdf`;
         const blob = doc.output('blob');
         if (navigator.share && /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const file = new File([blob], fileName, { type: 'application/pdf' });
@@ -1782,7 +1981,8 @@
         [{isim:'ÖMERLİ:',adet:item.depoL},{isim:'SHOWROOM:',adet:item.depoN},{isim:'TAMİR:',adet:item.depoP}]
             .forEach(d => { if(parseInt(d.adet)>0) depoHtml+=`<div style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim} <strong>${d.adet} Adet</strong></div>`; });
 
-        document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi;
+        const grupLabel = item.ozelKod5 ? ' (' + item.ozelKod5.replace(/^\d+-/, '') + ')' : '';
+        document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi + grupLabel;
         let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum</strong> ${item.stokDurumu}</div>
@@ -1833,6 +2033,180 @@
         const t = document.createElement("div"); t.textContent = m;
         t.style = `position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:${c}; color:white; padding:10px 20px; border-radius:20px; z-index:10000; font-size:12px; font-family:inherit; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
         document.body.appendChild(t); setTimeout(() => t.remove(), 1800);
+    }
+
+    // =============================================
+    // TEKLİF İÇERİ AKTAR (Excel/PDF → Sepet)
+    // =============================================
+    document.getElementById('teklif-import-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        this.value = '';
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'pdf') {
+            showToast('⚠️ PDF aktarımı: ürün kodları metin olarak okunacak', '#f59f00');
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                // PDF text extraction via basic pattern matching (no library needed for code+qty)
+                const bytes = new Uint8Array(evt.target.result);
+                let text = '';
+                for (let i = 0; i < bytes.length; i++) {
+                    if (bytes[i] >= 32 && bytes[i] < 127) text += String.fromCharCode(bytes[i]);
+                    else text += ' ';
+                }
+                teklifImportIsle(text, null);
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            // Excel
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const wb = XLSX.read(evt.target.result, {type: 'array'});
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ''});
+                    teklifImportIsle(null, rows);
+                } catch(err) {
+                    showToast('❌ Excel okunamadı: ' + err.message, '#e63946');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    });
+
+    function teklifImportIsle(pdfText, excelRows) {
+        const bulunan = [];
+        const bulunamayan = [];
+
+        if (excelRows) {
+            // Başlık satırını bul
+            let kodCol = -1, adetCol = -1, fiyatCol = -1;
+            let startRow = 0;
+            for (let r = 0; r < Math.min(10, excelRows.length); r++) {
+                const row = excelRows[r].map(c => String(c||'').toUpperCase().trim());
+                const ki = row.findIndex(c => c.includes('KOD') || c === 'STOK KODU' || c === 'ÜRÜN KODU' || c === 'PRODUCT CODE');
+                const ai = row.findIndex(c => c === 'ADET' || c === 'QTY' || c === 'MİKTAR' || c === 'QUANTITY');
+                const fi = row.findIndex(c => c.includes('FİYAT') || c.includes('FIYAT') || c.includes('PRICE') || c.includes('BİRİM'));
+                if (ki >= 0) { kodCol = ki; adetCol = ai >= 0 ? ai : -1; fiyatCol = fi >= 0 ? fi : -1; startRow = r + 1; break; }
+            }
+            // Başlık bulunamadıysa ilk sütun = kod, ikinci = adet tahmini
+            if (kodCol < 0) { kodCol = 0; adetCol = 1; startRow = 1; }
+
+            for (let r = startRow; r < excelRows.length; r++) {
+                const row = excelRows[r];
+                const rawKod = String(row[kodCol] || '').trim();
+                if (!rawKod || rawKod.length < 2) continue;
+                const adet = parseInt(row[adetCol]) || 1;
+                const rawFiyat = fiyatCol >= 0 ? String(row[fiyatCol] || '').replace(/[^0-9.,]/g,'').replace(',','.') : '';
+                const dosyaFiyat = rawFiyat ? parseFloat(rawFiyat) : null;
+
+                const item = allData.find(d => d.stokKodu.toUpperCase() === rawKod.toUpperCase());
+                if (item) {
+                    bulunan.push({ item, adet, dosyaFiyat });
+                } else {
+                    bulunamayan.push(rawKod);
+                }
+            }
+        } else if (pdfText) {
+            // PDF: boşluklarla ayrılmış token'lardan stok kodu eşleştir
+            const tokens = pdfText.split(/\s+/).filter(Boolean);
+            const kodSet = new Set(allData.map(d => d.stokKodu.toUpperCase()));
+            let i = 0;
+            while (i < tokens.length) {
+                const tok = tokens[i].toUpperCase();
+                if (kodSet.has(tok)) {
+                    const adet = parseInt(tokens[i+1]) || 1;
+                    const item = allData.find(d => d.stokKodu.toUpperCase() === tok);
+                    bulunan.push({ item, adet, dosyaFiyat: null });
+                    i += 2;
+                } else {
+                    i++;
+                }
+            }
+        }
+
+        if (bulunan.length === 0) {
+            return showToast('❌ Eşleşen ürün bulunamadı. Dosyayı kontrol edin.', '#e63946');
+        }
+
+        // Sepete aktar + indirim paneli göster
+        if (sepet.length > 0 && !confirm(bulunan.length + ' ürün bulundu. Mevcut teklif temizlenip aktarılsın mı?')) return;
+
+        sepet = [];
+        document.querySelectorAll('.btn-sepete-ekle.zaten-var').forEach(btn => { btn.textContent = '+ Ekle'; btn.classList.remove('zaten-var'); });
+        window._aktifTeklifId = null;
+
+        const cur = document.getElementById('teklif-para-birimi').value;
+        const importSonuclar = [];
+
+        bulunan.forEach(({ item, adet, dosyaFiyat }) => {
+            let listeFiyat = hesaplaListeFiyat({ fiyat: item.fiyat, isEur: (item.marka||'').includes('PANATTA') }, cur);
+            let manuelFiyat = null;
+            let indirimYuzde = 0;
+            if (dosyaFiyat && dosyaFiyat > 0) {
+                manuelFiyat = dosyaFiyat;
+                indirimYuzde = listeFiyat > 0 ? ((listeFiyat - dosyaFiyat) / listeFiyat) * 100 : 0;
+            }
+            const yeniItem = {
+                id: Date.now() + Math.random(),
+                stokKodu: item.stokKodu,
+                stokAdi: item.stokAdi,
+                marka: item.marka || '',
+                isEur: (item.marka||'').includes('PANATTA'),
+                fiyat: item.fiyat,
+                resim: item.resim || '',
+                adet: adet,
+                indirim: indirimYuzde,
+                manuelFiyat: manuelFiyat,
+                _manuelFiyatUSD: manuelFiyat ? (cur==='TL' ? manuelFiyat/usdKur : cur==='EUR' ? manuelFiyat*(eurKur/usdKur) : manuelFiyat) : null,
+                _manuelFiyatCur: manuelFiyat ? cur : null
+            };
+            sepet.push(yeniItem);
+            importSonuclar.push({ kod: item.stokKodu, listeFiyat, dosyaFiyat, indirimYuzde, manuelFiyat });
+        });
+
+        sepetBadgeGuncelle();
+        teklifEkraniniAc();
+
+        // İndirim bilgi panelini göster
+        if (importSonuclar.some(s => s.dosyaFiyat)) {
+            setTimeout(() => {
+                let panelHtml = `<div style="font-size:12px;font-weight:800;color:#1a1f36;margin-bottom:10px;">📊 Aktarım Sonucu — Birim Fiyat Karşılaştırması</div>`;
+                panelHtml += `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+                    <thead><tr style="background:#f0f4ff;">
+                        <th style="padding:4px 6px;text-align:left;border:1px solid #dde2ec;">Ürün Kodu</th>
+                        <th style="padding:4px 6px;border:1px solid #dde2ec;">Liste Fiyatı</th>
+                        <th style="padding:4px 6px;border:1px solid #dde2ec;">Dosya Fiyatı</th>
+                        <th style="padding:4px 6px;border:1px solid #dde2ec;">İndirim %</th>
+                    </tr></thead><tbody>`;
+                importSonuclar.forEach(s => {
+                    const renkIndirim = s.indirimYuzde > 0 ? '#2f9e44' : '#c92a2a';
+                    panelHtml += `<tr>
+                        <td style="padding:3px 6px;border:1px solid #eaecf2;font-weight:700;">${s.kod}</td>
+                        <td style="padding:3px 6px;border:1px solid #eaecf2;text-align:right;">${s.dosyaFiyat ? formatCurrency(s.listeFiyat) : '-'}</td>
+                        <td style="padding:3px 6px;border:1px solid #eaecf2;text-align:right;">${s.dosyaFiyat ? formatCurrency(s.dosyaFiyat) : 'Liste fiyatı kullanıldı'}</td>
+                        <td style="padding:3px 6px;border:1px solid #eaecf2;text-align:right;color:${renkIndirim};font-weight:800;">${s.dosyaFiyat ? '%' + formatCurrency(s.indirimYuzde) : '-'}</td>
+                    </tr>`;
+                });
+                panelHtml += '</tbody></table>';
+                if (bulunamayan && bulunamayan.length) {
+                    panelHtml += `<div style="margin-top:8px;font-size:10px;color:#e63946;font-weight:700;">⚠️ Bulunamayan kodlar: ${bulunamayan.join(', ')}</div>`;
+                }
+
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:9998;display:flex;justify-content:center;align-items:center;';
+                overlay.innerHTML = `<div style="background:white;border-radius:12px;padding:20px 20px 16px;box-shadow:0 5px 24px rgba(0,0,0,0.25);max-width:540px;width:95vw;max-height:80vh;overflow-y:auto;">
+                    ${panelHtml}
+                    <div style="margin-top:14px;text-align:right;"><button onclick="this.closest('div[style*=fixed]').remove()" style="background:#3b5bdb;color:white;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;">Tamam ✓</button></div>
+                </div>`;
+                document.body.appendChild(overlay);
+            }, 300);
+        } else {
+            const msg = bulunamayan.length
+                ? `✔ ${bulunan.length} ürün aktarıldı. ${bulunamayan.length} kod bulunamadı: ${bulunamayan.join(', ')}`
+                : `✔ ${bulunan.length} ürün aktarıldı (liste fiyatı kullanıldı)`;
+            showToast(msg, '#00a859');
+        }
     }
 
     // Birim fiyat input: yazarken sadece geçersiz karakterleri temizle, formatlamayı blur'a bırak
@@ -1902,7 +2276,7 @@
             <button onclick="(function(){const m=document.getElementById('teklif-tasi-secim-modal');const c=m._custName;m.style.display='none';musteriTeklifeTasi(c,true);})()"
                 style="background:linear-gradient(135deg,#7950f2,#9775fa);color:white;border:none;padding:11px 20px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;text-align:left;">
                 🔄 Revize Teklif
-                <div style="font-size:10px;font-weight:500;opacity:0.85;margin-top:2px;">Zaten ayrılmış satış — stok uyarısı gösterilmez</div>
+                <div style="font-size:10px;font-weight:500;opacity:0.85;margin-top:2px;">Bloke satış — güncel stok verileri yansıtılır, yeni teklif gibi değil</div>
             </button>
         </div>
         <button onclick="document.getElementById('teklif-tasi-secim-modal').style.display='none'"
