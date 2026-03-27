@@ -1696,7 +1696,7 @@
             <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.marka && item.marka.includes('PANATTA') ? '€' : '$') : '-'}</div>
             <div class="info-row" style="font-weight:800;margin-top:6px;color:#1a1f36;"><strong>FİZİKİ STOK:</strong> ${item.fiili}</div>
             ${depoHtml}
-            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK</strong> ${item.kalan}</div>
+            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
             </div>`;
         html += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
         if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(l => html+=`<div class="info-row" style="color:#00a859">✔ ${l}</div>`);
