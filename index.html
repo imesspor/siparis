@@ -127,7 +127,7 @@
         .btn-sepete-ekle { background: linear-gradient(135deg, #00a859, #00c96a); color: white; border: none; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; font-family: inherit; transition: all 0.15s; }
         .btn-sepete-ekle:hover { background: linear-gradient(135deg, #008a48, #00a859); transform: translateY(-1px); }
         .btn-sepete-ekle.zaten-var { background: linear-gradient(135deg, #e63946, #ff6b6b); }
-        .adet-input-mini { width: 60px; border: 1.5px solid var(--accent-blue); border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-blue); background: #f0f6ff; padding: 0 2px; outline: none; font-family: inherit; height: 20px; }
+        .adet-input-mini { width: 38px; border: 1.5px solid var(--accent-blue); border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-blue); background: #f0f6ff; padding: 0 2px; outline: none; font-family: inherit; height: 20px; }
         .col-sepet { background-color: #f0fff4 !important; white-space: nowrap; }
 
         /* ── Sepet Butonu (sağ üst) ── */
@@ -344,6 +344,7 @@
         <thead>
             <tr>
                 <th style="width:25px;">#</th>
+                <th class="col-sepet" style="width:120px;">SEPET</th>
                 <th style="width:85px;">STOK KODU</th>
                 <th style="width:auto;">STOK ADI</th>
                 <th style="width:70px;">FİYAT</th>
@@ -356,7 +357,6 @@
                 <th class="col-omur" style="width:80px;">STOK ÖMRÜ</th>
                 <th class="col-oneri" style="width:80px;">SİP. ÖNERİ</th>
                 <th class="col-stok-durumu" style="width:120px;" title="Aylık satış geçmişi için tıklayın">STOK DURUMU 📅</th>
-                <th class="col-sepet" style="width:120px;">SEPET</th>
             </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -1037,6 +1037,15 @@
             const sepetteMi = sepet.some(s => s.stokKodu === item.stokKodu);
             return `<tr data-id="${item.stokKodu}" class="${item.kalan <= 0 ? 'critical-row' : ''}">
                 <td class="w-sort">⠿</td>
+                <td class="col-sepet">
+                    <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
+                        <input type="number" class="adet-input-mini" id="adet-${safeKod}" value="1" min="1" max="9999" onclick="event.stopPropagation()">
+                        <button class="btn-sepete-ekle ${sepetteMi ? 'zaten-var' : ''}"
+                            onclick="sepeteEkle('${safeKod}', this)">
+                            ${sepetteMi ? '✓ Eklendi' : '+ Ekle'}
+                        </button>
+                    </div>
+                </td>
                 <td>${item.stokKodu}</td>
                 <td class="col-stok-adi" onclick="showDetail('${safeKod}')">${item.stokAdi}</td>
                 <td>${formatCurrency(item.fiyat)}</td>
@@ -1051,15 +1060,6 @@
                 <td class="col-stok-durumu" style="color:${item.stokDurumuRenk}"
                     onclick="showAylikSatis('${safeKod}')"
                     title="Aylık satış geçmişini görmek için tıklayın">${item.stokDurumu||'DİĞER'}</td>
-                <td class="col-sepet">
-                    <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
-                        <input type="number" class="adet-input-mini" id="adet-${safeKod}" value="1" min="1" max="9999" onclick="event.stopPropagation()">
-                        <button class="btn-sepete-ekle ${sepetteMi ? 'zaten-var' : ''}"
-                            onclick="sepeteEkle('${safeKod}', this)">
-                            ${sepetteMi ? '✓ Eklendi' : '+ Ekle'}
-                        </button>
-                    </div>
-                </td>
             </tr>`;
         }).join('');
         if(sortableRows) sortableRows.destroy();
@@ -1085,11 +1085,39 @@
 
         // Zaten sepette mi?
         if (sepet.some(s => s.stokKodu === stokKodu)) {
-            // Sepete git
             teklifEkraniniAc();
             return;
         }
 
+        // Sepet boşsa ve müşteri adı girilmemişse önce müşteri adı sor
+        const musteriInput = document.getElementById('teklif-musteri');
+        const musteriAdi = musteriInput ? musteriInput.value.trim() : '';
+        if (sepet.length === 0 && !musteriAdi) {
+            musteriAdiSor(stokKodu, btn);
+            return;
+        }
+
+        _sepeteEkleDevam(stokKodu, btn, item);
+    }
+
+    function musteriAdiSor(stokKodu, btn) {
+        document.getElementById('musteri-sor-modal').style.display = 'flex';
+        document.getElementById('musteri-sor-input').value = '';
+        setTimeout(() => document.getElementById('musteri-sor-input').focus(), 100);
+        document.getElementById('musteri-sor-tamam').onclick = function() {
+            const ad = document.getElementById('musteri-sor-input').value.trim();
+            if (!ad) { document.getElementById('musteri-sor-input').focus(); return; }
+            document.getElementById('teklif-musteri').value = ad;
+            document.getElementById('musteri-sor-modal').style.display = 'none';
+            const item = allData.find(d => d.stokKodu === stokKodu);
+            if (item) _sepeteEkleDevam(stokKodu, btn, item);
+        };
+        document.getElementById('musteri-sor-input').onkeydown = function(e) {
+            if (e.key === 'Enter') document.getElementById('musteri-sor-tamam').click();
+        };
+    }
+
+    function _sepeteEkleDevam(stokKodu, btn, item) {
         const adetInput = document.getElementById('adet-' + stokKodu);
         const adet = parseInt(adetInput ? adetInput.value : 1) || 1;
 
@@ -1107,10 +1135,12 @@
         });
 
         sepetBadgeGuncelle();
-        // Butonu güncelle
         btn.textContent = '✓ Eklendi';
         btn.classList.add('zaten-var');
-        showToast('✔ Sepete eklendi', '#00a859');
+
+        const musteriAdi = document.getElementById('teklif-musteri') ? document.getElementById('teklif-musteri').value.trim() : '';
+        const toastMesaj = musteriAdi ? `✔ ${musteriAdi} için sepete eklendi` : '✔ Sepete eklendi';
+        showToast(toastMesaj, '#00a859');
     }
 
     function sepetBadgeGuncelle() {
@@ -1778,6 +1808,22 @@
     }
 </script>
  
+<!-- Müşteri Adı Sor Modal -->
+<div id="musteri-sor-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:9998;justify-content:center;align-items:center;">
+    <div style="background:white;border-radius:12px;padding:28px 24px;box-shadow:0 5px 24px rgba(0,0,0,0.25);min-width:300px;max-width:90vw;">
+        <div style="font-size:13px;font-weight:800;color:#1a1f36;margin-bottom:6px;">👤 Müşteri / Şirket Adı</div>
+        <div style="font-size:11px;color:#8a94a6;margin-bottom:14px;">Sepete ürün eklemeden önce müşteri adını girin.</div>
+        <input id="musteri-sor-input" type="text" placeholder="Müşteri veya şirket adı..."
+            style="width:100%;padding:8px 12px;border:1.5px solid #3b5bdb;border-radius:7px;font-size:13px;font-weight:600;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;">
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="document.getElementById('musteri-sor-modal').style.display='none'"
+                style="background:#eee;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">İptal</button>
+            <button id="musteri-sor-tamam"
+                style="background:#3b5bdb;color:white;border:none;padding:7px 18px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;">Devam Et →</button>
+        </div>
+    </div>
+</div>
+
 <div id="brand-select-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
     <div style="background:white;border-radius:10px;padding:30px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,0.3);min-width:280px;">
         <div style="font-size:14px;font-weight:bold;margin-bottom:20px;">Hangi markanın raporunu indirmek istiyorsunuz?</div>
