@@ -1039,7 +1039,7 @@
                 <td class="w-sort">⠿</td>
                 <td class="col-sepet">
                     <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
-                        <input type="number" class="adet-input-mini" id="adet-${safeKod}" value="1" min="1" max="9999" onclick="event.stopPropagation()">
+                        <input type="number" class="adet-input-mini" id="adet-${safeKod}" value="1" min="1" max="9999" onclick="this.select();event.stopPropagation()">
                         <button class="btn-sepete-ekle ${sepetteMi ? 'zaten-var' : ''}"
                             onclick="sepeteEkle('${safeKod}', this)">
                             ${sepetteMi ? '✓ Eklendi' : '+ Ekle'}
