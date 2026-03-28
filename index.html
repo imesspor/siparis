@@ -323,7 +323,6 @@
         <span id="notes-name" class="file-name-display"></span>
     </div>
     <div style="display:flex; align-items:center; gap:8px;">
-        <!-- SEPETE GİT BUTONU -->
         <button class="btn-sepet-goto" onclick="teklifEkraniniAc()" id="btn-sepet-goto">
             🛒 TEKLİFE GİT
             <span class="sepet-badge" id="sepet-badge">0</span>
@@ -336,11 +335,10 @@
         </div>
     </div>
 </div>
- 
 <div class="slicer-wrapper">
     <div id="slicer-area"></div>
 </div>
- 
+
 <div class="table-container">
     <table>
         <thead>
@@ -364,7 +362,7 @@
         <tbody id="table-body"></tbody>
     </table>
 </div>
- 
+
 <!-- Ürün Detay Modal -->
 <div id="info-modal" class="modal-overlay" onclick="closeModal(event,'info-modal')">
     <div class="modal-content" onclick="event.stopPropagation()">
@@ -375,7 +373,7 @@
         <div id="modal-body"></div>
     </div>
 </div>
- 
+
 <!-- Müşteri Önizleme Modal -->
 <div id="preview-modal" class="modal-overlay" onclick="closeModal(event,'preview-modal')">
     <div class="modal-content preview-modal" onclick="event.stopPropagation()">
@@ -386,7 +384,7 @@
         <div id="preview-body"></div>
     </div>
 </div>
- 
+
 <!-- Aylık Satış Geçmişi Modal -->
 <div id="satis-modal" class="modal-overlay" onclick="closeModal(event,'satis-modal')">
     <div class="modal-content satis-modal-content" onclick="event.stopPropagation()">
@@ -2038,25 +2036,86 @@
     // =============================================
     // TEKLİF İÇERİ AKTAR (Excel/PDF → Sepet)
     // =============================================
+    // TEKLİF İÇERİ AKTAR (Excel/PDF → Sepet)
+    // =============================================
     document.getElementById('teklif-import-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
         this.value = '';
         const ext = file.name.split('.').pop().toLowerCase();
+
         if (ext === 'pdf') {
-            showToast('⚠️ PDF aktarımı: ürün kodları metin olarak okunacak', '#f59f00');
             const reader = new FileReader();
             reader.onload = function(evt) {
-                // PDF text extraction via basic pattern matching (no library needed for code+qty)
+                // PDF'den ham metin çıkar
                 const bytes = new Uint8Array(evt.target.result);
                 let text = '';
                 for (let i = 0; i < bytes.length; i++) {
                     if (bytes[i] >= 32 && bytes[i] < 127) text += String.fromCharCode(bytes[i]);
                     else text += ' ';
                 }
-                teklifImportIsle(text, null);
+
+                // PDF metni satırlara böl, fazla boşlukları temizle
+                const satirlar = text.split(/\n|(?<=\S)\s{3,}(?=\S)/).map(s => s.trim()).filter(Boolean);
+
+                // "No", "Kod", "Adet" başlık satırını bul
+                let kodCol = -1, adetCol = -1, baslikSatirIdx = -1;
+                for (let i = 0; i < satirlar.length; i++) {
+                    const tokenler = satirlar[i].split(/\s+/).map(t => t.toUpperCase());
+                    const ki = tokenler.findIndex(t => t === 'KOD' || t === 'CODE');
+                    const ai = tokenler.findIndex(t => t === 'ADET' || t === 'QTY' || t === 'QUANTITY');
+                    if (ki >= 0) {
+                        kodCol = ki;
+                        adetCol = ai >= 0 ? ai : -1;
+                        baslikSatirIdx = i;
+                        break;
+                    }
+                }
+
+                const kodSet = new Set(allData.map(d => d.stokKodu.toUpperCase()));
+                const eklenenKodlar = new Set();
+                const pdfBulunan = [];
+
+                if (baslikSatirIdx >= 0) {
+                    // Başlık bulundu — sadece başlık sonrası satırları oku
+                    for (let i = baslikSatirIdx + 1; i < satirlar.length; i++) {
+                        const tokenler = satirlar[i].split(/\s+/);
+                        if (tokenler.length <= kodCol) continue;
+                        const potKod = tokenler[kodCol].toUpperCase();
+                        if (!kodSet.has(potKod) || eklenenKodlar.has(potKod)) continue;
+
+                        let adet = 1;
+                        if (adetCol >= 0 && tokenler[adetCol]) {
+                            const n = parseInt(tokenler[adetCol]);
+                            if (!isNaN(n) && n > 0 && n < 10000) adet = n;
+                        }
+                        const item = allData.find(d => d.stokKodu.toUpperCase() === potKod);
+                        pdfBulunan.push({ item, adet, dosyaFiyat: null });
+                        eklenenKodlar.add(potKod);
+                    }
+                } else {
+                    // Başlık bulunamadı — sıra no + kod pattern: satır başı rakam, ikinci token kod
+                    const parcalar = text.split(/\s{2,}/).map(s => s.trim()).filter(Boolean);
+                    for (const parca of parcalar) {
+                        const tokenler = parca.split(/\s+/);
+                        if (!/^\d+$/.test(tokenler[0]) || tokenler.length < 2) continue;
+                        const potKod = tokenler[1].toUpperCase();
+                        if (!kodSet.has(potKod) || eklenenKodlar.has(potKod)) continue;
+                        let adet = 1;
+                        for (let t = tokenler.length - 1; t >= 2; t--) {
+                            const n = parseInt(tokenler[t]);
+                            if (!isNaN(n) && n > 0 && n < 10000 && /^\d+$/.test(tokenler[t])) { adet = n; break; }
+                        }
+                        const item = allData.find(d => d.stokKodu.toUpperCase() === potKod);
+                        pdfBulunan.push({ item, adet, dosyaFiyat: null });
+                        eklenenKodlar.add(potKod);
+                    }
+                }
+
+                teklifImportIsle(pdfBulunan);
             };
             reader.readAsArrayBuffer(file);
+
         } else {
             // Excel
             const reader = new FileReader();
@@ -2065,7 +2124,49 @@
                     const wb = XLSX.read(evt.target.result, {type: 'array'});
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ''});
-                    teklifImportIsle(null, rows);
+
+                    // "KOD" veya benzeri başlık satırını bul
+                    let kodCol = -1, adetCol = -1, fiyatCol = -1, startRow = 0;
+                    for (let r = 0; r < Math.min(15, rows.length); r++) {
+                        const row = rows[r].map(c => String(c||'').toUpperCase().trim());
+                        const ki = row.findIndex(c => c === 'KOD' || c === 'STOK KODU' || c === 'ÜRÜN KODU' || c === 'PRODUCT CODE' || c === 'KODU');
+                        if (ki >= 0) {
+                            kodCol  = ki;
+                            adetCol = row.findIndex(c => c === 'ADET' || c === 'QTY' || c === 'MİKTAR' || c === 'QUANTITY');
+                            fiyatCol = row.findIndex(c => c.includes('FİYAT') || c.includes('FIYAT') || c.includes('PRICE') || c.includes('BİRİM'));
+                            startRow = r + 1;
+                            break;
+                        }
+                    }
+
+                    const kodSet = new Set(allData.map(d => d.stokKodu.toUpperCase()));
+                    const eklenenKodlar = new Set();
+                    const excelBulunan = [];
+                    const excelBulunamayan = [];
+
+                    // Başlık bulunamadıysa ilk sütunu dene — sadece allData'dakilerle tam eşleşenleri al
+                    const baslangic = kodCol >= 0 ? startRow : 0;
+                    const kSutun    = kodCol >= 0 ? kodCol : 0;
+
+                    for (let r = baslangic; r < rows.length; r++) {
+                        const row = rows[r];
+                        const rawKod = String(row[kSutun] || '').trim();
+                        if (!rawKod || rawKod.length < 2) continue;
+                        if (eklenenKodlar.has(rawKod.toUpperCase())) continue;
+
+                        const item = allData.find(d => d.stokKodu.toUpperCase() === rawKod.toUpperCase());
+                        if (item) {
+                            const adet = adetCol >= 0 ? (parseInt(row[adetCol]) || 1) : 1;
+                            const rawFiyat = fiyatCol >= 0 ? String(row[fiyatCol]||'').replace(/[^0-9.,]/g,'').replace(',','.') : '';
+                            const dosyaFiyat = rawFiyat ? parseFloat(rawFiyat) : null;
+                            excelBulunan.push({ item, adet, dosyaFiyat });
+                            eklenenKodlar.add(rawKod.toUpperCase());
+                        } else {
+                            excelBulunamayan.push(rawKod);
+                        }
+                    }
+
+                    teklifImportIsle(excelBulunan, excelBulunamayan);
                 } catch(err) {
                     showToast('❌ Excel okunamadı: ' + err.message, '#e63946');
                 }
@@ -2074,56 +2175,8 @@
         }
     });
 
-    function teklifImportIsle(pdfText, excelRows) {
-        const bulunan = [];
-        const bulunamayan = [];
-
-        if (excelRows) {
-            // Başlık satırını bul
-            let kodCol = -1, adetCol = -1, fiyatCol = -1;
-            let startRow = 0;
-            for (let r = 0; r < Math.min(10, excelRows.length); r++) {
-                const row = excelRows[r].map(c => String(c||'').toUpperCase().trim());
-                const ki = row.findIndex(c => c.includes('KOD') || c === 'STOK KODU' || c === 'ÜRÜN KODU' || c === 'PRODUCT CODE');
-                const ai = row.findIndex(c => c === 'ADET' || c === 'QTY' || c === 'MİKTAR' || c === 'QUANTITY');
-                const fi = row.findIndex(c => c.includes('FİYAT') || c.includes('FIYAT') || c.includes('PRICE') || c.includes('BİRİM'));
-                if (ki >= 0) { kodCol = ki; adetCol = ai >= 0 ? ai : -1; fiyatCol = fi >= 0 ? fi : -1; startRow = r + 1; break; }
-            }
-            // Başlık bulunamadıysa ilk sütun = kod, ikinci = adet tahmini
-            if (kodCol < 0) { kodCol = 0; adetCol = 1; startRow = 1; }
-
-            for (let r = startRow; r < excelRows.length; r++) {
-                const row = excelRows[r];
-                const rawKod = String(row[kodCol] || '').trim();
-                if (!rawKod || rawKod.length < 2) continue;
-                const adet = parseInt(row[adetCol]) || 1;
-                const rawFiyat = fiyatCol >= 0 ? String(row[fiyatCol] || '').replace(/[^0-9.,]/g,'').replace(',','.') : '';
-                const dosyaFiyat = rawFiyat ? parseFloat(rawFiyat) : null;
-
-                const item = allData.find(d => d.stokKodu.toUpperCase() === rawKod.toUpperCase());
-                if (item) {
-                    bulunan.push({ item, adet, dosyaFiyat });
-                } else {
-                    bulunamayan.push(rawKod);
-                }
-            }
-        } else if (pdfText) {
-            // PDF: boşluklarla ayrılmış token'lardan stok kodu eşleştir
-            const tokens = pdfText.split(/\s+/).filter(Boolean);
-            const kodSet = new Set(allData.map(d => d.stokKodu.toUpperCase()));
-            let i = 0;
-            while (i < tokens.length) {
-                const tok = tokens[i].toUpperCase();
-                if (kodSet.has(tok)) {
-                    const adet = parseInt(tokens[i+1]) || 1;
-                    const item = allData.find(d => d.stokKodu.toUpperCase() === tok);
-                    bulunan.push({ item, adet, dosyaFiyat: null });
-                    i += 2;
-                } else {
-                    i++;
-                }
-            }
-        }
+    function teklifImportIsle(bulunan, bulunamayan) {
+        bulunamayan = bulunamayan || [];
 
         if (bulunan.length === 0) {
             return showToast('❌ Eşleşen ürün bulunamadı. Dosyayı kontrol edin.', '#e63946');
@@ -2211,9 +2264,7 @@
 
     // Birim fiyat input: yazarken sadece geçersiz karakterleri temizle, formatlamayı blur'a bırak
     function birimFiyatFormatla(input) {
-        // İmleç pozisyonunu koru
         const pos = input.selectionStart;
-        // Sadece rakam, nokta ve virgüle izin ver; diğerlerini sil
         const temiz = input.value.replace(/[^0-9.,]/g, '');
         if (input.value !== temiz) {
             input.value = temiz;
@@ -2221,22 +2272,12 @@
         }
     }
 
-    // Odaktan çıkınca Türk binlik formatına çevir: 91000,50 → 91.000,50
-    function birimFiyatFormatlaBlur(input) {
-        const raw = birimFiyatDegerAl(input); // nokta ondalık ayracı ile float string
-        const sayi = parseFloat(raw);
-        if (!isNaN(sayi)) {
-            input.value = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(sayi);
-        }
-    }
-
-    // Yazılan değeri temiz float'a çevir — her türlü girişi kaldır, sadece rakam ve son ayracı al
+    // Yazılan değeri temiz float'a çevir — tüm noktaları sil, virgülü noktaya çevir → "25000" veya "25000.50"
     function birimFiyatDegerAl(input) {
-        // Tüm noktaları sil, virgülü noktaya çevir → "25000" veya "25000.50"
         return input.value.replace(/[^0-9,]/g, '').replace(',', '.');
     }
 
-    // Odaktan çıkınca formatla: 25000 → 25.000,00
+    // Odaktan çıkınca Türk binlik formatına çevir: 25000 → 25.000,00
     function birimFiyatFormatlaBlur(input) {
         const sayi = parseFloat(birimFiyatDegerAl(input));
         if (!isNaN(sayi)) {
