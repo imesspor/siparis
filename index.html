@@ -87,7 +87,7 @@
         .critical-row td { color: #e63946 !important; font-weight: 800 !important; }
         tr:hover td { background-color: #f5f8ff !important; }
         .w-sort { width: 25px; cursor: move; color: var(--border-color); text-align: center; font-size: 16px; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,31,54,0.45); display: none; z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,31,54,0.45); display: none; z-index: 6000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
         .modal-content { background: var(--bg-white); padding: 24px; border-radius: 12px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); }
         .cust-link { color: var(--accent-blue); text-decoration: underline; cursor: pointer; font-weight: 700; }
         .cust-link:hover { color: var(--panatta-color); }
@@ -149,7 +149,8 @@
         .teklif-urun-item { background: var(--bg-white); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
         .teklif-urun-ust { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
         .teklif-urun-resim { width: 52px; height: 52px; object-fit: contain; border-radius: 6px; background: var(--bg-main); border: 1px solid var(--border-color); flex-shrink: 0; }
-        .teklif-urun-adi { font-size: 12px; font-weight: 700; color: var(--text-dark); flex: 1; }
+        .teklif-urun-adi { font-size: 12px; font-weight: 700; color: var(--accent-blue); flex: 1; cursor: pointer; }
+        .teklif-urun-adi:hover { color: var(--panatta-color); }
         .teklif-urun-kod { font-size: 10px; background: var(--text-dark); color: white; padding: 2px 6px; border-radius: 4px; }
         .teklif-urun-alt { display: flex; align-items: center; gap: 8px; background: var(--bg-main); border-radius: 6px; padding: 6px 8px; flex-wrap: wrap; }
         .teklif-field-label { font-size: 9px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
@@ -1441,7 +1442,7 @@
                     <div style="flex:1;min-width:0;">
                         <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
                             <span class="teklif-urun-kod">${item.stokKodu}</span>
-                            <span class="teklif-urun-adi">${item.stokAdi}</span>
+                            <span class="teklif-urun-adi" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')" style="cursor:pointer;" title="Ürün detayını görmek için tıklayın">${item.stokAdi}</span>
                             ${(stokItem && !item._revize) ? stokUyariHesapla(stokItem, item.adet) : (item._revize ? '<span style="background:#7950f2;color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;">REZERVE 🔄</span> ' + stokUyariRevize(stokItem, item.adet) : '')}
                             ${stokHtml}
                         </div>
