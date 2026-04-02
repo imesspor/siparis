@@ -552,29 +552,72 @@
 
     function arsiveKaydet(stokKodu, stokAdi, adet) {
         if (!adet && adet !== 0) return;
-        const arsiv = JSON.parse(localStorage.getItem('siparisArsivData') || '{}');
+        const storageKey = 'siparisArsivData_' + (currentBrand || 'PROFORCE');
+        const arsiv = JSON.parse(localStorage.getItem(storageKey) || '{}');
         const gun = bugunTarih();
         if (!arsiv[gun]) arsiv[gun] = {};
         arsiv[gun][stokKodu] = { stokAdi: stokAdi || stokKodu, adet: adet };
-        localStorage.setItem('siparisArsivData', JSON.stringify(arsiv));
+        localStorage.setItem(storageKey, JSON.stringify(arsiv));
     }
 
     let _aktifArsivTarih = null;
+    let _aktifArsivMarka = 'PROFORCE';
 
     function siparisArsiviniAc() {
-        const arsiv = JSON.parse(localStorage.getItem('siparisArsivData') || '{}');
-        const tarihler = Object.keys(arsiv).sort().reverse();
-        _aktifArsivTarih = tarihler[0] || null;
-        _arsivTabsRender(tarihler);
-        arsivTabGoster(_aktifArsivTarih);
+        _aktifArsivMarka = currentBrand || 'PROFORCE';
+        _arsivMarkaTabsRender();
+        _arsivYenile();
         document.getElementById('arsiv-search').value = '';
         document.getElementById('siparis-arsiv-modal').style.display = 'flex';
     }
 
-    function _arsivTabsRender(tarihler) {
+    function _arsivMarkaTabsRender() {
         const cont = document.getElementById('arsiv-tarih-tabs');
-        if (tarihler.length === 0) {
-            cont.innerHTML = '<span style="font-size:11px;color:#aaa;">Henüz arşiv kaydı yok.</span>';
+        const proRenk = _aktifArsivMarka === 'PROFORCE';
+        const panRenk = _aktifArsivMarka === 'PANATTA';
+        cont.innerHTML = `
+            <div style="display:flex;gap:6px;margin-right:12px;align-items:center;flex-shrink:0;">
+                <button onclick="_arsivMarkaDegistir('PROFORCE')" id="arsiv-marka-PROFORCE"
+                    style="padding:4px 14px;border-radius:20px;border:2px solid ${proRenk?'#00a859':'#ddd'};
+                    background:${proRenk?'#00a859':'white'};color:${proRenk?'white':'#555'};
+                    font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;">PROFORCE</button>
+                <button onclick="_arsivMarkaDegistir('PANATTA')" id="arsiv-marka-PANATTA"
+                    style="padding:4px 14px;border-radius:20px;border:2px solid ${panRenk?'#e63946':'#ddd'};
+                    background:${panRenk?'#e63946':'white'};color:${panRenk?'white':'#555'};
+                    font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;">PANATTA</button>
+                <span style="width:1px;height:20px;background:#ddd;margin:0 4px;display:inline-block;"></span>
+            </div>
+            <div id="arsiv-tarih-btn-alani" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;align-items:center;"></div>`;
+    }
+
+    function _arsivMarkaDegistir(marka) {
+        _aktifArsivMarka = marka;
+        ['PROFORCE','PANATTA'].forEach(m => {
+            const btn = document.getElementById('arsiv-marka-' + m);
+            if (!btn) return;
+            const renk = m === 'PROFORCE' ? '#00a859' : '#e63946';
+            const aktif = m === marka;
+            btn.style.borderColor = aktif ? renk : '#ddd';
+            btn.style.background  = aktif ? renk : 'white';
+            btn.style.color       = aktif ? 'white' : '#555';
+        });
+        _arsivYenile();
+    }
+
+    function _arsivYenile() {
+        const storageKey = 'siparisArsivData_' + _aktifArsivMarka;
+        const arsiv = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        const tarihler = Object.keys(arsiv).sort().reverse();
+        _aktifArsivTarih = tarihler[0] || null;
+        _arsivTarihTabsRender(tarihler);
+        arsivTabGoster(_aktifArsivTarih);
+    }
+
+    function _arsivTarihTabsRender(tarihler) {
+        const cont = document.getElementById('arsiv-tarih-btn-alani');
+        if (!cont) return;
+        if (!tarihler || tarihler.length === 0) {
+            cont.innerHTML = '<span style="font-size:11px;color:#aaa;">Bu marka için arşiv kaydı yok.</span>';
             return;
         }
         cont.innerHTML = tarihler.map(t => {
@@ -589,7 +632,6 @@
 
     function arsivTabGoster(tarih) {
         _aktifArsivTarih = tarih;
-        // tab stil güncelle
         document.querySelectorAll('[id^="arsiv-tab-"]').forEach(btn => {
             const t = btn.id.replace('arsiv-tab-', '');
             const aktif = t === tarih;
@@ -597,7 +639,7 @@
             btn.style.background  = aktif ? '#e67e22' : 'white';
             btn.style.color       = aktif ? 'white' : '#555';
         });
-        arsivIcerikRender(tarih, '');
+        arsivIcerikRender(tarih, document.getElementById('arsiv-search')?.value || '');
     }
 
     function arsivFiltrele() {
@@ -608,7 +650,8 @@
     function arsivIcerikRender(tarih, aramaQ) {
         const cont = document.getElementById('arsiv-icerik');
         if (!tarih) { cont.innerHTML = '<p style="color:#aaa;text-align:center;font-size:12px;">Henüz sipariş arşivi bulunmuyor.</p>'; return; }
-        const arsiv = JSON.parse(localStorage.getItem('siparisArsivData') || '{}');
+        const storageKey = 'siparisArsivData_' + _aktifArsivMarka;
+        const arsiv = JSON.parse(localStorage.getItem(storageKey) || '{}');
         const gunData = arsiv[tarih] || {};
         const slug = s => (s||'').replace(/İ/g,'i').replace(/I/g,'ı').toLowerCase();
         const q = slug(aramaQ);
@@ -621,37 +664,95 @@
             return;
         }
 
+        const markaRenk = _aktifArsivMarka === 'PANATTA' ? '#e63946' : '#00a859';
         const label = tarih.split('-').reverse().join('.');
-        let html = `<div style="font-size:12px;color:#888;margin-bottom:12px;font-weight:700;">${label} tarihli siparişler — <span style="color:#e67e22;">${entries.length} ürün</span></div>`;
+        let html = `<div style="font-size:12px;color:#888;margin-bottom:12px;font-weight:700;">
+            <span style="background:${markaRenk};color:white;padding:2px 8px;border-radius:4px;font-size:10px;margin-right:6px;">${_aktifArsivMarka}</span>
+            ${label} tarihli siparişler — <span style="color:#e67e22;">${entries.length} ürün</span>
+        </div>`;
         html += `<table style="width:100%;border-collapse:collapse;font-size:12px;">
             <thead><tr style="background:#fef3e2;position:sticky;top:0;">
                 <th style="padding:9px 14px;text-align:left;border:1px solid #fce8c3;font-weight:800;color:#b7660a;font-size:11px;letter-spacing:0.4px;text-transform:uppercase;width:160px;">STOK KODU</th>
                 <th style="padding:9px 14px;text-align:left;border:1px solid #fce8c3;font-weight:800;color:#b7660a;font-size:11px;letter-spacing:0.4px;text-transform:uppercase;">STOK ADI</th>
-                <th style="padding:9px 14px;text-align:center;border:1px solid #fce8c3;font-weight:800;color:#b7660a;font-size:11px;letter-spacing:0.4px;text-transform:uppercase;width:160px;">SİPARİŞ ADEDİ</th>
+                <th style="padding:9px 14px;text-align:center;border:1px solid #fce8c3;font-weight:800;color:#b7660a;font-size:11px;letter-spacing:0.4px;text-transform:uppercase;width:130px;">SİPARİŞ ADEDİ</th>
+                <th style="padding:9px 14px;text-align:center;border:1px solid #fce8c3;font-weight:800;color:#b7660a;font-size:11px;letter-spacing:0.4px;text-transform:uppercase;width:110px;">İŞLEM</th>
             </tr></thead><tbody>`;
         entries.forEach(([kod, d], i) => {
             const bg = i % 2 === 0 ? 'white' : '#fffbf5';
-            html += `<tr style="background:${bg};">
+            const kodSafe = kod.replace(/'/g, "\\'");
+            html += `<tr id="arsiv-row-${i}" style="background:${bg};">
                 <td style="padding:8px 14px;border:1px solid #fce8c3;font-weight:700;color:#444;font-family:monospace;font-size:12px;">${kod}</td>
                 <td style="padding:8px 14px;border:1px solid #fce8c3;color:#333;font-weight:500;">${d.stokAdi}</td>
-                <td style="padding:8px 14px;border:1px solid #fce8c3;text-align:center;font-weight:800;color:#e67e22;font-size:15px;">${d.adet}</td>
+                <td id="arsiv-adet-${i}" style="padding:8px 14px;border:1px solid #fce8c3;text-align:center;font-weight:800;color:#e67e22;font-size:15px;">${d.adet}</td>
+                <td style="padding:6px 10px;border:1px solid #fce8c3;text-align:center;white-space:nowrap;">
+                    <button onclick="arsivKayitDuzenle('${tarih}','${kodSafe}',${i})"
+                        style="background:#eef2ff;color:#3b5bdb;border:none;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;margin-right:4px;">✏️ Düzenle</button>
+                    <button onclick="arsivKayitSil('${tarih}','${kodSafe}')"
+                        style="background:#fff1f2;color:#e63946;border:none;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 Sil</button>
+                </td>
             </tr>`;
         });
         html += `</tbody></table>`;
         cont.innerHTML = html;
     }
 
+    function arsivKayitSil(tarih, kod) {
+        if (!confirm('"' + kod + '" kaydı silinsin mi?')) return;
+        const storageKey = 'siparisArsivData_' + _aktifArsivMarka;
+        const arsiv = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        if (arsiv[tarih] && arsiv[tarih][kod]) {
+            delete arsiv[tarih][kod];
+            if (Object.keys(arsiv[tarih]).length === 0) delete arsiv[tarih];
+            localStorage.setItem(storageKey, JSON.stringify(arsiv));
+        }
+        _arsivYenile();
+        showToast('Kayıt silindi.', '#e63946');
+    }
+
+    function arsivKayitDuzenle(tarih, kod, rowIdx) {
+        const storageKey = 'siparisArsivData_' + _aktifArsivMarka;
+        const arsiv = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        const d = arsiv[tarih] && arsiv[tarih][kod];
+        if (!d) return;
+        const td = document.getElementById('arsiv-adet-' + rowIdx);
+        if (!td) return;
+        const mevcutAdet = d.adet;
+        td.innerHTML = '<input type="number" value="' + mevcutAdet + '" min="0" ' +
+            'style="width:70px;border:1.5px solid #3b5bdb;border-radius:4px;text-align:center;font-size:12px;font-weight:700;padding:2px 4px;font-family:inherit;outline:none;" ' +
+            'onblur="arsivKayitKaydet(\'' + tarih + '\',\'' + kod.replace(/'/g,"\\'") + '\',' + rowIdx + ',this)" ' +
+            'onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){this.value=\'' + mevcutAdet + '\';this.blur();}">';
+        td.querySelector('input').focus();
+        td.querySelector('input').select();
+    }
+
+    function arsivKayitKaydet(tarih, kod, rowIdx, input) {
+        const yeniAdet = parseInt(input.value);
+        if (isNaN(yeniAdet) || yeniAdet < 0) {
+            arsivIcerikRender(tarih, document.getElementById('arsiv-search').value || '');
+            return;
+        }
+        const storageKey = 'siparisArsivData_' + _aktifArsivMarka;
+        const arsiv = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        if (arsiv[tarih] && arsiv[tarih][kod]) {
+            arsiv[tarih][kod].adet = yeniAdet;
+            localStorage.setItem(storageKey, JSON.stringify(arsiv));
+            showToast('Adet güncellendi: ' + yeniAdet, '#3b5bdb');
+        }
+        arsivIcerikRender(tarih, document.getElementById('arsiv-search').value || '');
+    }
+
     function arsivExcelIndir() {
-        const arsiv = JSON.parse(localStorage.getItem('siparisArsivData') || '{}');
+        const storageKey = 'siparisArsivData_' + _aktifArsivMarka;
+        const arsiv = JSON.parse(localStorage.getItem(storageKey) || '{}');
         const wb2 = XLSX.utils.book_new();
         const tarihler = Object.keys(arsiv).sort().reverse();
         if (tarihler.length === 0) { alert('İndirilecek arşiv verisi yok.'); return; }
         tarihler.forEach(tarih => {
-            const rows = Object.entries(arsiv[tarih]).map(([kod, d]) => ({'TARİH': tarih.split('-').reverse().join('.'), 'STOK KODU': kod, 'STOK ADI': d.stokAdi, 'SİPARİŞ ADEDİ': d.adet}));
+            const rows = Object.entries(arsiv[tarih]).map(([kod, d]) => ({'MARKA': _aktifArsivMarka, 'TARİH': tarih.split('-').reverse().join('.'), 'STOK KODU': kod, 'STOK ADI': d.stokAdi, 'SİPARİŞ ADEDİ': d.adet}));
             const label = tarih.replace(/-/g, '').slice(2);
             XLSX.utils.book_append_sheet(wb2, XLSX.utils.json_to_sheet(rows), label);
         });
-        XLSX.writeFile(wb2, `Siparis_Arsivi_${new Date().toLocaleDateString('tr-TR').replace(/\./g,'-')}.xlsx`);
+        XLSX.writeFile(wb2, `Siparis_Arsivi_${_aktifArsivMarka}_${new Date().toLocaleDateString('tr-TR').replace(/\./g,'-')}.xlsx`);
     }
     // ────────────────────────────────────────────────────────────
 
