@@ -30,21 +30,103 @@
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         button, input, select { touch-action: manipulation; }
-        body { font-family: 'DM Sans', 'Segoe UI', sans-serif; background-color: var(--bg-main); margin: 0; padding: 6px; color: var(--text-dark); font-weight: 500; }
-        .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 6px; background: var(--bg-white); padding: 6px 16px; border-radius: var(--radius); box-shadow: var(--shadow-sm); gap: 8px; border: 1px solid var(--border-color); }
-        .upload-section { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+        body { font-family: 'DM Sans', 'Segoe UI', sans-serif; background-color: var(--bg-main); margin: 0; padding: 0; color: var(--text-dark); font-weight: 500; }
+
+        /* ── NAV BAR ── */
+        .top-bar {
+            display: flex;
+            align-items: stretch;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 6px rgba(60,70,100,0.07);
+            margin-bottom: 0;
+            padding: 0 14px;
+            gap: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            min-height: 46px;
+        }
+        .nav-logo-wrap {
+            display: flex;
+            align-items: center;
+            padding-right: 16px;
+            border-right: 1px solid var(--border-light);
+            margin-right: 4px;
+            flex-shrink: 0;
+        }
+        .nav-tabs {
+            display: flex;
+            align-items: stretch;
+            flex: 1;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .nav-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 14px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+            position: relative;
+            transition: color 0.15s;
+            border-bottom: 2.5px solid transparent;
+            margin-bottom: -1px;
+        }
+        .nav-tab:hover { color: var(--text-dark); background: #f8f9fc; }
+        .nav-tab .nav-icon { font-size: 14px; line-height: 1; }
+        .nav-tab .nav-label { letter-spacing: 0.1px; }
+        .nav-tab.nav-active { color: var(--accent-blue); font-weight: 700; border-bottom-color: var(--accent-blue); }
+        .nav-tab.nav-danger:hover { color: #c92a2a; }
+        .nav-tab.nav-orange:hover { color: #e67700; }
+        .nav-tab.nav-green { color: #2f9e44; }
+        .nav-tab.nav-green:hover { color: #1a7a2e; }
+        .nav-divider {
+            width: 1px;
+            background: var(--border-light);
+            margin: 10px 4px;
+            flex-shrink: 0;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding-left: 10px;
+            border-left: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+
+        /* File name badge */
+        .file-name-display { font-size: 10px; color: var(--text-muted); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; display: none; }
+
+        /* Hidden inputs */
         .hidden-input { display: none; }
+
+        /* Legacy btn-action — kept for any remaining references */
         .btn-action { border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; color: white; transition: all 0.15s; letter-spacing: 0.3px; }
-        .btn-action:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .btn-action:hover { opacity: 0.85; }
         .btn-data { background: linear-gradient(135deg, #3b5bdb, #4c6ef5); }
         .btn-notes { background: linear-gradient(135deg, #7950f2, #9775fa); }
         .btn-report { background: linear-gradient(135deg, #2d3436, #4a5568); }
-        .file-name-display { font-size: 10px; color: var(--text-muted); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
-        .brand-tabs { display: flex; gap: 5px; }
-        .tab-btn { padding: 4px 14px; border: 2px solid transparent; cursor: pointer; font-weight: 800; border-radius: 6px; color: white; font-size: 11px; opacity: 0.45; transition: all 0.2s; letter-spacing: 0.5px; }
+        .upload-section { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+
+        /* Brand pill tabs */
+        .brand-tabs { display: flex; gap: 4px; }
+        .tab-btn { padding: 4px 13px; border: 1.5px solid transparent; cursor: pointer; font-weight: 800; border-radius: 20px; color: white; font-size: 10px; opacity: 0.45; transition: all 0.18s; letter-spacing: 0.4px; }
         .tab-btn.proforce { background: var(--proforce-color); }
         .tab-btn.panatta { background: var(--panatta-color); }
-        .tab-btn.active { opacity: 1; border-color: rgba(0,0,0,0.2); box-shadow: var(--shadow-sm); }
+        .tab-btn.active { opacity: 1; border-color: rgba(0,0,0,0.15); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+        /* Page content padding */
+        .page-content { padding: 6px; }
         .slicer-wrapper { background: var(--bg-white); padding: 6px; border-radius: var(--radius); border: 1px solid var(--border-color); margin-bottom: 6px; box-shadow: var(--shadow-sm); }
         #slicer-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 4px; align-items: center; }
         .slicer-btn { height: 27px; background: var(--bg-main); border: 1px solid var(--border-color); font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 5px; transition: all 0.15s; color: var(--text-mid); text-align: center; letter-spacing: 0.2px; }
@@ -201,18 +283,17 @@
            MOBİL RESPONSIVE  (max-width: 768px)
         ═══════════════════════════════════════ */
         @media (max-width: 768px) {
-            body { padding: 4px; font-size: 13px; }
+            .page-content { padding: 4px; font-size: 13px; }
 
-            /* ── Top Bar ── */
-            .top-bar { padding: 8px 10px; gap: 6px; }
-            .upload-section { flex-wrap: wrap; gap: 5px; }
-            .upload-section img { height: 26px; }
-            .btn-action { padding: 7px 10px; font-size: 11px; }
-            .file-name-display { max-width: 70px; }
-            .brand-tabs { gap: 4px; }
-            .tab-btn { padding: 6px 12px; font-size: 12px; }
-            .btn-sepet-goto { padding: 7px 12px; font-size: 11px; }
-            .sepet-badge { width: 18px; height: 18px; font-size: 10px; }
+            /* ── Nav Bar ── */
+            .top-bar { padding: 0 8px; min-height: 42px; }
+            .nav-logo-wrap { padding-right: 10px; }
+            .nav-logo-wrap img { height: 24px; }
+            .nav-tab { padding: 0 9px; font-size: 11px; gap: 4px; }
+            .nav-tab .nav-icon { font-size: 13px; }
+            .nav-divider { margin: 8px 2px; }
+            .nav-right { padding-left: 7px; }
+            .tab-btn { padding: 4px 10px; font-size: 10px; }
 
             /* ── Slicer / Kategori ── */
             .slicer-wrapper { padding: 5px; }
@@ -312,31 +393,74 @@
 <body>
  
 <div class="top-bar">
-    <div class="upload-section" style="flex:1;">
-        <img src="https://i.ibb.co/kV5hBdbW/1.png" alt="Logo" style="height:32px; width:auto; object-fit:contain; margin-right:6px;">
-        <button class="btn-action btn-data" onclick="document.getElementById('excel-file').click()">📂 VERİYİ YÜKLE</button>
-        <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
-        <span id="data-name" class="file-name-display"></span>
-        <button class="btn-action btn-report" onclick="downloadReport()">📥 ÜRÜN RAPORU AL</button>
-        <button class="btn-action" style="background:linear-gradient(135deg,#e67e22,#f39c12);" onclick="siparisArsiviniAc()">📦 SİPARİŞ ARŞİVİ</button>
-        <button class="btn-action btn-notes" onclick="downloadCurrentSort()">📤 BİLGİLERİ DIŞARI AKTAR</button>
-        <button class="btn-action btn-notes" onclick="document.getElementById('notes-file').click()">📝 BİLGİLERİ İÇERİ AL</button>
-        <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
-        <span id="notes-name" class="file-name-display"></span>
+    <!-- Logo -->
+    <div class="nav-logo-wrap">
+        <img src="https://i.ibb.co/kV5hBdbW/1.png" alt="Logo" style="height:28px;width:auto;object-fit:contain;">
     </div>
-    <div style="display:flex; align-items:center; gap:8px;">
-        <button class="btn-sepet-goto" onclick="teklifEkraniniAc()" id="btn-sepet-goto">
-            🛒 TEKLİFE GİT
-            <span class="sepet-badge" id="sepet-badge">0</span>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <!-- Veri Yükle -->
+        <button class="nav-tab" onclick="document.getElementById('excel-file').click()" title="Excel veri dosyası yükle">
+            <span class="nav-icon">📂</span>
+            <span class="nav-label">Veri Yükle</span>
         </button>
-        <button class="btn-action" style="background:linear-gradient(135deg,#1971c2,#339af0);" onclick="document.getElementById('teklif-import-file').click()" title="PDF veya Excel teklif dosyası yükle">📥 TEKLİFİ İÇERİ AL</button>
+        <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
+
+        <!-- Ürün Raporu -->
+        <button class="nav-tab nav-orange" onclick="downloadReport()" title="Ürün raporu indir">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Ürün Raporu</span>
+        </button>
+
+        <!-- Sipariş Arşivi -->
+        <button class="nav-tab" onclick="siparisArsiviniAc()" title="Sipariş arşivini aç">
+            <span class="nav-icon">📦</span>
+            <span class="nav-label">Sipariş Arşivi</span>
+        </button>
+
+        <div class="nav-divider"></div>
+
+        <!-- Dışa Aktar -->
+        <button class="nav-tab" onclick="downloadCurrentSort()" title="Bilgileri dışa aktar">
+            <span class="nav-icon">📤</span>
+            <span class="nav-label">Dışa Aktar</span>
+        </button>
+
+        <!-- İçeri Al (notes) -->
+        <button class="nav-tab" onclick="document.getElementById('notes-file').click()" title="Bilgileri içeri al">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">İçeri Al</span>
+        </button>
+        <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
+
+        <div class="nav-divider"></div>
+
+        <!-- Teklifi İçeri Al -->
+        <button class="nav-tab" onclick="document.getElementById('teklif-import-file').click()" title="PDF veya Excel teklif dosyası yükle">
+            <span class="nav-icon">📥</span>
+            <span class="nav-label">Teklif İçeri Al</span>
+        </button>
         <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
+
+        <!-- Teklife Git -->
+        <button class="nav-tab nav-green" onclick="teklifEkraniniAc()" id="btn-sepet-goto" title="Teklife git">
+            <span class="nav-icon">🛒</span>
+            <span class="nav-label">Teklife Git</span>
+            <span class="sepet-badge" id="sepet-badge" style="background:#e63946;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;">0</span>
+        </button>
+    </div>
+
+    <!-- Right: Brand Switcher -->
+    <div class="nav-right">
         <div class="brand-tabs">
             <button id="btn-proforce" class="tab-btn proforce active" onclick="switchBrand('PROFORCE')">PROFORCE</button>
             <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
         </div>
     </div>
 </div>
+
+<div class="page-content">
 <div class="slicer-wrapper">
     <div id="slicer-area"></div>
 </div>
@@ -364,6 +488,8 @@
         <tbody id="table-body"></tbody>
     </table>
 </div>
+
+</div><!-- /page-content -->
 
 <!-- Ürün Detay Modal -->
 <div id="info-modal" class="modal-overlay" onclick="closeModal(event,'info-modal')">
