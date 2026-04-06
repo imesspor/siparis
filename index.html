@@ -401,9 +401,9 @@
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
         <!-- Veri Yükle -->
-        <button class="nav-tab" onclick="document.getElementById('excel-file').click()" title="Excel veri dosyası yükle">
+        <button class="nav-tab" id="veri-yukle-btn" onclick="document.getElementById('excel-file').click()" title="Excel veri dosyası yükle">
             <span class="nav-icon">📂</span>
-            <span class="nav-label">Veri Yükle</span>
+            <span class="nav-label" id="data-name">Veri Yükle</span>
         </button>
         <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
 
@@ -971,6 +971,16 @@
             allData.forEach(item => { item.manuelSiparis = 0; });
             localStorage.setItem('masterInventoryData', JSON.stringify(allData));
             switchBrand(currentBrand);
+            // Nav butonunu güncelle — önceden yüklenmiş veri var
+            const sonYukleme = localStorage.getItem('son_yukleme_bilgi');
+            if (sonYukleme) {
+                try {
+                    const bilgi = JSON.parse(sonYukleme);
+                    document.getElementById('data-name').textContent = '\u2705 ' + bilgi.ad;
+                    const vBtn = document.getElementById('veri-yukle-btn');
+                    if (vBtn) { vBtn.style.color = '#2f9e44'; vBtn.title = 'Son yükleme: ' + bilgi.zaman + '\n' + bilgi.tamAd; }
+                } catch(e) {}
+            }
         }
         kurCek();
         teklifArsivGoster();
@@ -1163,6 +1173,14 @@
             applyManuelSiparisToData();
             saveAndRender();
             const yuklemeZamani = new Date().toLocaleString('tr-TR');
+            // Nav butonunu güncelle
+            const kisaAd = file.name.replace(/\.[^.]+$/, '').substring(0, 18);
+            document.getElementById('data-name').textContent = '\u2705 ' + kisaAd;
+            const vBtn = document.getElementById('veri-yukle-btn');
+            if (vBtn) { vBtn.style.color = '#2f9e44'; vBtn.title = 'Son yükleme: ' + yuklemeZamani + '\n' + file.name; }
+            // Yükleme bilgisini localStorage'a kaydet (sayfa yenilenince de hatırlansın)
+            const kisaAdKayit = file.name.replace(/\.[^.]+$/, '').substring(0, 18);
+            localStorage.setItem('son_yukleme_bilgi', JSON.stringify({ad: kisaAdKayit, tamAd: file.name, zaman: yuklemeZamani}));
             const sayfalar = [
                 wsStok     ? '✅ ANLIK_STOK_DATA'        : '❌ ANLIK_STOK_DATA (bulunamadı)',
                 wsGorsel   ? '✅ GÖRSEL'                  : '⚠️ GÖRSEL (bulunamadı)',
