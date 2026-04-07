@@ -993,7 +993,7 @@
     document.getElementById('excel-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
-        document.getElementById('data-name').textContent = file.name;
+
         const reader = new FileReader();
         reader.onerror = function(e) { alert('Dosya okunamadı: ' + e); };
         reader.onload = function(evt) {
@@ -1179,7 +1179,48 @@
             // Yükleme bilgisini localStorage'a kaydet (sayfa yenilenince de hatırlansın)
             const kisaAdKayit = file.name.replace(/\.[^.]+$/, '').substring(0, 18);
             localStorage.setItem('son_yukleme_bilgi', JSON.stringify({ad: kisaAdKayit, tamAd: file.name, zaman: yuklemeZamani}));
-            showToast('✅ Veri yükleme başarılı — ' + allData.length + ' ürün', '#00a859');
+            const sayfalar = [
+                wsStok     ? '✅ ANLIK_STOK_DATA'        : '❌ ANLIK_STOK_DATA (bulunamadı)',
+                wsGorsel   ? '✅ GÖRSEL'                  : '⚠️ GÖRSEL (bulunamadı)',
+                wsGecmis   ? '✅ GEÇMİŞ SATIŞ'           : '⚠️ GEÇMİŞ SATIŞ (bulunamadı)',
+                wsSiparis  ? '✅ ALINAN SİPARİŞLER DETAY' : '⚠️ ALINAN SİPARİŞLER DETAY (bulunamadı)',
+                wsVerilen  ? '✅ VERİLEN SİPARİŞ DETAY'   : '⚠️ VERİLEN SİPARİŞ DETAY (bulunamadı)',
+            ];
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;justify-content:center;align-items:center;';
+            overlay.innerHTML = `<div style="background:white;border-radius:14px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,0.25);min-width:320px;max-width:460px;width:92vw;overflow:hidden;font-family:inherit;">
+                <div style="background:linear-gradient(135deg,#00a859,#00c96a);padding:16px 20px;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:22px;">✅</span>
+                    <div>
+                        <div style="color:white;font-size:14px;font-weight:800;">Veri Yükleme Başarılı</div>
+                        <div style="color:rgba(255,255,255,0.85);font-size:11px;margin-top:2px;">${yuklemeZamani}</div>
+                    </div>
+                </div>
+                <div style="padding:16px 20px;">
+                    <div style="display:flex;gap:12px;margin-bottom:14px;">
+                        <div style="flex:1;background:#f0fff4;border:1.5px solid #00a859;border-radius:8px;padding:10px;text-align:center;">
+                            <div style="font-size:22px;font-weight:800;color:#00a859;">${allData.length}</div>
+                            <div style="font-size:10px;color:#555;font-weight:600;">Toplam Ürün</div>
+                        </div>
+                        <div style="flex:1;background:#f0f6ff;border:1.5px solid #3b5bdb;border-radius:8px;padding:10px;text-align:center;">
+                            <div style="font-size:22px;font-weight:800;color:#3b5bdb;">${uniqueIncoming.size}</div>
+                            <div style="font-size:10px;color:#555;font-weight:600;">Güncellenen Kayıt</div>
+                        </div>
+                        <div style="flex:1;background:#fff8f0;border:1.5px solid #f39c12;border-radius:8px;padding:10px;text-align:center;">
+                            <div style="font-size:22px;font-weight:800;color:#f39c12;">${siparisMap.size}</div>
+                            <div style="font-size:10px;color:#555;font-weight:600;">Sipariş Kalemi</div>
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#8a94a6;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Okunan Sayfalar</div>
+                    <div style="background:#f8f9fc;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px;">
+                        ${sayfalar.map(s => `<div style="font-size:11px;font-weight:600;color:#1a1f36;">${s}</div>`).join('')}
+                    </div>
+                </div>
+                <div style="padding:0 20px 16px;text-align:right;">
+                    <button onclick="this.closest('div[style*=fixed]').remove()" style="background:#3b5bdb;color:white;border:none;padding:8px 24px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:800;font-family:inherit;">Tamam ✓</button>
+                </div>
+            </div>`;
+            document.body.appendChild(overlay);
           } catch(err) {
               alert('Veri yükleme hatası:\n' + err.message);
               console.error(err);
