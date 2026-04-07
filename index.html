@@ -132,7 +132,7 @@
         .slicer-btn { height: 27px; background: var(--bg-main); border: 1px solid var(--border-color); font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 5px; transition: all 0.15s; color: var(--text-mid); text-align: center; letter-spacing: 0.2px; }
         .slicer-btn:hover { background: var(--accent-blue-light); color: var(--accent-blue); border-color: #c5d0ff; }
         .slicer-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); box-shadow: 0 2px 6px rgba(59,91,219,0.3); }
-        .search-container-in-slicer { display: flex; align-items: center; background: var(--bg-white); border: 1.5px solid var(--accent-blue); border-radius: 6px; padding: 0; height: 29px; grid-column: span 3; position: relative; overflow: visible; box-shadow: 0 0 0 3px rgba(59,91,219,0.08); }
+        .search-container-in-slicer { display: flex; align-items: center; background: var(--bg-white); border: 1.5px solid var(--accent-blue); border-radius: 6px; padding: 0; height: 29px; grid-column: span 2; position: relative; overflow: visible; box-shadow: 0 0 0 3px rgba(59,91,219,0.08); }
         .search-input { flex: 1; border: none; outline: none; font-size: 11px; font-weight: 600; padding: 0 10px; color: var(--accent-blue); background: transparent; font-family: inherit; }
         .search-input::placeholder { color: var(--text-muted); font-weight: 500; }
         .btn-customer-trigger { background: var(--accent-blue); height: 100%; padding: 0 14px; border: none; color: white; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background 0.15s; border-radius: 0 4px 4px 0; font-family: inherit; }
@@ -401,9 +401,10 @@
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
         <!-- Veri Yükle -->
-        <button class="nav-tab" id="veri-yukle-btn" onclick="document.getElementById('excel-file').click()" title="Excel veri dosyası yükle">
+        <button class="nav-tab" id="veri-yukle-btn" onclick="document.getElementById('excel-file').click()" title="Excel veri dosyası yükle" style="color:var(--text-muted);">
             <span class="nav-icon">📂</span>
-            <span class="nav-label" id="data-name">Veri Yükle</span>
+            <span class="nav-label">Veri Yükle</span>
+
         </button>
         <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
 
@@ -976,7 +977,6 @@
             if (sonYukleme) {
                 try {
                     const bilgi = JSON.parse(sonYukleme);
-                    document.getElementById('data-name').textContent = '\u2705 ' + bilgi.ad;
                     const vBtn = document.getElementById('veri-yukle-btn');
                     if (vBtn) { vBtn.style.color = '#2f9e44'; vBtn.title = 'Son yükleme: ' + bilgi.zaman + '\n' + bilgi.tamAd; }
                 } catch(e) {}
@@ -1174,55 +1174,12 @@
             saveAndRender();
             const yuklemeZamani = new Date().toLocaleString('tr-TR');
             // Nav butonunu güncelle
-            const kisaAd = file.name.replace(/\.[^.]+$/, '').substring(0, 18);
-            document.getElementById('data-name').textContent = '\u2705 ' + kisaAd;
             const vBtn = document.getElementById('veri-yukle-btn');
             if (vBtn) { vBtn.style.color = '#2f9e44'; vBtn.title = 'Son yükleme: ' + yuklemeZamani + '\n' + file.name; }
             // Yükleme bilgisini localStorage'a kaydet (sayfa yenilenince de hatırlansın)
             const kisaAdKayit = file.name.replace(/\.[^.]+$/, '').substring(0, 18);
             localStorage.setItem('son_yukleme_bilgi', JSON.stringify({ad: kisaAdKayit, tamAd: file.name, zaman: yuklemeZamani}));
-            const sayfalar = [
-                wsStok     ? '✅ ANLIK_STOK_DATA'        : '❌ ANLIK_STOK_DATA (bulunamadı)',
-                wsGorsel   ? '✅ GÖRSEL'                  : '⚠️ GÖRSEL (bulunamadı)',
-                wsGecmis   ? '✅ GEÇMİŞ SATIŞ'           : '⚠️ GEÇMİŞ SATIŞ (bulunamadı)',
-                wsSiparis  ? '✅ ALINAN SİPARİŞLER DETAY' : '⚠️ ALINAN SİPARİŞLER DETAY (bulunamadı)',
-                wsVerilen  ? '✅ VERİLEN SİPARİŞ DETAY'   : '⚠️ VERİLEN SİPARİŞ DETAY (bulunamadı)',
-            ];
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;justify-content:center;align-items:center;';
-            overlay.innerHTML = `<div style="background:white;border-radius:14px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,0.25);min-width:320px;max-width:460px;width:92vw;overflow:hidden;font-family:inherit;">
-                <div style="background:linear-gradient(135deg,#00a859,#00c96a);padding:16px 20px;display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:22px;">✅</span>
-                    <div>
-                        <div style="color:white;font-size:14px;font-weight:800;">Veri Yükleme Başarılı</div>
-                        <div style="color:rgba(255,255,255,0.85);font-size:11px;margin-top:2px;">${yuklemeZamani}</div>
-                    </div>
-                </div>
-                <div style="padding:16px 20px;">
-                    <div style="display:flex;gap:12px;margin-bottom:14px;">
-                        <div style="flex:1;background:#f0fff4;border:1.5px solid #00a859;border-radius:8px;padding:10px;text-align:center;">
-                            <div style="font-size:22px;font-weight:800;color:#00a859;">${allData.length}</div>
-                            <div style="font-size:10px;color:#555;font-weight:600;">Toplam Ürün</div>
-                        </div>
-                        <div style="flex:1;background:#f0f6ff;border:1.5px solid #3b5bdb;border-radius:8px;padding:10px;text-align:center;">
-                            <div style="font-size:22px;font-weight:800;color:#3b5bdb;">${uniqueIncoming.size}</div>
-                            <div style="font-size:10px;color:#555;font-weight:600;">Güncellenen Kayıt</div>
-                        </div>
-                        <div style="flex:1;background:#fff8f0;border:1.5px solid #f39c12;border-radius:8px;padding:10px;text-align:center;">
-                            <div style="font-size:22px;font-weight:800;color:#f39c12;">${siparisMap.size}</div>
-                            <div style="font-size:10px;color:#555;font-weight:600;">Sipariş Kalemi</div>
-                        </div>
-                    </div>
-                    <div style="font-size:11px;font-weight:700;color:#8a94a6;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Okunan Sayfalar</div>
-                    <div style="background:#f8f9fc;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px;">
-                        ${sayfalar.map(s => `<div style="font-size:11px;font-weight:600;color:#1a1f36;">${s}</div>`).join('')}
-                    </div>
-                </div>
-                <div style="padding:0 20px 16px;text-align:right;">
-                    <button onclick="this.closest('div[style*=fixed]').remove()" style="background:#3b5bdb;color:white;border:none;padding:8px 24px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:800;font-family:inherit;">Tamam ✓</button>
-                </div>
-            </div>`;
-            document.body.appendChild(overlay);
+            showToast('✅ Veri yükleme başarılı — ' + allData.length + ' ürün', '#00a859');
           } catch(err) {
               alert('Veri yükleme hatası:\n' + err.message);
               console.error(err);
@@ -1304,9 +1261,11 @@
             categories.map(cat =>
                 `<div class="slicer-btn ${currentFilter===cat?'active':''}" onclick="filterCategory('${cat}')" data-cat="${cat}" draggable="true" style="cursor:grab;">${cleanLabel(cat)}</div>`
             ).join('') +
-            `<div class="search-container-in-slicer">
+            `<div class="search-container-in-slicer" style="position:relative;">
                 <input type="text" id="search-input" class="search-input" placeholder="ÜRÜN ARA..." oninput="renderTable()">
-                <button class="btn-customer-trigger" onclick="toggleCustomerDropdown(event)">👥 MÜŞTERİLER</button>
+            </div>
+            <div style="position:relative;display:flex;align-items:center;">
+                <button class="btn-customer-trigger" style="border-radius:6px;height:29px;" onclick="toggleCustomerDropdown(event)">👥 MÜŞTERİLER</button>
                 <div id="customer-dropdown" class="customer-dropdown">
                     <div class="cust-search-wrapper">
                         <input type="text" id="cust-search-input" class="cust-inner-search" placeholder="Müşteri veya Sipariş Ara..." oninput="filterCustomers()">
