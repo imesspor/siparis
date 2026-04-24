@@ -487,7 +487,6 @@
                 <th class="col-kalan" style="width:55px;">KALAN</th>
                 <th class="col-ithalat" style="width:60px;">İTHALAT</th>
                 <th class="col-depo" style="width:34px;">ÖML</th>
-                <th class="col-depo" style="width:34px;">MRK</th>
                 <th class="col-depo" style="width:34px;">SHW</th>
                 <th class="col-depo" style="width:34px;">ŞRK</th>
                 <th class="col-depo" style="width:34px;">TMR</th>
@@ -1159,7 +1158,7 @@
                     resim:        resimMap.get(kodu) || '',
                     ithalatDetay: (ithalatMap.get(kodu)||[]).join('\n'),
                     satisListesi: siparisMap.get(kodu) || [],
-                    depoL: parseInt(r.L)||0, depoM: parseInt(r.M)||0,
+                    depoL: parseInt(r.L)||0,
                     depoN: parseInt(r.N)||0, depoO: parseInt(r.O)||0,
                     depoP: parseInt(r.P)||0, depoV: parseInt(r.V)||0,
                     avgSatis:   analiz.ortalama,
@@ -1591,7 +1590,7 @@
                 <td class="col-kalan">${item.kalan}</td>
                 <td class="col-ithalat">${item.ithalat}</td>
                 ${[
-                  {v:item.depoL},{v:item.depoM},{v:item.depoN},{v:item.depoO},{v:item.depoP},{v:item.depoV}
+                  {v:item.depoL},{v:item.depoN},{v:item.depoO},{v:item.depoP},{v:item.depoV}
                 ].map(d => {
                   const a = parseInt(d.v)||0;
                   return `<td class="col-depo${a>=1?'':' yok'}">${a>=1?a:'-'}</td>`;
@@ -2537,8 +2536,8 @@
 
     function downloadReportForBrand(secilenMarka) {
         if (!allData || allData.length === 0) return alert('Veri yok!');
-        const header = ['STOK KODU','STOK ADI','MARKA','KATEGORİ','FİYAT','FİİLİ STOK','SATIŞ','KALAN','İTHALAT','MANUEL SİPARİŞ','AYLIK ORT.','STOK ÖMRÜ (AY)','SİPARİŞ ÖNERİSİ','STOK DURUMU','İTHALAT DETAY'];
-        const toRow = it => [it.stokKodu,it.stokAdi,it.marka,it.ozelKod5,it.fiyat,it.fiili,it.satis,it.kalan,it.ithalat,it.manuelSiparis||0,it.avgSatis?parseFloat(it.avgSatis.toFixed(2)):0,it.stokOmru,it.ihtiyacAdet,it.stokDurumu,it.ithalatDetay||''];
+        const header = ['STOK KODU','STOK ADI','MARKA','KATEGORİ','FİYAT','FİİLİ STOK','SATIŞ','KALAN','İTHALAT','ÖMERLİ DEPO','SHOWROOM','ŞİRKET DEPO','TAMİR DEPO','İNTERNET DEPO','AYLIK ORT.','STOK ÖMRÜ (AY)','SİPARİŞ ÖNERİSİ','STOK DURUMU','İTHALAT DETAY'];
+        const toRow = it => [it.stokKodu,it.stokAdi,it.marka,it.ozelKod5,it.fiyat,it.fiili,it.satis,it.kalan,it.ithalat,it.depoL||0,it.depoN||0,it.depoO||0,it.depoP||0,it.depoV||0,it.avgSatis?parseFloat(it.avgSatis.toFixed(2)):0,it.stokOmru,it.ihtiyacAdet,it.stokDurumu,it.ithalatDetay||''];
         const wb2 = XLSX.utils.book_new();
         const used = new Set();
         const uName = base => { let n=base,c=2; while(used.has(n)){n=base.substring(0,28)+c++;} used.add(n); return n; };
