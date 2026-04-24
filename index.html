@@ -1733,8 +1733,7 @@
         });
 
         sepetBadgeGuncelle();
-        btn.textContent = '✓ Eklendi';
-        btn.classList.add('zaten-var');
+        renderTable();
 
         const musteriAdi = document.getElementById('teklif-musteri') ? document.getElementById('teklif-musteri').value.trim() : '';
         const toastMesaj = musteriAdi ? `✔ ${musteriAdi} için sepete eklendi` : '✔ Sepete eklendi';
