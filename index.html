@@ -153,8 +153,10 @@
         thead { background: linear-gradient(to bottom, #f8faff, #eef1f8); position: sticky; top: 0; z-index: 10; }
         th { padding: 5px 6px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; height: 22px; text-align: center; font-weight: 800; color: var(--text-mid); letter-spacing: 0.4px; text-transform: uppercase; }
         td { padding: 2px 5px; border: 1px solid var(--border-light); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; height: 20px; text-align: center; font-weight: 600; color: var(--text-dark); }
-        .col-stok-adi { text-align: left !important; padding-left: 6px; cursor: pointer; color: var(--accent-blue) !important; }
+        .col-stok-adi { text-align: left !important; padding-left: 6px; cursor: pointer; color: var(--accent-blue) !important; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .col-stok-adi:hover { text-decoration: underline; }
+        .col-depo { font-size: 10px; font-weight: 600; text-align: center; white-space: nowrap; padding: 2px 5px !important; color: #212529; background: #f1f3f5 !important; }
+        .col-depo.yok { color: #ced4da; background: #f1f3f5 !important; }
         .col-fiili { background-color: #fff8f0 !important; }
         .col-satis { background-color: #fffbea !important; }
         .col-kalan { background-color: #f6fff0 !important; }
@@ -166,7 +168,12 @@
         .col-oneri { background-color: #fffdf0 !important; }
         .col-stok-durumu { background-color: #f8f9fc !important; font-size: 10px !important; cursor: pointer; }
         .col-stok-durumu:hover { opacity: 0.8; text-decoration: underline; }
-        .critical-row td { color: #e63946 !important; font-weight: 800 !important; }
+        .critical-row td { color: #e63946 !important; }
+        .critical-row td.col-depo,
+        .critical-row td.col-avg,
+        .critical-row td.col-omur,
+        .critical-row td.col-oneri { color: unset !important; }
+        .critical-row td.col-stok-durumu { color: unset !important; }
         tr:hover td { background-color: #f5f8ff !important; }
         .w-sort { width: 25px; cursor: move; color: var(--border-color); text-align: center; font-size: 16px; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,31,54,0.45); display: none; z-index: 6000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
@@ -479,7 +486,12 @@
                 <th class="col-satis" style="width:55px;">SATIŞ</th>
                 <th class="col-kalan" style="width:55px;">KALAN</th>
                 <th class="col-ithalat" style="width:60px;">İTHALAT</th>
-                <th class="col-manuel" style="width:70px;">SİPARİŞ</th>
+                <th class="col-depo" style="width:34px;">ÖML</th>
+                <th class="col-depo" style="width:34px;">MRK</th>
+                <th class="col-depo" style="width:34px;">SHW</th>
+                <th class="col-depo" style="width:34px;">ŞRK</th>
+                <th class="col-depo" style="width:34px;">TMR</th>
+                <th class="col-depo" style="width:34px;">İNT</th>
                 <th class="col-avg" style="width:80px;">AYLIK ORT.</th>
                 <th class="col-omur" style="width:80px;">STOK ÖMRÜ</th>
                 <th class="col-oneri" style="width:80px;">SİP. ÖNERİ</th>
@@ -1147,8 +1159,9 @@
                     resim:        resimMap.get(kodu) || '',
                     ithalatDetay: (ithalatMap.get(kodu)||[]).join('\n'),
                     satisListesi: siparisMap.get(kodu) || [],
-                    depoL: parseInt(r.L)||0, depoN: parseInt(r.N)||0,
-                    depoO: parseInt(r.O)||0, depoP: parseInt(r.P)||0,
+                    depoL: parseInt(r.L)||0, depoM: parseInt(r.M)||0,
+                    depoN: parseInt(r.N)||0, depoO: parseInt(r.O)||0,
+                    depoP: parseInt(r.P)||0, depoV: parseInt(r.V)||0,
                     avgSatis:   analiz.ortalama,
                     totalSatis: analiz.totalSatis,
                     stokOmru:   analiz.ortalama > 0 ? (eldeki / analiz.ortalama).toFixed(1) : '0.0',
@@ -1474,6 +1487,7 @@
         sepetBadgeGuncelle();
         const dd = document.getElementById('customer-dropdown');
         if(dd) dd.style.display = 'none';
+        renderTable();
         teklifEkraniniAc();
         const tip = revize ? 'Revize Teklif' : 'Yeni Teklif';
         showToast('✔ ' + custName + ' → ' + tip + ' (' + urunler.length + ' ürün)', '#7950f2');
@@ -1553,16 +1567,20 @@
             const omurVal   = parseFloat(item.stokOmru);
             const omurSimge = omurVal < 5 ? '⚠️' : '✅';
             const safeKod   = item.stokKodu.replace(/'/g,"\\'");
-            const sepetteMi = sepet.some(s => s.stokKodu === item.stokKodu);
+            const sepetItem = sepet.find(s => s.stokKodu === item.stokKodu);
+            const sepetteMi = !!sepetItem;
+            // Sepetteki adet ile input adeti karşılaştır (güncelleme butonu için)
+            const sepetAdet = sepetItem ? sepetItem.adet : 1;
             return `<tr data-id="${item.stokKodu}" class="${item.kalan <= 0 ? 'critical-row' : ''}">
                 <td class="w-sort">⠿</td>
                 <td class="col-sepet">
-                    <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
-                        <input type="number" class="adet-input-mini" id="adet-${safeKod}" value="1" min="1" max="9999" onclick="this.select();event.stopPropagation()">
-                        <button class="btn-sepete-ekle ${sepetteMi ? 'zaten-var' : ''}"
-                            onclick="sepeteEkle('${safeKod}', this)">
-                            ${sepetteMi ? '✓ Eklendi' : '+ Ekle'}
-                        </button>
+                    <div style="display:flex;align-items:center;gap:3px;justify-content:center;flex-wrap:nowrap;">
+                        <input type="number" class="adet-input-mini" id="adet-${safeKod}" value="${sepetAdet}" min="1" max="9999" onclick="this.select();event.stopPropagation()" oninput="adetDegisti('${safeKod}',this)">
+                        ${!sepetteMi
+                            ? `<button class="btn-sepete-ekle" onclick="sepeteEkle('${safeKod}', this)" style="min-width:44px;">+ Ekle</button>`
+                            : `<button class="btn-sepete-ekle" id="btn-guncelle-${safeKod}" onclick="sepetAdetGuncelle('${safeKod}')" style="background:linear-gradient(135deg,#f59f00,#fcc419);color:#1a1f36;min-width:52px;display:none;" title="Adeti güncelle">✎ Güncelle</button>
+                               <button class="btn-sepete-ekle" onclick="sepettenKodlaKaldir('${safeKod}',this)" style="background:linear-gradient(135deg,#e63946,#ff6b6b);min-width:44px;" title="Listeden kaldır">✕ Kaldır</button>`
+                        }
                     </div>
                 </td>
                 <td>${item.stokKodu}</td>
@@ -1572,11 +1590,16 @@
                 <td class="col-satis">${item.satis}</td>
                 <td class="col-kalan">${item.kalan}</td>
                 <td class="col-ithalat">${item.ithalat}</td>
-                <td class="col-manuel" onclick="editManuelSiparis(this,'${safeKod}')">${item.manuelSiparis||0}</td>
+                ${[
+                  {v:item.depoL},{v:item.depoM},{v:item.depoN},{v:item.depoO},{v:item.depoP},{v:item.depoV}
+                ].map(d => {
+                  const a = parseInt(d.v)||0;
+                  return `<td class="col-depo${a>=1?'':' yok'}">${a>=1?a:'-'}</td>`;
+                }).join('')}
                 <td class="col-avg">${item.avgSatis ? item.avgSatis.toFixed(2) : '0.00'}</td>
                 <td class="col-omur">${item.stokOmru} Ay ${omurSimge}</td>
-                <td class="col-oneri" style="color:${item.ihtiyacAdet>0?'red':'green'}">${item.ihtiyacAdet} Adet</td>
-                <td class="col-stok-durumu" style="color:${item.stokDurumuRenk}"
+                <td class="col-oneri" style="color:${item.ihtiyacAdet>0?'red':'green'} !important">${item.ihtiyacAdet} Adet</td>
+                <td class="col-stok-durumu" style="color:${item.stokDurumuRenk} !important"
                     onclick="showAylikSatis('${safeKod}')"
                     title="Aylık satış geçmişini görmek için tıklayın">${item.stokDurumu||'DİĞER'}</td>
             </tr>`;
@@ -1598,6 +1621,36 @@
     // =============================================
     // SEPET FONKSİYONLARI
     // =============================================
+    function adetDegisti(stokKodu, input) {
+        // Eğer ürün sepetteyse güncelle butonu göster
+        const guncelleBtn = document.getElementById('btn-guncelle-' + stokKodu);
+        if (!guncelleBtn) return;
+        const sepetItem = sepet.find(s => s.stokKodu === stokKodu);
+        if (!sepetItem) return;
+        const yeniAdet = parseInt(input.value) || 1;
+        guncelleBtn.style.display = yeniAdet !== sepetItem.adet ? 'inline-flex' : 'none';
+    }
+
+    function sepetAdetGuncelle(stokKodu) {
+        const sepetItem = sepet.find(s => s.stokKodu === stokKodu);
+        if (!sepetItem) return;
+        const input = document.getElementById('adet-' + stokKodu);
+        const yeniAdet = parseInt(input ? input.value : 1) || 1;
+        sepetItem.adet = yeniAdet;
+        const guncelleBtn = document.getElementById('btn-guncelle-' + stokKodu);
+        if (guncelleBtn) guncelleBtn.style.display = 'none';
+        sepetBadgeGuncelle();
+        showToast(`✔ ${stokKodu} adedi güncellendi: ${yeniAdet}`, '#f59f00');
+    }
+
+    function sepettenKodlaKaldir(stokKodu, btn) {
+        const sepetItem = sepet.find(s => s.stokKodu === stokKodu);
+        if (!sepetItem) return;
+        sepettenSil(sepetItem.id);
+        // Buton kolonunu yeniden render et (renderTable çağırmak yerine sadece o satırı güncelle)
+        renderTable();
+    }
+
     function sepeteEkle(stokKodu, btn) {
         const item = allData.find(d => d.stokKodu === stokKodu);
         if (!item) return;
@@ -1622,14 +1675,40 @@
     function musteriAdiSor(stokKodu, btn) {
         document.getElementById('musteri-sor-modal').style.display = 'flex';
         document.getElementById('musteri-sor-input').value = '';
+        document.getElementById('musteri-sor-indirim').value = '';
+        // Döviz seçimini güncelle (mevcut ürüne göre)
+        const item = allData.find(d => d.stokKodu === stokKodu);
+        const isEur = item && (item.marka || '').includes('PANATTA');
+        document.getElementById('musteri-sor-doviz').value = isEur ? 'EUR' : 'USD';
+        // Kur/Tarih alanlarını güncelle
+        document.getElementById('musteri-sor-kur').value = '';
+        document.getElementById('musteri-sor-tarih').value = new Date().toLocaleDateString('tr-TR');
         setTimeout(() => document.getElementById('musteri-sor-input').focus(), 100);
         document.getElementById('musteri-sor-tamam').onclick = function() {
             const ad = document.getElementById('musteri-sor-input').value.trim();
             if (!ad) { document.getElementById('musteri-sor-input').focus(); return; }
             document.getElementById('teklif-musteri').value = ad;
+            // Döviz cinsini teklif ekranına uygula
+            const secilenDoviz = document.getElementById('musteri-sor-doviz').value;
+            document.getElementById('teklif-para-birimi').value = secilenDoviz;
+            // Manuel kur girilmişse uygula
+            const manuelKur = parseFloat(document.getElementById('musteri-sor-kur').value.replace(',','.'));
+            const manuelTarih = document.getElementById('musteri-sor-tarih').value.trim();
+            if (!isNaN(manuelKur) && manuelKur > 0) {
+                if (secilenDoviz === 'USD' || secilenDoviz === 'TL') usdKur = manuelKur;
+                if (secilenDoviz === 'EUR') eurKur = manuelKur;
+                const tarihYazisi = manuelTarih || new Date().toLocaleDateString('tr-TR');
+                document.getElementById('kur-gosterge').textContent = `USD: ${formatCurrency(usdKur)} ₺ | EUR: ${formatCurrency(eurKur)} ₺ (${tarihYazisi})`;
+                document.getElementById('kur-gosterge').style.background = '#fff8e6';
+                document.getElementById('kur-gosterge').style.borderColor = '#f59f00';
+                document.getElementById('kur-gosterge').style.color = '#b35800';
+            }
+            // İndirim oranını sakla (sepete eklenecek ürüne uygulanacak)
+            const indirimStr = document.getElementById('musteri-sor-indirim').value;
+            window._musteriSorIndirim = parseFloat(indirimStr) || 0;
             document.getElementById('musteri-sor-modal').style.display = 'none';
-            const item = allData.find(d => d.stokKodu === stokKodu);
-            if (item) _sepeteEkleDevam(stokKodu, btn, item);
+            const itemForCart = allData.find(d => d.stokKodu === stokKodu);
+            if (itemForCart) _sepeteEkleDevam(stokKodu, btn, itemForCart);
         };
         document.getElementById('musteri-sor-input').onkeydown = function(e) {
             if (e.key === 'Enter') document.getElementById('musteri-sor-tamam').click();
@@ -1639,6 +1718,7 @@
     function _sepeteEkleDevam(stokKodu, btn, item) {
         const adetInput = document.getElementById('adet-' + stokKodu);
         const adet = parseInt(adetInput ? adetInput.value : 1) || 1;
+        const indirim = (window._musteriSorIndirim !== undefined && window._musteriSorIndirim > 0) ? window._musteriSorIndirim : 0;
 
         sepet.push({
             id: Date.now(),
@@ -1649,7 +1729,7 @@
             fiyat: item.fiyat,
             resim: item.resim || '',
             adet: adet,
-            indirim: 0,
+            indirim: indirim,
             manuelFiyat: null
         });
 
@@ -1679,15 +1759,11 @@
     }
 
     function sepettenSil(id) {
-        const item = sepet.find(s => s.id === id);
         sepet = sepet.filter(s => s.id !== id);
         sepetBadgeGuncelle();
         teklifGuncelle();
-        // Tablodaki butonu da sıfırla
-        if (item) {
-            const btn = document.querySelector(`button[onclick*="sepeteEkle('${item.stokKodu.replace(/'/g,"\\'")}'"]`);
-            if (btn) { btn.textContent = '+ Ekle'; btn.classList.remove('zaten-var'); }
-        }
+        // Tabloyu yeniden render et (buton kolonunu güncellemek için)
+        renderTable();
     }
 
     function teklifUrunGuncelle(id, alan, deger) {
@@ -1980,13 +2056,10 @@
         // Aktif teklif başlık sıfırla
         window._aktifTeklifId = null;
         window._aktifTeklifBaslik = null;
+        window._musteriSorIndirim = 0;
         sepetBadgeGuncelle();
-        // Tablodaki butonları sıfırla
-        document.querySelectorAll('.btn-sepete-ekle.zaten-var').forEach(btn => {
-            btn.textContent = '+ Ekle';
-            btn.classList.remove('zaten-var');
-        });
         teklifGuncelle();
+        renderTable();
         showToast('Yeni teklif için ekran temizlendi', '#00a859');
     }
 
@@ -2077,6 +2150,7 @@
         window._aktifTeklifBaslik = t.baslik || t.musteri;
         sepetBadgeGuncelle();
         teklifGuncelle();
+        renderTable();
         showToast('Teklif yüklendi: ' + (t.baslik || t.musteri), '#3b5bdb');
     }
 
@@ -2414,11 +2488,11 @@
         doc.text("Satıcı Onayı", 15, signY); doc.line(15, signY + 2, 60, signY + 2);
         doc.text("Müşteri Onayı", 135, signY); doc.line(135, signY + 2, 180, signY + 2);
 
-        const fileName = `${musteri.replace(/\s+/g, '_')}_Teklif${stokDurumluMu ? '_Stok' : ''}.pdf`;
+        const fileName = `${musteri} Teklif${stokDurumluMu ? ' Stok' : ''}.pdf`;
         const blob = doc.output('blob');
         if (navigator.share && /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const file = new File([blob], fileName, { type: 'application/pdf' });
-            navigator.share({ files: [file], title: fileName }).catch(() => doc.save(fileName));
+            navigator.share({ files: [file] }).catch(() => doc.save(fileName));
         } else {
             doc.save(fileName);
         }
@@ -2430,14 +2504,14 @@
         const totalReserved = item.satisListesi ? item.satisListesi.reduce((s,x) => s+(parseInt(x.adet)||0), 0) : 0;
         const kalanRenk = item.kalan > 0 ? '#00a859' : '#ff0000';
         let depoHtml = '';
-        [{isim:'ÖMERLİ:',adet:item.depoL},{isim:'SHOWROOM:',adet:item.depoN},{isim:'TAMİR:',adet:item.depoP}]
-            .forEach(d => { if(parseInt(d.adet)>0) depoHtml+=`<div style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim} <strong>${d.adet} Adet</strong></div>`; });
+        [{isim:'ÖMERLİ DEPO',adet:item.depoL},{isim:'MERKEZ DEPO',adet:item.depoM},{isim:'SHOWROOM',adet:item.depoN},{isim:'ŞİRKET DEPO',adet:item.depoO},{isim:'TAMİR DEPO',adet:item.depoP},{isim:'İNTERNET DEPO',adet:item.depoV}]
+            .forEach(d => { if(parseInt(d.adet)>=1) depoHtml+=`<div style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim}: <strong>${d.adet} Adet</strong></div>`; });
 
         const grupLabel = item.ozelKod5 ? ' (' + item.ozelKod5.replace(/^\d+-/, '') + ')' : '';
         document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi + grupLabel;
         let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
-            <div class="info-row" style="color:${item.stokDurumuRenk}"><strong>Durum</strong> ${item.stokDurumu}</div>
+            <div class="info-row" style="color:${item.stokDurumuRenk};cursor:pointer;" onclick="document.getElementById('info-modal').style.display='none';showAylikSatis('${item.stokKodu}')" title="Aylık satış geçmişini görmek için tıklayın"><strong>Durum</strong> ${item.stokDurumu} <span style="font-size:10px;opacity:0.65;">📅</span></div>
             <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.marka && item.marka.includes('PANATTA') ? '€' : '$') : '-'}</div>
             <div class="info-row" style="font-weight:800;margin-top:6px;color:#1a1f36;"><strong>FİZİKİ STOK:</strong> ${item.fiili}</div>
             ${depoHtml}
@@ -2715,6 +2789,7 @@
         });
 
         sepetBadgeGuncelle();
+        renderTable();
         teklifEkraniniAc();
 
         // İndirim bilgi panelini göster
@@ -2784,11 +2859,41 @@
  
 <!-- Müşteri Adı Sor Modal -->
 <div id="musteri-sor-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:9998;justify-content:center;align-items:center;">
-    <div style="background:white;border-radius:12px;padding:28px 24px;box-shadow:0 5px 24px rgba(0,0,0,0.25);min-width:300px;max-width:90vw;">
-        <div style="font-size:13px;font-weight:800;color:#1a1f36;margin-bottom:6px;">👤 Müşteri / Şirket Adı</div>
-        <div style="font-size:11px;color:#8a94a6;margin-bottom:14px;">Sepete ürün eklemeden önce müşteri adını girin.</div>
+    <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 5px 24px rgba(0,0,0,0.25);min-width:320px;max-width:92vw;width:380px;">
+        <div style="font-size:13px;font-weight:800;color:#1a1f36;margin-bottom:4px;">👤 Teklif Bilgileri</div>
+        <div style="font-size:11px;color:#8a94a6;margin-bottom:14px;">Müşteri adı ve teklif ayarlarını girin.</div>
         <input id="musteri-sor-input" type="text" placeholder="Müşteri veya şirket adı..."
-            style="width:100%;padding:8px 12px;border:1.5px solid #3b5bdb;border-radius:7px;font-size:13px;font-weight:600;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;">
+            style="width:100%;padding:8px 12px;border:1.5px solid #3b5bdb;border-radius:7px;font-size:13px;font-weight:600;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <div>
+                <div style="font-size:9px;font-weight:800;color:#8a94a6;text-transform:uppercase;margin-bottom:3px;">İndirim %</div>
+                <input id="musteri-sor-indirim" type="number" min="0" max="100" step="0.5" placeholder="0"
+                    style="width:100%;padding:7px 10px;border:1.5px solid #dde2ec;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;outline:none;box-sizing:border-box;">
+            </div>
+            <div>
+                <div style="font-size:9px;font-weight:800;color:#8a94a6;text-transform:uppercase;margin-bottom:3px;">Döviz Cinsi</div>
+                <select id="musteri-sor-doviz" style="width:100%;padding:7px 8px;border:1.5px solid #dde2ec;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;outline:none;box-sizing:border-box;">
+                    <option value="TL">TL (₺)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EURO (€)</option>
+                </select>
+            </div>
+        </div>
+        <div style="background:#f8f9fc;border-radius:8px;padding:10px;margin-bottom:12px;">
+            <div style="font-size:9px;font-weight:800;color:#8a94a6;text-transform:uppercase;margin-bottom:6px;">Kur Bilgisi <span style="font-weight:500;text-transform:none;">(boş bırakılırsa güncel kur kullanılır)</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div>
+                    <div style="font-size:9px;color:#8a94a6;margin-bottom:2px;">Kur (₺)</div>
+                    <input id="musteri-sor-kur" type="text" placeholder="örn: 43.50" inputmode="decimal"
+                        style="width:100%;padding:6px 10px;border:1.5px solid #dde2ec;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;outline:none;box-sizing:border-box;">
+                </div>
+                <div>
+                    <div style="font-size:9px;color:#8a94a6;margin-bottom:2px;">Tarih</div>
+                    <input id="musteri-sor-tarih" type="text" placeholder="GG.AA.YYYY"
+                        style="width:100%;padding:6px 10px;border:1.5px solid #dde2ec;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;outline:none;box-sizing:border-box;">
+                </div>
+            </div>
+        </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
             <button onclick="document.getElementById('musteri-sor-modal').style.display='none'"
                 style="background:#eee;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">İptal</button>
