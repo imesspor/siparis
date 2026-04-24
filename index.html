@@ -1660,6 +1660,12 @@
             return;
         }
 
+        // Stok yoksa uyarı modal aç
+        if ((parseInt(item.kalan) || 0) <= 0) {
+            stokYokUyariGoster(stokKodu, btn);
+            return;
+        }
+
         // Sepet boşsa ve müşteri adı girilmemişse önce müşteri adı sor
         const musteriInput = document.getElementById('teklif-musteri');
         const musteriAdi = musteriInput ? musteriInput.value.trim() : '';
@@ -1669,6 +1675,58 @@
         }
 
         _sepeteEkleDevam(stokKodu, btn, item);
+    }
+
+    function stokYokUyariGoster(stokKodu, btn) {
+        const item = allData.find(d => d.stokKodu === stokKodu);
+        if (!item) return;
+
+        // Benzer ürünleri bul: ürün adındaki kelimeleri karşılaştır, kalan > 0 olanlar
+        const kelimeler = item.stokAdi.toLowerCase()
+            .replace(/[^a-z0-9çğışöü\s]/gi, ' ')
+            .split(/\s+/).filter(k => k.length >= 3);
+
+        const benzerler = allData
+            .filter(d => d.stokKodu !== stokKodu && (parseInt(d.kalan) || 0) >= 1 && d.marka === item.marka)
+            .map(d => {
+                const adLower = d.stokAdi.toLowerCase();
+                const eslesme = kelimeler.filter(k => adLower.includes(k)).length;
+                const oran = kelimeler.length > 0 ? eslesme / kelimeler.length : 0;
+                return { ...d, eslesme, oran };
+            })
+            .filter(d => d.eslesme >= (kelimeler.length === 1 ? 1 : 2))
+            .sort((a, b) => b.eslesme - a.eslesme);
+
+        const benzerHtml = benzerler.length > 0
+            ? benzerler.map(d => `
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid #f0f0f0;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:11px;font-weight:700;color:#1a1f36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.stokKodu}</div>
+                        <div style="font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.stokAdi}</div>
+                    </div>
+                    <div style="font-size:10px;color:#2f9e44;font-weight:800;white-space:nowrap;">${d.kalan} Adet</div>
+                    <button onclick="stokYokModalKapat();sepeteEkle('${d.stokKodu.replace(/'/g,"\\'")}',this)"
+                        style="background:linear-gradient(135deg,#00a859,#38d9a9);color:white;border:none;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:800;font-family:inherit;white-space:nowrap;">+ Ekle</button>
+                </div>`).join('')
+            : `<div style="font-size:11px;color:#aaa;text-align:center;padding:12px;">Benzer stoklu ürün bulunamadı.</div>`;
+
+        document.getElementById('stok-yok-urun-adi').textContent = `${item.stokKodu} — ${item.stokAdi}`;
+        document.getElementById('stok-yok-benzerler').innerHTML = benzerHtml;
+        document.getElementById('stok-yok-ekle-btn').onclick = function() {
+            stokYokModalKapat();
+            const musteriInput = document.getElementById('teklif-musteri');
+            const musteriAdi = musteriInput ? musteriInput.value.trim() : '';
+            if (sepet.length === 0 && !musteriAdi) {
+                musteriAdiSor(stokKodu, btn);
+            } else {
+                _sepeteEkleDevam(stokKodu, btn, item);
+            }
+        };
+        document.getElementById('stok-yok-modal').style.display = 'flex';
+    }
+
+    function stokYokModalKapat() {
+        document.getElementById('stok-yok-modal').style.display = 'none';
     }
 
     function musteriAdiSor(stokKodu, btn) {
@@ -2855,6 +2913,31 @@
     }
 </script>
  
+<!-- Stok Yok Uyarı Modal -->
+<div id="stok-yok-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
+    <div style="background:white;border-radius:14px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,0.25);width:400px;max-width:94vw;overflow:hidden;">
+        <!-- Başlık -->
+        <div style="background:linear-gradient(135deg,#e63946,#ff6b6b);padding:16px 20px;">
+            <div style="font-size:13px;font-weight:800;color:white;margin-bottom:2px;">⚠️ Stokta Ürün Yok</div>
+            <div id="stok-yok-urun-adi" style="font-size:11px;color:rgba(255,255,255,0.85);"></div>
+        </div>
+        <!-- Yine de ekle butonu -->
+        <div style="padding:12px 16px;border-bottom:2px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="font-size:11px;color:#555;">Bu ürün stokta bulunmuyor. Yine de teklife eklemek istiyor musunuz?</div>
+            <button id="stok-yok-ekle-btn" style="background:linear-gradient(135deg,#e63946,#ff6b6b);color:white;border:none;padding:7px 14px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;white-space:nowrap;">Yine de Ekle</button>
+        </div>
+        <!-- Benzer ürünler -->
+        <div style="padding:10px 16px 6px;">
+            <div style="font-size:9px;font-weight:800;color:#8a94a6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Stokta Olan Benzer Ürünler</div>
+            <div id="stok-yok-benzerler" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+        <!-- Kapat -->
+        <div style="padding:10px 16px 14px;text-align:right;">
+            <button onclick="stokYokModalKapat()" style="background:#f1f3f5;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;color:#555;">İptal</button>
+        </div>
+    </div>
+</div>
+
 <!-- Müşteri Adı Sor Modal -->
 <div id="musteri-sor-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:9998;justify-content:center;align-items:center;">
     <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 5px 24px rgba(0,0,0,0.25);min-width:320px;max-width:92vw;width:380px;">
