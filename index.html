@@ -1682,19 +1682,21 @@
         if (!item) return;
 
         // Benzer ürünleri bul: ürün adındaki kelimeleri karşılaştır, kalan > 0 olanlar
-        const kelimeler = item.stokAdi.toLowerCase()
+        const tumKelimeler = item.stokAdi.toLowerCase()
             .replace(/[^a-z0-9çğışöü\s]/gi, ' ')
-            .split(/\s+/).filter(k => k.length >= 3);
+            .split(/\s+/).filter(k => k.length >= 2);
+        // Max 4 kelime baz alınır, tamamı eşleşmeli
+        const kelimeler = tumKelimeler.slice(0, 4);
+        const minEslesme = kelimeler.length; // 1→1, 2→2, 3→3, 4→4
 
         const benzerler = allData
             .filter(d => d.stokKodu !== stokKodu && (parseInt(d.kalan) || 0) >= 1 && d.marka === item.marka)
             .map(d => {
                 const adLower = d.stokAdi.toLowerCase();
                 const eslesme = kelimeler.filter(k => adLower.includes(k)).length;
-                const oran = kelimeler.length > 0 ? eslesme / kelimeler.length : 0;
-                return { ...d, eslesme, oran };
+                return { ...d, eslesme };
             })
-            .filter(d => d.eslesme >= (kelimeler.length === 1 ? 1 : 2))
+            .filter(d => d.eslesme >= minEslesme)
             .sort((a, b) => b.eslesme - a.eslesme);
 
         const benzerHtml = benzerler.length > 0
