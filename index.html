@@ -1103,9 +1103,9 @@
                 XLSX.utils.sheet_to_json(wsSiparis, {header: 'A', defval: ''}).slice(1).forEach(row => {
                     const sKodu    = String(row.L || '').trim();
                     const sMusteri = String(row.J || '').trim();
-                    const sAdet    = String(row.R || '').trim();
+                    const sAdet    = String(row.T || '').trim();
                     const sTarih   = excelDateToJS(row.C);
-                    if(sKodu && sMusteri) {
+                    if(sKodu && sMusteri && (parseInt(sAdet)||0) > 0) {
                         if(!siparisMap.has(sKodu)) siparisMap.set(sKodu, []);
                         siparisMap.get(sKodu).push({ musteri: sMusteri, adet: sAdet, tarih: sTarih, rawDate: row.C, temsilci: String(row.F || '').trim() });
                     }
@@ -1149,12 +1149,17 @@
                 else if(analiz.ortalama >= 2)             { durum = '📈 NORMAL';             renk = '#3498db'; }
                 else if(analiz.ortalama > 0)              { durum = '⏳ YAVAŞ HAREKET';      renk = '#f39c12'; }
 
+                const dovizRaw = String(r.W || '').trim().toUpperCase();
+                const doviz = dovizRaw === 'TL' || dovizRaw === 'TRY' ? 'TL'
+                            : dovizRaw === 'EUR' || dovizRaw === 'EURO' ? 'EUR'
+                            : 'USD'; // varsayılan USD
                 uniqueIncoming.set(kodu, {
                     stokKodu: kodu,
                     stokAdi:  String(r.B || ''),
                     marka:    String(r.C || '').toUpperCase(),
                     ozelKod5: String(r.F || 'DİĞER'),
                     fiyat:    parseFloat(String(r.G).replace(',','.')) || 0,
+                    doviz:    doviz,
                     fiili, satis: parseInt(r.I)||0, kalan: parseInt(r.J)||0, ithalat,
                     resim:        resimMap.get(kodu) || '',
                     ithalatDetay: (ithalatMap.get(kodu)||[]).join('\n'),
@@ -1383,44 +1388,116 @@
         alert('Tüm değişiklikleriniz Excel olarak paketlendi.');
     }
 
-    function previewCustomerList(e, custName) {
+    function previewCustomerList(e, custName, filterDate) {
         if(e) e.stopPropagation();
-        document.getElementById('preview-title').textContent = custName;
-        let html = `<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-            <button class="btn-excel-cust-big" style="margin-bottom:0;" onclick="downloadCustomerList(null,'${custName.replace(/'/g,"\\'")}')">📥 LİSTEYİ EXCEL OLARAK İNDİR</button>
-            <button onclick="teklifeTasiSecim('${custName.replace(/'/g,"\\'")}');" style="background:linear-gradient(135deg,#7950f2,#9775fa);color:white;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">🛒 TEKLİFE TAŞI</button>
-        </div>`;
-        html += `<table class="preview-table"><thead><tr><th>TARİH</th><th>KOD</th><th>AD</th><th>TEMSİLCİ</th><th>SİPARİŞ</th><th>FİİLİ</th><th>KALAN</th></tr></thead><tbody>`;
-        let hasData = false;
+        const tekSiparis = filterDate !== undefined && filterDate !== null && filterDate !== '';
+        const baslik = tekSiparis
+            ? `${custName} <span style="font-size:11px;font-weight:600;color:#8a94a6;">(Tek Sipariş Görünümü)</span>`
+            : custName;
+        document.getElementById('preview-title').innerHTML = baslik;
+
+        // Veriyi topla
+        const satirlar = [];
         allData.forEach(item => {
-            const orders = item.satisListesi.filter(s => s.musteri === custName);
-            if(orders.length > 0) {
-                hasData = true;
+            const orders = item.satisListesi.filter(s => {
+                if (s.musteri !== custName) return false;
+                if (tekSiparis) return String(s.rawDate||'') === String(filterDate);
+                return true;
+            });
+            if (orders.length > 0) {
                 const total = orders.reduce((s,c) => s + (parseInt(c.adet)||0), 0);
-                const temsilci = orders[0].temsilci || '-';
-                html += `<tr><td>${orders[0].tarih||'-'}</td><td>${item.stokKodu}</td><td>${item.stokAdi}</td><td>${temsilci}</td><td style="color:red">${total}</td><td>${item.fiili}</td><td style="color:blue">${item.kalan}</td></tr>`;
+                satirlar.push({ item, orders, total });
             }
         });
-        html += '</tbody></table>';
-        document.getElementById('preview-body').innerHTML = hasData ? html : '<p>Sipariş bulunamadı.</p>';
+
+        let html = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+            <button class="btn-excel-cust-big" style="margin-bottom:0;" onclick="downloadCustomerList(null,'${custName.replace(/'/g,"\\'")}','${filterDate||''}')">📥 EXCEL İNDİR</button>
+            <button onclick="teklifeTasiSecim('${custName.replace(/'/g,"\\'")}');" style="background:linear-gradient(135deg,#7950f2,#9775fa);color:white;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">🛒 TEKLİFE TAŞI</button>
+            ${tekSiparis ? `<button onclick="previewCustomerList(null,'${custName.replace(/'/g,"\\'")}',null)" style="background:#f1f3f9;color:#4a5568;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">👥 Tüm Siparişleri Gör</button>` : ''}
+            <span style="margin-left:auto;font-size:11px;color:#8a94a6;font-weight:600;">${satirlar.length} ürün · ${satirlar.reduce((s,r)=>s+r.total,0)} adet bekliyor</span>
+        </div>`;
+
+        if (satirlar.length === 0) {
+            html += '<p style="color:#999;text-align:center;padding:20px;">Sipariş bulunamadı.</p>';
+        } else {
+            html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+            satirlar.forEach(({ item, orders, total }) => {
+                const kalanRenk = item.kalan > 0 ? '#2f9e44' : '#e63946';
+                const tarih = orders[0].tarih || '-';
+                const temsilci = orders[0].temsilci || '';
+                const dovizSembol = item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$';
+                const fiyatStr = item.fiyat ? `${item.fiyat.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${dovizSembol}` : '-';
+
+                html += `<div style="display:flex;align-items:center;gap:10px;background:white;border:1px solid #eaecf2;border-radius:8px;padding:8px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                    <img src="${item.resim||''}" onerror="this.style.display='none'"
+                         style="width:52px;height:52px;object-fit:contain;border-radius:6px;background:#f4f6f9;border:1px solid #eaecf2;flex-shrink:0;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap;">
+                            <span style="background:#1a1f36;color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;flex-shrink:0;">${item.stokKodu}</span>
+                            <span style="font-size:12px;font-weight:700;color:#1a1f36;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.stokAdi}</span>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:10px;color:#8a94a6;">
+                            <span>📅 ${tarih}</span>
+                            ${temsilci ? `<span>👤 ${temsilci}</span>` : ''}
+                            <span>💰 ${fiyatStr}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;text-align:center;">
+                        <div style="background:#fff0f0;border-radius:6px;padding:4px 10px;">
+                            <div style="font-size:9px;color:#e63946;font-weight:600;">BEKLİYEN</div>
+                            <div style="font-size:16px;font-weight:800;color:#e63946;">${total}</div>
+                        </div>
+                        <div style="background:#f0fff4;border-radius:6px;padding:4px 10px;">
+                            <div style="font-size:9px;color:${kalanRenk};font-weight:600;">KALAN</div>
+                            <div style="font-size:16px;font-weight:800;color:${kalanRenk};">${item.kalan}</div>
+                        </div>
+                        <div style="background:#f4f6f9;border-radius:6px;padding:4px 10px;">
+                            <div style="font-size:9px;color:#4a5568;font-weight:600;">FİZİKİ</div>
+                            <div style="font-size:16px;font-weight:800;color:#4a5568;">${item.fiili}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+        }
+
+        document.getElementById('preview-body').innerHTML = html;
         document.getElementById('preview-modal').style.display = 'flex';
         document.getElementById('customer-dropdown').style.display = 'none';
     }
 
-    function downloadCustomerList(e, custName) {
+    function downloadCustomerList(e, custName, filterDate) {
         if(e) e.stopPropagation();
+        const tekSiparis = filterDate !== undefined && filterDate !== null && filterDate !== '';
         const list = [];
         allData.forEach(item => {
-            const orders = item.satisListesi.filter(s => s.musteri === custName);
+            const orders = item.satisListesi.filter(s => {
+                if (s.musteri !== custName) return false;
+                if (tekSiparis) return String(s.rawDate||'') === String(filterDate);
+                return true;
+            });
             if(orders.length > 0) {
                 const total = orders.reduce((s,c) => s+(parseInt(c.adet)||0), 0);
-                list.push({'TARİH': orders[0].tarih||'-','KOD':item.stokKodu,'AD':item.stokAdi,'TEMSİLCİ':orders[0].temsilci||'-','SİPARİŞ':total,'FİİLİ':item.fiili,'KALAN':item.kalan});
+                const dovizSembol = item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$';
+                list.push({
+                    'TARİH': orders[0].tarih||'-',
+                    'KOD': item.stokKodu,
+                    'AD': item.stokAdi,
+                    'TEMSİLCİ': orders[0].temsilci||'-',
+                    'BEKLİYEN': total,
+                    'FİZİKİ STOK': item.fiili,
+                    'SATILABİLİR': item.kalan,
+                    'FİYAT': item.fiyat||0,
+                    'PARA BİRİMİ': dovizSembol
+                });
             }
         });
         if(list.length > 0) {
             const ws2 = XLSX.utils.json_to_sheet(list);
+            ws2['!cols'] = [{wch:12},{wch:14},{wch:40},{wch:14},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12}];
             const wb2 = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb2, ws2, 'Siparis');
+            const sekmeAdi = tekSiparis ? 'Tek_Siparis' : 'Tum_Siparisler';
+            XLSX.utils.book_append_sheet(wb2, ws2, sekmeAdi);
             XLSX.writeFile(wb2, `${custName}_Siparis.xlsx`);
         }
     }
@@ -1467,7 +1544,7 @@
                 stokKodu: canliItem.stokKodu,
                 stokAdi: canliItem.stokAdi,
                 marka: canliItem.marka || '',
-                isEur: (canliItem.marka || '').includes('PANATTA'),
+                doviz: canliItem.doviz || 'USD',
                 fiyat: canliItem.fiyat,
                 resim: canliItem.resim || '',
                 adet: adet,
@@ -1585,7 +1662,7 @@
                 </td>
                 <td>${item.stokKodu}</td>
                 <td class="col-stok-adi" onclick="showDetail('${safeKod}')">${item.stokAdi}</td>
-                <td>${formatCurrency(item.fiyat)}</td>
+                <td>${formatCurrency(item.fiyat)} ${item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$'}</td>
                 <td class="col-fiili">${item.fiili}</td>
                 <td class="col-satis">${item.satis}</td>
                 <td class="col-kalan">${item.kalan}</td>
@@ -1738,8 +1815,8 @@
         document.getElementById('musteri-sor-indirim').value = '';
         // Döviz seçimini güncelle (mevcut ürüne göre)
         const item = allData.find(d => d.stokKodu === stokKodu);
-        const isEur = item && (item.marka || '').includes('PANATTA');
-        document.getElementById('musteri-sor-doviz').value = isEur ? 'EUR' : 'USD';
+        const itemDoviz = (item && item.doviz) ? item.doviz : 'USD';
+        document.getElementById('musteri-sor-doviz').value = itemDoviz;
         // Kur/Tarih alanlarını güncelle
         document.getElementById('musteri-sor-kur').value = '';
         document.getElementById('musteri-sor-tarih').value = new Date().toLocaleDateString('tr-TR');
@@ -1778,14 +1855,28 @@
     function _sepeteEkleDevam(stokKodu, btn, item) {
         const adetInput = document.getElementById('adet-' + stokKodu);
         const adet = parseInt(adetInput ? adetInput.value : 1) || 1;
-        const indirim = (window._musteriSorIndirim !== undefined && window._musteriSorIndirim > 0) ? window._musteriSorIndirim : 0;
+
+        // Mevcut teklifte baskın indirim varsa otomatik uygula
+        let indirim = (window._musteriSorIndirim !== undefined && window._musteriSorIndirim > 0) ? window._musteriSorIndirim : 0;
+        if (!indirim && sepet.length > 0) {
+            const indirimliler = sepet.filter(i => (i.indirim || 0) > 0 && i.manuelFiyat === null);
+            if (indirimliler.length > 0) {
+                // En yaygın indirim oranını bul
+                const sayac = {};
+                indirimliler.forEach(i => { const k = i.indirim.toFixed(2); sayac[k] = (sayac[k]||0)+1; });
+                const enCok = Object.entries(sayac).sort((a,b)=>b[1]-a[1])[0];
+                if (enCok && indirimliler.length >= Math.ceil(sepet.length * 0.6)) {
+                    indirim = parseFloat(enCok[0]);
+                }
+            }
+        }
 
         sepet.push({
             id: Date.now(),
             stokKodu: item.stokKodu,
             stokAdi: item.stokAdi,
             marka: item.marka || '',
-            isEur: (item.marka || '').includes('PANATTA'),
+            doviz: item.doviz || 'USD',
             fiyat: item.fiyat,
             resim: item.resim || '',
             adet: adet,
@@ -1865,10 +1956,23 @@
     }
 
     function hesaplaListeFiyat(item, cur) {
-        if (cur === 'TL') return item.fiyat * (item.isEur ? eurKur : usdKur);
-        if (cur === 'EUR') return item.isEur ? item.fiyat : item.fiyat * (usdKur / eurKur);
-        // USD
-        return item.isEur ? item.fiyat * (eurKur / usdKur) : item.fiyat;
+        const doviz = item.doviz || (item.isEur ? 'EUR' : 'USD');
+        // TL ürün: fiyat zaten TL, kur uygulanmaz
+        if (doviz === 'TL') {
+            if (cur === 'TL') return item.fiyat;
+            if (cur === 'USD') return item.fiyat / usdKur;
+            if (cur === 'EUR') return item.fiyat / eurKur;
+        }
+        // EUR ürün
+        if (doviz === 'EUR') {
+            if (cur === 'TL')  return item.fiyat * eurKur;
+            if (cur === 'EUR') return item.fiyat;
+            if (cur === 'USD') return item.fiyat * (eurKur / usdKur);
+        }
+        // USD ürün (varsayılan)
+        if (cur === 'TL')  return item.fiyat * usdKur;
+        if (cur === 'EUR') return item.fiyat * (usdKur / eurKur);
+        return item.fiyat; // USD
     }
 
     function hesaplaUrunFiyat(item, cur) {
@@ -2032,10 +2136,12 @@
                             ${stokHtml}
                         </div>
                         <div style="font-size:10px;color:var(--text-muted);">
-                            ${item.isEur
-                              ? `Liste: <b>${formatCurrency(item.fiyat)} €</b> / <b>${formatCurrency(item.fiyat * eurKur)} ₺</b>`
-                              : `Liste: <b>${formatCurrency(item.fiyat)} $</b> / <b>${formatCurrency(item.fiyat * usdKur)} ₺</b>`
-                            }
+                            ${(()=>{
+                                const d = item.doviz || (item.isEur ? 'EUR' : 'USD');
+                                if (d === 'TL') return `Liste: <b>${formatCurrency(item.fiyat)} ₺</b>`;
+                                if (d === 'EUR') return `Liste: <b>${formatCurrency(item.fiyat)} €</b> / <b>${formatCurrency(item.fiyat * eurKur)} ₺</b>`;
+                                return `Liste: <b>${formatCurrency(item.fiyat)} $</b> / <b>${formatCurrency(item.fiyat * usdKur)} ₺</b>`;
+                            })()}
                             ${item.marka ? ' | ' + item.marka : ''}
                         </div>
                         ${item._ithalatNotu ? `<div style="font-size:10px;color:#1971c2;margin-top:2px;">📦 Gelecek: ${item._ithalatNotu}</div>` : ''}
@@ -2083,6 +2189,58 @@
         document.getElementById('ozet-genel-toplam').textContent = formatCurrency(genelToplam) + ' ' + sembol;
         document.getElementById('ozet-ort-indirim').textContent = '%' + formatCurrency(ortIndirim);
         document.getElementById('ozet-indirim-tutar').textContent = formatCurrency(indirimTutari) + ' ' + sembol;
+
+        // ── UYARI SİSTEMİ ──
+        const uyarilar = [];
+
+        // 1. Karışık para birimi uyarısı (TL + USD veya TL + EUR)
+        const dovizler = [...new Set(sepet.map(i => i.doviz || (i.isEur ? 'EUR' : 'USD')))];
+        const tlVar   = dovizler.includes('TL');
+        const usdVar  = dovizler.includes('USD');
+        const eurVar  = dovizler.includes('EUR');
+        if (tlVar && usdVar) uyarilar.push('⚠️ Bu teklifte <b>TL fiyatlı</b> ve <b>USD fiyatlı</b> ürünler karışık. TL ürünler kur işlemine tabi olmaz, dikkat edin.');
+        if (tlVar && eurVar) uyarilar.push('⚠️ Bu teklifte <b>TL fiyatlı</b> ve <b>EUR fiyatlı</b> ürünler karışık. TL ürünler liste fiyatıyla mı teklif veriliyor?');
+        if (usdVar && eurVar) uyarilar.push('⚠️ Bu teklifte <b>USD</b> ve <b>EUR</b> cinsinden ürünler bir arada.');
+
+        // 2. Fiyatsız ürün uyarısı
+        const fiyatsizilar = sepet.filter(i => !i.fiyat || i.fiyat === 0);
+        if (fiyatsizilar.length > 0) uyarilar.push(`⚠️ <b>${fiyatsizilar.map(i=>i.stokKodu).join(', ')}</b> ürün(ler)inde liste fiyatı <b>0 veya girilmemiş</b>.`);
+
+        // 3. Anormal indirim uyarısı (2+ ürün varsa kontrol et)
+        if (sepet.length >= 2) {
+            const indirimler = sepet.map(i => i.indirim || 0).filter(v => !isNaN(v));
+            const ortIndirimSepet = indirimler.reduce((a,b)=>a+b,0) / indirimler.length;
+            const anormal = sepet.filter(i => {
+                const fark = Math.abs((i.indirim||0) - ortIndirimSepet);
+                return fark > 15 && ortIndirimSepet > 0; // ortalamanın 15 puan üstü/altı
+            });
+            if (anormal.length > 0) uyarilar.push(`⚠️ <b>${anormal.map(i=>i.stokKodu).join(', ')}</b> ürününde indirim oranı diğerlerinden belirgin farklı (ortalama %${ortIndirimSepet.toFixed(1)}).`);
+
+            // 4. Toplu indirim uygulanmış ama sıfır indirimli ürün var
+            const sifirIndirimli = sepet.filter(i => (i.indirim || 0) === 0 && i.manuelFiyat === null);
+            const indirimliler   = sepet.filter(i => (i.indirim || 0) > 0);
+            if (indirimliler.length > 0 && sifirIndirimli.length > 0)
+                uyarilar.push(`⚠️ <b>${sifirIndirimli.map(i=>i.stokKodu).join(', ')}</b> ürününde indirim yok, diğer ürünlerde indirim uygulanmış.`);
+        }
+
+        // Uyarı kutusunu güncelle
+        let uyariBox = document.getElementById('teklif-uyari-box');
+        if (!uyariBox) {
+            uyariBox = document.createElement('div');
+            uyariBox.id = 'teklif-uyari-box';
+            uyariBox.style.cssText = 'margin:0 0 10px;display:none;';
+            const liste2 = document.getElementById('teklif-urun-listesi');
+            liste2.parentNode.insertBefore(uyariBox, liste2);
+        }
+        if (uyarilar.length > 0) {
+            uyariBox.style.display = 'block';
+            uyariBox.innerHTML = uyarilar.map(u =>
+                `<div style="background:#fff8e6;border:1.5px solid #f59f00;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:11px;color:#7c4a00;line-height:1.5;">${u}</div>`
+            ).join('');
+        } else {
+            uyariBox.style.display = 'none';
+            uyariBox.innerHTML = '';
+        }
     }
 
     function topluIndirimUygula() {
@@ -2338,10 +2496,20 @@
     }
     function hesaplaListeFiyatIcin(item, cur) {
         const f = item.fiyat || item.baseUsd || 0;
-        const isEur = item.isEur || (item.marka || '').includes('PANATTA');
-        if (cur === 'TL') return f * (isEur ? eurKur : usdKur);
-        if (cur === 'EUR') return isEur ? f : f * (usdKur / eurKur);
-        return isEur ? f * (eurKur / usdKur) : f;
+        const doviz = item.doviz || (item.isEur || (item.marka || '').includes('PANATTA') ? 'EUR' : 'USD');
+        if (doviz === 'TL') {
+            if (cur === 'TL') return f;
+            if (cur === 'USD') return f / usdKur;
+            if (cur === 'EUR') return f / eurKur;
+        }
+        if (doviz === 'EUR') {
+            if (cur === 'TL')  return f * eurKur;
+            if (cur === 'EUR') return f;
+            return f * (eurKur / usdKur);
+        }
+        if (cur === 'TL')  return f * usdKur;
+        if (cur === 'EUR') return f * (usdKur / eurKur);
+        return f;
     }
 
     async function teklifPDFIndir() {
@@ -2574,7 +2742,7 @@
         </div>`;
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk};cursor:pointer;" onclick="document.getElementById('info-modal').style.display='none';showAylikSatis('${item.stokKodu}')" title="Aylık satış geçmişini görmek için tıklayın"><strong>Durum</strong> ${item.stokDurumu} <span style="font-size:10px;opacity:0.65;">📅</span></div>
-            <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.marka && item.marka.includes('PANATTA') ? '€' : '$') : '-'}</div>
+            <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$') : '-'}</div>
             <div class="info-row" style="font-weight:800;margin-top:6px;color:#1a1f36;"><strong>FİZİKİ STOK:</strong> ${item.fiili}</div>
             ${depoHtml}
             <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
@@ -2585,7 +2753,7 @@
         html += `</div><div class="modal-section"><h4>👥 SİPARİŞLER (${totalReserved})</h4>`;
         if(item.satisListesi && item.satisListesi.length > 0) {
             item.satisListesi.forEach(s => {
-                html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}')">${s.musteri}</span>${s.temsilci ? ' <span style="color:#8a94a6;font-size:10px;">('+s.temsilci+')</span>' : ''} (${s.tarih||'-'})</div>`;
+                html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}','${s.rawDate||''}')">${s.musteri}</span>${s.temsilci ? ' <span style="color:#8a94a6;font-size:10px;">('+s.temsilci+')</span>' : ''} (${s.tarih||'-'})</div>`;
             });
         } else html += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
         html += '</div>';
@@ -2825,7 +2993,7 @@
         const importSonuclar = [];
 
         bulunan.forEach(({ item, adet, dosyaFiyat }) => {
-            let listeFiyat = hesaplaListeFiyat({ fiyat: item.fiyat, isEur: (item.marka||'').includes('PANATTA') }, cur);
+            let listeFiyat = hesaplaListeFiyat({ fiyat: item.fiyat, doviz: item.doviz || 'USD' }, cur);
             let manuelFiyat = null;
             let indirimYuzde = 0;
             if (dosyaFiyat && dosyaFiyat > 0) {
@@ -2837,7 +3005,7 @@
                 stokKodu: item.stokKodu,
                 stokAdi: item.stokAdi,
                 marka: item.marka || '',
-                isEur: (item.marka||'').includes('PANATTA'),
+                doviz: item.doviz || 'USD',
                 fiyat: item.fiyat,
                 resim: item.resim || '',
                 adet: adet,
