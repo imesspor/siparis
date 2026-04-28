@@ -590,6 +590,7 @@
             <!-- Aksiyonlar -->
             <button class="teklif-action-btn btn-onizle" onclick="teklifOnizle()">👁 Önizle</button>
             <button class="teklif-action-btn btn-indir-pdf" onclick="teklifPDFIndir()">📄 PDF İndir</button>
+            <button class="teklif-action-btn" style="background:#6f42c1;color:white;" onclick="alert('Şartname indirme özelliği yakında eklenecek.')">📋 Şartname İndir</button>
             <button class="teklif-action-btn btn-kaydet" onclick="teklifKaydet()">💾 Kaydet</button>
             <button class="teklif-action-btn btn-yeni" onclick="yeniTeklif()">✚ Yeni Teklif</button>
             <!-- Arşiv -->
@@ -2568,6 +2569,9 @@
         const grupLabel = item.ozelKod5 ? ' (' + item.ozelKod5.replace(/^\d+-/, '') + ')' : '';
         document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi + grupLabel;
         let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
+        html += `<div style="text-align:center;margin-bottom:10px;">
+            <button onclick="alert('Şartname görüntüleme özelliği yakında eklenecek.')" style="background:#6f42c1;color:white;border:none;border-radius:6px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">📋 Şartname Görüntüle</button>
+        </div>`;
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk};cursor:pointer;" onclick="document.getElementById('info-modal').style.display='none';showAylikSatis('${item.stokKodu}')" title="Aylık satış geçmişini görmek için tıklayın"><strong>Durum</strong> ${item.stokDurumu} <span style="font-size:10px;opacity:0.65;">📅</span></div>
             <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.marka && item.marka.includes('PANATTA') ? '€' : '$') : '-'}</div>
