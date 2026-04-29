@@ -2370,7 +2370,39 @@
                 uyarilar.push(`⚠️ <b>${sifirIndirimli.map(i=>i.stokKodu).join(', ')}</b> ürününde indirim yok, diğer ürünlerde indirim uygulanmış.`);
         }
 
-        // Uyarı kutusunu güncelle
+        // 5. Mükerrer ürün adı uyarısı (aynı isim farklı kod)
+        const isimler = sepet.map(i => i.stokAdi.trim().toUpperCase());
+        const isimSayac = {};
+        isimler.forEach(ad => { isimSayac[ad] = (isimSayac[ad]||0)+1; });
+        Object.keys(isimSayac).filter(ad => isimSayac[ad] > 1).forEach(ad => {
+            const kodlar = sepet.filter(i => i.stokAdi.trim().toUpperCase() === ad).map(i => i.stokKodu).join(', ');
+            uyarilar.push(`⚠️ <b>"${ad}"</b> isimli ürün teklifte <b>${isimSayac[ad]} kez</b> var (${kodlar}).`);
+        });
+
+        // 6. Benzer ürün adı uyarısı (kelime örtüşmesi %60 ve üzeri) — gruplu özet
+        const sepetIsimler = sepet.map(i => ({ kod: i.stokKodu, ad: i.stokAdi.trim().toUpperCase() }));
+        const stopWords = new Set(['VE','İLE','THE','BİR','FOR','AND','OR','OF','DE','DA','LE','LA']);
+        const kelimeleriAl = ad => ad.split(/\s+/).filter(k => k.length >= 3 && !stopWords.has(k));
+        const benzerGruplar = []; // her eleman: [kod1, kod2, ...]
+        const islendi = new Set();
+        for (let a = 0; a < sepetIsimler.length; a++) {
+            if (islendi.has(a)) continue;
+            const grup = [a];
+            for (let b = a+1; b < sepetIsimler.length; b++) {
+                const adA = sepetIsimler[a].ad, adB = sepetIsimler[b].ad;
+                if (adA === adB) continue;
+                const kwA = kelimeleriAl(adA), kwB = kelimeleriAl(adB);
+                if (kwA.length < 2 || kwB.length < 2) continue;
+                const oran = kwA.filter(k => kwB.includes(k)).length / Math.max(kwA.length, kwB.length);
+                if (oran >= 0.6) { grup.push(b); islendi.add(b); }
+            }
+            if (grup.length > 1) benzerGruplar.push(grup);
+        }
+        benzerGruplar.forEach(grup => {
+            const kodlar = grup.map(i => sepetIsimler[i].kod).join(', ');
+            uyarilar.push(`⚠️ Benzer isimli ürünler teklifte bir arada: <b>${kodlar}</b> — mükerrer olabilir.`);
+        });
+
         let uyariBox = document.getElementById('teklif-uyari-box');
         if (!uyariBox) {
             uyariBox = document.createElement('div');
