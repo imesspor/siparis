@@ -395,6 +395,23 @@
             .arsiv-btns { gap: 4px; }
             .arsiv-btn { flex: 1; text-align: center; }
         }
+        /* ── İSTİHBARAT PANELİ ── */
+        .ip-tab { background:none;border:none;border-bottom:3px solid transparent;padding:10px 14px;font-size:11px;font-weight:700;color:#8a94a6;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap; }
+        .ip-tab.aktif { color:#1a1f36;border-bottom-color:#2d3561; }
+        .ip-tab:hover { color:#1a1f36; }
+        .ip-kart { background:white;border:1px solid #e2e6f0;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);cursor:pointer;transition:box-shadow 0.15s; }
+        .ip-kart:hover { box-shadow:0 3px 12px rgba(0,0,0,0.1); }
+        .ip-kart-sol { flex:1;min-width:0; }
+        .ip-kart-bas { font-size:12px;font-weight:800;color:#1a1f36;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+        .ip-kart-alt { font-size:10px;color:#8a94a6;font-weight:600; }
+        .ip-badge { border-radius:8px;padding:5px 10px;text-align:center;flex-shrink:0;min-width:52px; }
+        .ip-badge b { display:block;font-size:16px;font-weight:900; }
+        .ip-badge small { display:block;font-size:8px;font-weight:700;opacity:0.8;margin-top:1px; }
+        .ip-bosluk { text-align:center;padding:40px 20px;color:#aaa;font-size:13px; }
+        .ip-ozet-bar { display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap; }
+        .ip-ozet-kutu { flex:1;min-width:100px;background:white;border:1px solid #e2e6f0;border-radius:8px;padding:10px 14px;text-align:center; }
+        .ip-ozet-kutu b { display:block;font-size:20px;font-weight:900;color:#1a1f36; }
+        .ip-ozet-kutu small { font-size:9px;color:#8a94a6;font-weight:700;text-transform:uppercase; }
     </style>
 </head>
 <body>
@@ -451,6 +468,13 @@
         </button>
         <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
 
+        <!-- İstihbarat Paneli -->
+        <button class="nav-tab" onclick="istihbaratPaneliAc()" title="Akıllı Analiz" id="btn-istihbarat" style="position:relative;">
+            <span class="nav-icon">🧠</span>
+            <span class="nav-label">Analiz</span>
+            <span id="istihbarat-badge" style="display:none;position:absolute;top:4px;right:4px;background:#e63946;color:white;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:900;align-items:center;justify-content:center;">!</span>
+        </button>
+
         <!-- Teklife Git -->
         <button class="nav-tab nav-green" onclick="teklifEkraniniAc()" id="btn-sepet-goto" title="Teklife git">
             <span class="nav-icon">🛒</span>
@@ -502,6 +526,29 @@
 </div>
 
 </div><!-- /page-content -->
+
+<!-- ═══ İSTİHBARAT PANELİ MODAL ═══ -->
+<div id="istihbarat-modal" style="display:none;position:fixed;inset:0;background:rgba(10,14,30,0.7);z-index:99998;align-items:flex-start;justify-content:flex-end;padding:54px 12px 12px;">
+    <div style="background:#f4f6fb;border-radius:14px;width:100%;max-width:780px;max-height:calc(100vh - 70px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.35);display:flex;flex-direction:column;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1a1f36,#2d3561);border-radius:14px 14px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;">
+            <div>
+                <div style="color:white;font-size:15px;font-weight:800;letter-spacing:0.5px;">🧠 İSTİHBARAT PANELİ</div>
+                <div style="color:#8a9ac0;font-size:10px;font-weight:600;margin-top:2px;" id="istihbarat-subtitle">Veriler analiz ediliyor...</div>
+            </div>
+            <button onclick="document.getElementById('istihbarat-modal').style.display='none'" style="background:rgba(255,255,255,0.1);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">×</button>
+        </div>
+        <!-- Tab Bar -->
+        <div style="display:flex;background:white;border-bottom:1px solid #e2e6f0;padding:0 16px;gap:4px;position:sticky;top:57px;z-index:1;">
+            <button class="ip-tab aktif" id="ip-tab-kritik" onclick="ipTabGec('kritik')">🔴 Kritik Müşteriler</button>
+            <button class="ip-tab" id="ip-tab-stok" onclick="ipTabGec('stok')">🟡 Stok Alarmı</button>
+            <button class="ip-tab" id="ip-tab-firsat" onclick="ipTabGec('firsat')">🟢 Fırsat Listesi</button>
+            <button class="ip-tab" id="ip-tab-skor" onclick="ipTabGec('skor')">📊 Ürün Skoru</button>
+        </div>
+        <!-- İçerik -->
+        <div id="istihbarat-icerik" style="padding:14px;flex:1;"></div>
+    </div>
+</div>
 
 <!-- Ürün Detay Modal -->
 <div id="info-modal" class="modal-overlay" onclick="closeModal(event,'info-modal')">
@@ -3388,5 +3435,294 @@
         </div>
     </div>
 </div>
+<script>
+// ═══════════════════════════════════════════
+//  İSTİHBARAT PANELİ
+// ═══════════════════════════════════════════
+
+let _ipAktifTab = 'kritik';
+
+function ipTabGec(tab) {
+    _ipAktifTab = tab;
+    ['kritik','stok','firsat','skor'].forEach(t => {
+        document.getElementById('ip-tab-' + t).classList.toggle('aktif', t === tab);
+    });
+    ipRender(tab);
+}
+
+function istihbaratPaneliAc() {
+    if (!allData || allData.length === 0) {
+        alert('Önce Excel dosyasını yükleyin.');
+        return;
+    }
+    document.getElementById('istihbarat-modal').style.display = 'flex';
+    const bugun = new Date();
+    document.getElementById('istihbarat-subtitle').textContent =
+        `Son güncelleme: ${bugun.toLocaleDateString('tr-TR')} — ${allData.length} ürün analiz edildi`;
+    ipRender(_ipAktifTab);
+}
+
+// rawDate (Excel seri numarası) → JS Date
+function ipRawToDate(raw) {
+    if (!raw || isNaN(raw)) return null;
+    return new Date(Math.round((raw - 25569) * 86400 * 1000));
+}
+
+// Gün farkı hesapla
+function ipGunFarki(rawDate) {
+    const d = ipRawToDate(rawDate);
+    if (!d) return null;
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function ipRender(tab) {
+    const icerik = document.getElementById('istihbarat-icerik');
+    icerik.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:12px;">Analiz yapılıyor...</div>';
+    setTimeout(() => {
+        if (tab === 'kritik') icerik.innerHTML = ipKritikMusteriler();
+        else if (tab === 'stok') icerik.innerHTML = ipStokAlarm();
+        else if (tab === 'firsat') icerik.innerHTML = ipFirsatListesi();
+        else if (tab === 'skor') icerik.innerHTML = ipUrunSkor();
+    }, 50);
+}
+
+// ── TAB 1: KRİTİK MÜŞTERİLER ──
+function ipKritikMusteriler() {
+    // Her müşteri için en eski bekleyen siparişi bul
+    const musteriMap = {};
+    allData.forEach(item => {
+        (item.satisListesi || []).forEach(s => {
+            const gun = ipGunFarki(s.rawDate);
+            if (gun === null) return;
+            if (!musteriMap[s.musteri]) musteriMap[s.musteri] = { musteri: s.musteri, maxGun: 0, toplamAdet: 0, urunler: [], enEskiTarih: s.tarih };
+            const m = musteriMap[s.musteri];
+            if (gun > m.maxGun) { m.maxGun = gun; m.enEskiTarih = s.tarih; }
+            m.toplamAdet += parseInt(s.adet) || 0;
+            if (!m.urunler.includes(item.stokKodu)) m.urunler.push(item.stokKodu);
+        });
+    });
+
+    const liste = Object.values(musteriMap).sort((a, b) => b.maxGun - a.maxGun);
+    if (!liste.length) return '<div class="ip-bosluk">Bekleyen sipariş verisi bulunamadı.</div>';
+
+    // Özet
+    const kritikSayisi = liste.filter(m => m.maxGun >= 30).length;
+    const toplamBekleyen = liste.reduce((s, m) => s + m.toplamAdet, 0);
+    const enUzun = liste[0];
+
+    let html = `<div class="ip-ozet-bar">
+        <div class="ip-ozet-kutu"><b>${liste.length}</b><small>Müşteri Bekliyor</small></div>
+        <div class="ip-ozet-kutu"><b style="color:#e63946">${kritikSayisi}</b><small>30+ Gün Bekleyen</small></div>
+        <div class="ip-ozet-kutu"><b>${toplamBekleyen}</b><small>Toplam Bekleyen Adet</small></div>
+        <div class="ip-ozet-kutu"><b style="color:#e63946">${enUzun.maxGun}</b><small>En Uzun Bekleme (Gün)</small></div>
+    </div>`;
+
+    html += liste.map(m => {
+        const renk = m.maxGun >= 60 ? '#e63946' : m.maxGun >= 30 ? '#f59f00' : '#2f9e44';
+        const bg   = m.maxGun >= 60 ? '#fff0f0' : m.maxGun >= 30 ? '#fff8e6' : '#f0fff4';
+        const etiket = m.maxGun >= 60 ? 'KRİTİK' : m.maxGun >= 30 ? 'DİKKAT' : 'NORMAL';
+        return `<div class="ip-kart" onclick="previewCustomerList(null,'${m.musteri.replace(/'/g,"\\'")}')">
+            <div class="ip-kart-sol">
+                <div class="ip-kart-bas">${m.musteri}</div>
+                <div class="ip-kart-alt">
+                    📦 ${m.toplamAdet} adet bekliyor &nbsp;|&nbsp;
+                    🏷️ ${m.urunler.length} farklı ürün &nbsp;|&nbsp;
+                    📅 İlk sipariş: ${m.enEskiTarih}
+                </div>
+            </div>
+            <div class="ip-badge" style="background:${bg};color:${renk};">
+                <b>${m.maxGun}</b>
+                <small>GÜN</small>
+            </div>
+            <div style="background:${renk};color:white;border-radius:6px;padding:3px 8px;font-size:9px;font-weight:800;flex-shrink:0;">${etiket}</div>
+        </div>`;
+    }).join('');
+
+    return html;
+}
+
+// ── TAB 2: STOK ALARMI ──
+function ipStokAlarm() {
+    // Siparişi var + kalan stok yetersiz + ithalat yok veya yetersiz
+    const alarmlar = [];
+    allData.forEach(item => {
+        const bekleyen = (item.satisListesi || []).reduce((s, x) => s + (parseInt(x.adet)||0), 0);
+        if (bekleyen === 0) return;
+        const acik = item.kalan; // satılabilir stok
+        const ithalat = item.ithalat || 0;
+        const karsilama = acik + ithalat;
+        if (karsilama >= bekleyen) return; // yeterli, alarm yok
+        const eksik = bekleyen - karsilama;
+        const kritiklik = ithalat === 0 ? 'KRİTİK' : 'DİKKAT';
+        alarmlar.push({ item, bekleyen, acik, ithalat, eksik, kritiklik });
+    });
+
+    alarmlar.sort((a, b) => {
+        if (a.kritiklik !== b.kritiklik) return a.kritiklik === 'KRİTİK' ? -1 : 1;
+        return b.eksik - a.eksik;
+    });
+
+    if (!alarmlar.length) return '<div class="ip-bosluk">✅ Tüm siparişler için yeterli stok veya ithalat mevcut.</div>';
+
+    const kritikSayisi = alarmlar.filter(a => a.kritiklik === 'KRİTİK').length;
+    let html = `<div class="ip-ozet-bar">
+        <div class="ip-ozet-kutu"><b style="color:#e63946">${kritikSayisi}</b><small>Kritik Ürün (İthalat Yok)</small></div>
+        <div class="ip-ozet-kutu"><b style="color:#f59f00">${alarmlar.length - kritikSayisi}</b><small>Dikkat (İthalat Yetersiz)</small></div>
+        <div class="ip-ozet-kutu"><b>${alarmlar.reduce((s,a)=>s+a.eksik,0)}</b><small>Toplam Eksik Adet</small></div>
+    </div>`;
+
+    html += alarmlar.map(({ item, bekleyen, acik, ithalat, eksik, kritiklik }) => {
+        const renk = kritiklik === 'KRİTİK' ? '#e63946' : '#f59f00';
+        const bg   = kritiklik === 'KRİTİK' ? '#fff0f0' : '#fff8e6';
+        const musteriler = [...new Set((item.satisListesi||[]).map(s=>s.musteri))].join(', ');
+        return `<div class="ip-kart" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')">
+            <img src="${item.resim||''}" onerror="this.style.display='none'"
+                 style="width:44px;height:44px;object-fit:contain;border-radius:6px;background:#f4f6f9;border:1px solid #eaecf2;flex-shrink:0;">
+            <div class="ip-kart-sol">
+                <div class="ip-kart-bas">${item.stokKodu} — ${item.stokAdi}</div>
+                <div class="ip-kart-alt">
+                    👥 ${musteriler}
+                </div>
+                <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;">
+                    <span style="font-size:10px;color:#4a5568;">📦 Bekleyen: <b>${bekleyen}</b></span>
+                    <span style="font-size:10px;color:#2f9e44;">🏪 Stok: <b>${acik}</b></span>
+                    <span style="font-size:10px;color:#2d6be4;">🚢 İthalat: <b>${ithalat||0}</b></span>
+                    <span style="font-size:10px;color:${renk};font-weight:800;">⚠ Eksik: ${eksik}</span>
+                </div>
+            </div>
+            <div style="background:${renk};color:white;border-radius:6px;padding:3px 8px;font-size:9px;font-weight:800;flex-shrink:0;align-self:flex-start;">${kritiklik}</div>
+        </div>`;
+    }).join('');
+
+    return html;
+}
+
+// ── TAB 3: FIRSAT LİSTESİ ──
+function ipFirsatListesi() {
+    // Siparişi var + ithalat geliyor + müşteri haberdar edilebilir
+    const firsatlar = [];
+    allData.forEach(item => {
+        const bekleyen = (item.satisListesi || []).reduce((s, x) => s + (parseInt(x.adet)||0), 0);
+        if (bekleyen === 0) return;
+        if (!item.ithalatDetay || item.ithalatDetay.trim() === '') return;
+        const acik = item.kalan;
+        // ithalatDetay string: "65 Adet → 30.04.2026\n10 Adet → 15.05.2026" gibi
+        const satirlar = item.ithalatDetay.split('\n').filter(Boolean);
+        const ilkGelecek = satirlar[0] || '';
+        // Tarih çıkar
+        const tarihMatch = ilkGelecek.match(/(\d{2}\.\d{2}\.\d{4})/);
+        const gelecekTarih = tarihMatch ? tarihMatch[1] : '?';
+        // Toplam ithalat adet
+        const toplamIthalat = item.ithalat || 0;
+        const karsilanabilir = Math.min(bekleyen, acik + toplamIthalat);
+        if (karsilanabilir <= 0) return;
+        const musteriler = [...new Set((item.satisListesi||[]).map(s=>s.musteri))];
+        // Bekleyen gün
+        const maxGun = Math.max(...(item.satisListesi||[]).map(s => ipGunFarki(s.rawDate)||0));
+        firsatlar.push({ item, bekleyen, acik, toplamIthalat, karsilanabilir, gelecekTarih, musteriler, maxGun });
+    });
+
+    firsatlar.sort((a, b) => b.maxGun - a.maxGun);
+
+    if (!firsatlar.length) return '<div class="ip-bosluk">Şu an için fırsat listesi boş.<br><small>Siparişi olan ve ithalatı gelmekte olan ürün bulunamadı.</small></div>';
+
+    let html = `<div class="ip-ozet-bar">
+        <div class="ip-ozet-kutu"><b style="color:#2f9e44">${firsatlar.length}</b><small>Haberdar Edilebilir Müşteri Grubu</small></div>
+        <div class="ip-ozet-kutu"><b>${[...new Set(firsatlar.flatMap(f=>f.musteriler))].length}</b><small>Benzersiz Müşteri</small></div>
+    </div>
+    <div style="font-size:10px;color:#6c757d;margin-bottom:10px;background:#f0fff4;border:1px solid #b2f2bb;border-radius:6px;padding:8px 12px;">
+        💡 Bu ürünlerde siparişi olan müşteriler <b>ithalat tarihinde haberdar edilebilir</b>.
+    </div>`;
+
+    html += firsatlar.map(({ item, bekleyen, acik, toplamIthalat, karsilanabilir, gelecekTarih, musteriler, maxGun }) => {
+        return `<div class="ip-kart" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')">
+            <img src="${item.resim||''}" onerror="this.style.display='none'"
+                 style="width:44px;height:44px;object-fit:contain;border-radius:6px;background:#f4f6f9;border:1px solid #eaecf2;flex-shrink:0;">
+            <div class="ip-kart-sol">
+                <div class="ip-kart-bas">${item.stokKodu} — ${item.stokAdi}</div>
+                <div class="ip-kart-alt">👥 ${musteriler.join(' · ')}</div>
+                <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;">
+                    <span style="font-size:10px;color:#e63946;">⏳ ${maxGun} gün bekliyor</span>
+                    <span style="font-size:10px;color:#2d6be4;">🚢 ${toplamIthalat} adet geliyor</span>
+                    <span style="font-size:10px;color:#2f9e44;font-weight:800;">📅 ${gelecekTarih}</span>
+                </div>
+            </div>
+            <div style="background:#f0fff4;color:#2f9e44;border:1px solid #b2f2bb;border-radius:8px;padding:5px 10px;text-align:center;flex-shrink:0;">
+                <b style="display:block;font-size:14px;font-weight:900;">${karsilanabilir}</b>
+                <small style="font-size:8px;font-weight:700;">KARŞILANABİLİR</small>
+            </div>
+        </div>`;
+    }).join('');
+
+    return html;
+}
+
+// ── TAB 4: ÜRÜN SKORU ──
+function ipUrunSkor() {
+    // Skor = (bekleyen / max(kalan,1)) * log(bekleyen+1) * gunFaktoru
+    const skorlar = [];
+    allData.forEach(item => {
+        const bekleyen = (item.satisListesi || []).reduce((s, x) => s + (parseInt(x.adet)||0), 0);
+        if (bekleyen === 0) return;
+        const maxGun = Math.max(...(item.satisListesi||[]).map(s => ipGunFarki(s.rawDate)||0));
+        const gunFaktor = Math.log10(maxGun + 2);
+        const stokFaktor = bekleyen / Math.max(item.kalan + item.fiili, 1);
+        const skor = Math.round(bekleyen * stokFaktor * gunFaktor * 10);
+        const musteriler = [...new Set((item.satisListesi||[]).map(s=>s.musteri))];
+        skorlar.push({ item, bekleyen, maxGun, skor, musteriler });
+    });
+
+    skorlar.sort((a, b) => b.skor - a.skor);
+    if (!skorlar.length) return '<div class="ip-bosluk">Skorlanacak veri bulunamadı.</div>';
+
+    const maxSkor = skorlar[0].skor;
+
+    let html = `<div style="font-size:10px;color:#6c757d;margin-bottom:10px;background:#f0f4ff;border:1px solid #c5d0f5;border-radius:6px;padding:8px 12px;">
+        📊 Skor = Bekleyen adet × Stok baskısı × Bekleme süresi — ne kadar yüksekse o kadar acil.
+    </div>`;
+
+    html += skorlar.slice(0, 20).map(({ item, bekleyen, maxGun, skor, musteriler }, idx) => {
+        const yuzde = Math.round((skor / maxSkor) * 100);
+        const renk = yuzde >= 70 ? '#e63946' : yuzde >= 40 ? '#f59f00' : '#2f9e44';
+        return `<div class="ip-kart" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')">
+            <div style="font-size:18px;font-weight:900;color:#c8cdd8;width:24px;text-align:center;flex-shrink:0;">${idx+1}</div>
+            <img src="${item.resim||''}" onerror="this.style.display='none'"
+                 style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:#f4f6f9;border:1px solid #eaecf2;flex-shrink:0;">
+            <div class="ip-kart-sol">
+                <div class="ip-kart-bas">${item.stokKodu} — ${item.stokAdi}</div>
+                <div class="ip-kart-alt">👥 ${musteriler.join(' · ')}</div>
+                <div style="margin-top:6px;background:#f0f2f8;border-radius:4px;height:5px;overflow:hidden;">
+                    <div style="height:100%;width:${yuzde}%;background:${renk};border-radius:4px;transition:width 0.4s;"></div>
+                </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:18px;font-weight:900;color:${renk};">${skor}</div>
+                <div style="font-size:9px;color:#8a94a6;font-weight:600;">${maxGun}G / ${bekleyen}AD</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    if (skorlar.length > 20) html += `<div style="text-align:center;font-size:11px;color:#aaa;padding:10px;">... ve ${skorlar.length - 20} ürün daha</div>`;
+    return html;
+}
+
+// Veri yüklenince badge göster
+document.addEventListener('veriYuklendi', () => {
+    const badge = document.getElementById('istihbarat-badge');
+    if (!badge) return;
+    // Kritik müşteri sayısını hesapla
+    let kritik = 0;
+    (allData || []).forEach(item => {
+        (item.satisListesi || []).forEach(s => {
+            const gun = ipGunFarki(s.rawDate);
+            if (gun !== null && gun >= 30) kritik++;
+        });
+    });
+    if (kritik > 0) {
+        badge.style.display = 'inline-flex';
+        badge.textContent = kritik > 9 ? '!' : kritik;
+    }
+});
+</script>
 </body>
 </html>
