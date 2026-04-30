@@ -180,7 +180,7 @@
         .modal-content { background: var(--bg-white); padding: 24px; border-radius: 12px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); }
         .cust-link { color: var(--accent-blue); text-decoration: underline; cursor: pointer; font-weight: 700; }
         .cust-link:hover { color: var(--panatta-color); }
-        .preview-modal { width: 90% !important; max-width: 800px; z-index: 3000 !important; }
+        .preview-modal { width: 90% !important; max-width: 800px; z-index: 999999 !important; }
         .preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         .preview-table th, .preview-table td { padding: 4px; border: 1px solid var(--border-light); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .preview-table th { background: var(--bg-main); font-weight: 800; color: var(--text-mid); text-align: center; }
@@ -395,24 +395,6 @@
             .arsiv-btns { gap: 4px; }
             .arsiv-btn { flex: 1; text-align: center; }
         }
-        /* ── İSTİHBARAT PANELİ ── */
-        .ip-marka-btn { background:#f4f6f9;border:1.5px solid #e2e6f0;border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;color:#8a94a6;transition:all 0.15s; }
-        .ip-marka-btn.aktif { background:#1a1f36;border-color:#1a1f36;color:white; }border-bottom:3px solid transparent;padding:10px 14px;font-size:11px;font-weight:700;color:#8a94a6;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap; }
-        .ip-tab.aktif { color:#1a1f36;border-bottom-color:#2d3561; }
-        .ip-tab:hover { color:#1a1f36; }
-        .ip-kart { background:white;border:1px solid #e2e6f0;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);cursor:pointer;transition:box-shadow 0.15s; }
-        .ip-kart:hover { box-shadow:0 3px 12px rgba(0,0,0,0.1); }
-        .ip-kart-sol { flex:1;min-width:0; }
-        .ip-kart-bas { font-size:12px;font-weight:800;color:#1a1f36;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-        .ip-kart-alt { font-size:10px;color:#8a94a6;font-weight:600; }
-        .ip-badge { border-radius:8px;padding:5px 10px;text-align:center;flex-shrink:0;min-width:52px; }
-        .ip-badge b { display:block;font-size:16px;font-weight:900; }
-        .ip-badge small { display:block;font-size:8px;font-weight:700;opacity:0.8;margin-top:1px; }
-        .ip-bosluk { text-align:center;padding:40px 20px;color:#aaa;font-size:13px; }
-        .ip-ozet-bar { display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap; }
-        .ip-ozet-kutu { flex:1;min-width:100px;background:white;border:1px solid #e2e6f0;border-radius:8px;padding:10px 14px;text-align:center; }
-        .ip-ozet-kutu b { display:block;font-size:20px;font-weight:900;color:#1a1f36; }
-        .ip-ozet-kutu small { font-size:9px;color:#8a94a6;font-weight:700;text-transform:uppercase; }
     </style>
 </head>
 <body>
@@ -439,11 +421,6 @@
             <span class="nav-label">Ürün Raporu</span>
         </button>
 
-        <!-- Sipariş Arşivi -->
-        <button class="nav-tab" onclick="siparisArsiviniAc()" title="Sipariş arşivini aç">
-            <span class="nav-icon">📦</span>
-            <span class="nav-label">Sipariş Arşivi</span>
-        </button>
 
         <div class="nav-divider"></div>
 
@@ -470,10 +447,6 @@
         <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
 
         <!-- İstihbarat Paneli -->
-        <button class="nav-tab" onclick="istihbaratPaneliAc()" title="Akıllı Analiz" id="btn-istihbarat" style="position:relative;">
-            <span class="nav-icon">🧠</span>
-            <span class="nav-label">Analiz</span>
-            <span id="istihbarat-badge" style="display:none;position:absolute;top:4px;right:4px;background:#e63946;color:white;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:900;align-items:center;justify-content:center;">!</span>
         </button>
 
         <!-- Teklife Git -->
@@ -489,6 +462,7 @@
         <div class="brand-tabs">
             <button id="btn-proforce" class="tab-btn proforce active" onclick="switchBrand('PROFORCE')">PROFORCE</button>
             <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
+            <button id="btn-tyr" class="tab-btn" style="background:#ff6b00;color:white;" onclick="switchBrand('TYR')">TYR</button>
         </div>
     </div>
 </div>
@@ -528,44 +502,22 @@
 
 </div><!-- /page-content -->
 
-<!-- ═══ İSTİHBARAT PANELİ MODAL ═══ -->
-<div id="istihbarat-modal" style="display:none;position:fixed;inset:0;background:rgba(10,14,30,0.7);z-index:99998;align-items:flex-start;justify-content:flex-end;padding:54px 12px 12px;">
-    <div style="background:#f4f6fb;border-radius:14px;width:100%;max-width:780px;max-height:calc(100vh - 70px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.35);display:flex;flex-direction:column;">
+<!-- ═══ TEMSİLCİ MODAL ═══ -->
+<div id="temsilci-modal" style="display:none;position:fixed;inset:0;background:rgba(10,14,30,0.6);z-index:9000;align-items:flex-start;justify-content:center;padding-top:54px;">
+    <div style="background:#f4f6fb;border-radius:14px;width:100%;max-width:680px;max-height:calc(100vh - 70px);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);margin:0 12px;">
         <!-- Header -->
-        <div style="background:linear-gradient(135deg,#1a1f36,#2d3561);border-radius:14px 14px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;">
+        <div style="background:linear-gradient(135deg,#5f3dc4,#7950f2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
             <div>
-                <div style="color:white;font-size:15px;font-weight:800;letter-spacing:0.5px;">🧠 İSTİHBARAT PANELİ</div>
-                <div style="color:#8a9ac0;font-size:10px;font-weight:600;margin-top:2px;" id="istihbarat-subtitle">Veriler analiz ediliyor...</div>
+                <div style="color:white;font-size:14px;font-weight:800;">🧑‍💼 SATIŞ TEMSİLCİLERİ</div>
+                <div style="color:rgba(255,255,255,0.7);font-size:10px;margin-top:2px;" id="temsilci-subtitle"></div>
             </div>
-            <button onclick="document.getElementById('istihbarat-modal').style.display='none'" style="background:rgba(255,255,255,0.1);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">×</button>
-        </div>
-        <!-- Tab Bar -->
-        <div style="background:white;border-bottom:1px solid #e2e6f0;padding:8px 16px 0;position:sticky;top:57px;z-index:1;">
-            <!-- Marka + Arama -->
-            <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
-                <button class="ip-marka-btn aktif" id="ip-marka-HEPSİ" onclick="ipSetMarka('HEPSİ')">Tümü</button>
-                <button class="ip-marka-btn" id="ip-marka-PROFORCE" onclick="ipSetMarka('PROFORCE')" style="color:#00a859;">PROFORCE</button>
-                <button class="ip-marka-btn" id="ip-marka-PANATTA" onclick="ipSetMarka('PANATTA')" style="color:#e63946;">PANATTA</button>
-                <div style="flex:1;display:flex;align-items:center;gap:6px;background:#f4f6f9;border:1.5px solid #e2e6f0;border-radius:8px;padding:4px 10px;margin-left:4px;">
-                    <span style="font-size:12px;">🔍</span>
-                    <input id="ip-arama" type="text" placeholder="Ürün kodu, adı veya müşteri ara..."
-                           oninput="ipRender(_ipAktifTab)"
-                           style="border:none;background:none;outline:none;font-size:11px;font-weight:600;color:#1a1f36;width:100%;font-family:inherit;">
-                </div>
-            </div>
-            <!-- Sekmeler -->
-            <div style="display:flex;gap:4px;">
-                <button class="ip-tab aktif" id="ip-tab-kritik" onclick="ipTabGec('kritik')">🔴 Kritik Müşteriler</button>
-                <button class="ip-tab" id="ip-tab-stok" onclick="ipTabGec('stok')">🟡 Stok Alarmı</button>
-                <button class="ip-tab" id="ip-tab-firsat" onclick="ipTabGec('firsat')">🟢 Fırsat Listesi</button>
-                <button class="ip-tab" id="ip-tab-muadil" onclick="ipTabGec('muadil')">🔄 Muadil Öneriler</button>
-                <button class="ip-tab" id="ip-tab-skor" onclick="ipTabGec('skor')">📊 Ürün Skoru</button>
-            </div>
+            <button onclick="document.getElementById('temsilci-modal').style.display='none'" style="background:rgba(255,255,255,0.15);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">×</button>
         </div>
         <!-- İçerik -->
-        <div id="istihbarat-icerik" style="padding:14px;flex:1;"></div>
+        <div id="temsilci-icerik" style="overflow-y:auto;padding:12px;flex:1;"></div>
     </div>
 </div>
+
 
 <!-- Ürün Detay Modal -->
 <div id="info-modal" class="modal-overlay" onclick="closeModal(event,'info-modal')">
@@ -778,6 +730,7 @@
         const cont = document.getElementById('arsiv-tarih-tabs');
         const proRenk = _aktifArsivMarka === 'PROFORCE';
         const panRenk = _aktifArsivMarka === 'PANATTA';
+        const tyrRenk = _aktifArsivMarka === 'TYR';
         cont.innerHTML = `
             <div style="display:flex;gap:6px;margin-right:12px;align-items:center;flex-shrink:0;">
                 <button onclick="_arsivMarkaDegistir('PROFORCE')" id="arsiv-marka-PROFORCE"
@@ -788,6 +741,10 @@
                     style="padding:4px 14px;border-radius:20px;border:2px solid ${panRenk?'#e63946':'#ddd'};
                     background:${panRenk?'#e63946':'white'};color:${panRenk?'white':'#555'};
                     font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;">PANATTA</button>
+                <button onclick="_arsivMarkaDegistir('TYR')" id="arsiv-marka-TYR"
+                    style="padding:4px 14px;border-radius:20px;border:2px solid ${tyrRenk?'#ff6b00':'#ddd'};
+                    background:${tyrRenk?'#ff6b00':'white'};color:${tyrRenk?'white':'#555'};
+                    font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;">TYR</button>
                 <span style="width:1px;height:20px;background:#ddd;margin:0 4px;display:inline-block;"></span>
             </div>
             <div id="arsiv-tarih-btn-alani" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;align-items:center;"></div>`;
@@ -795,10 +752,10 @@
 
     function _arsivMarkaDegistir(marka) {
         _aktifArsivMarka = marka;
-        ['PROFORCE','PANATTA'].forEach(m => {
+        ['PROFORCE','PANATTA','TYR'].forEach(m => {
             const btn = document.getElementById('arsiv-marka-' + m);
             if (!btn) return;
-            const renk = m === 'PROFORCE' ? '#00a859' : '#e63946';
+            const renk = m === 'PROFORCE' ? '#00a859' : m === 'TYR' ? '#ff6b00' : '#e63946';
             const aktif = m === marka;
             btn.style.borderColor = aktif ? renk : '#ddd';
             btn.style.background  = aktif ? renk : 'white';
@@ -867,7 +824,7 @@
             return;
         }
 
-        const markaRenk = _aktifArsivMarka === 'PANATTA' ? '#e63946' : '#00a859';
+        const markaRenk = _aktifArsivMarka === 'PANATTA' ? '#e63946' : _aktifArsivMarka === 'TYR' ? '#ff6b00' : '#00a859';
         const label = tarih.split('-').reverse().join('.');
         let html = `<div style="font-size:12px;color:#888;margin-bottom:12px;font-weight:700;">
             <span style="background:${markaRenk};color:white;padding:2px 8px;border-radius:4px;font-size:10px;margin-right:6px;">${_aktifArsivMarka}</span>
@@ -1081,7 +1038,7 @@
                 const mevcutSayfalar = wb.SheetNames.join(', ');
                 return alert('ANLIK_STOK_DATA sayfası bulunamadı!\nDosyadaki sayfalar: ' + mevcutSayfalar);
             }
-            const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: 'A', defval: ''});
+            const stokJson = XLSX.utils.sheet_to_json(wsStok, {header: 'A', defval: ''}).slice(1);
 
             const resimMap = new Map();
             const wsGorsel = wb.Sheets['GÖRSEL'];
@@ -1199,10 +1156,12 @@
             }
 
             const uniqueIncoming = new Map();
-            stokJson.slice(1).forEach(r => {
+            stokJson.forEach(r => {
                 const kodu = String(r.A || '').trim();
                 if (!kodu || kodu.toLowerCase() === 'stok kodu') return;
                 const analiz       = satisAnalizMap.get(kodu) || { ortalama: 0, aktifAy: 0, totalSatis: 0 };
+                const marka        = String(r.C || '').toUpperCase();
+                const isTYR        = marka.includes('TYR');
                 const fiili        = parseInt(r.H) || 0;
                 const ithalat      = parseInt(r.K) || 0;
                 const eldeki       = fiili + ithalat;
@@ -1220,8 +1179,8 @@
                 uniqueIncoming.set(kodu, {
                     stokKodu: kodu,
                     stokAdi:  String(r.B || ''),
-                    marka:    String(r.C || '').toUpperCase(),
-                    ozelKod5: String(r.F || 'DİĞER'),
+                    marka:    marka,
+                    ozelKod5: isTYR ? String(r.E || 'DİĞER') : String(r.F || 'DİĞER'),
                     fiyat:    parseFloat(String(r.G).replace(',','.')) || 0,
                     doviz:    doviz,
                     fiili, satis: parseInt(r.I)||0, kalan: parseInt(r.J)||0, ithalat,
@@ -1269,7 +1228,7 @@
                 wsVerilen  ? '✅ VERİLEN SİPARİŞ DETAY'   : '⚠️ VERİLEN SİPARİŞ DETAY (bulunamadı)',
             ];
             const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;justify-content:center;align-items:center;';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:999999;display:flex;justify-content:center;align-items:flex-start;padding-top:60px;';
             overlay.innerHTML = `<div style="background:white;border-radius:14px;padding:0;box-shadow:0 8px 32px rgba(0,0,0,0.25);min-width:320px;max-width:460px;width:92vw;overflow:hidden;font-family:inherit;">
                 <div style="background:linear-gradient(135deg,#00a859,#00c96a);padding:16px 20px;display:flex;align-items:center;gap:10px;">
                     <span style="font-size:22px;">✅</span>
@@ -1389,6 +1348,7 @@
             </div>
             <div style="position:relative;display:flex;align-items:center;">
                 <button class="btn-customer-trigger" style="border-radius:6px;height:29px;" onclick="toggleCustomerDropdown(event)">👥 MÜŞTERİLER</button>
+                <button class="btn-customer-trigger" style="border-radius:6px;height:29px;margin-left:4px;background:#7950f2;" onclick="toggleTemsilciModal(event)">🧑‍💼 TEMSİLCİLER</button>
                 <div id="customer-dropdown" class="customer-dropdown">
                     <div class="cust-search-wrapper">
                         <input type="text" id="cust-search-input" class="cust-inner-search" placeholder="Müşteri veya Sipariş Ara..." oninput="filterCustomers()">
@@ -1426,19 +1386,39 @@
     }
 
     function filterCustomers() {
-        const searchTerm = document.getElementById('cust-search-input').value.toLowerCase();
-        const listArea   = document.getElementById('customer-list-area');
-        const customerSet = new Set();
-        allData.forEach(item => { if(item.satisListesi) item.satisListesi.forEach(s => customerSet.add(s.musteri)); });
-        const filtered = Array.from(customerSet).filter(c => c.toLowerCase().includes(searchTerm)).sort();
-        listArea.innerHTML = filtered.map(c => `
-            <div class="customer-item">
-                <span class="customer-name">${c}</span>
+        const raw = document.getElementById('cust-search-input').value;
+        const norm = s => (s||'').toLowerCase().replace(/ı/g,'i').replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ö/g,'o').replace(/ç/g,'c');
+        const searchTerm = norm(raw);
+        const listArea = document.getElementById('customer-list-area');
+
+        // Müşteri → en son temsilci map
+        const musteriTemsilci = {};
+        allData.forEach(item => {
+            (item.satisListesi||[]).forEach(s => {
+                if (s.musteri) {
+                    if (!musteriTemsilci[s.musteri]) musteriTemsilci[s.musteri] = '';
+                    if (s.temsilci) musteriTemsilci[s.musteri] = s.temsilci;
+                }
+            });
+        });
+
+        const filtered = Object.keys(musteriTemsilci)
+            .filter(c => !searchTerm || norm(c).includes(searchTerm) || norm(musteriTemsilci[c]).includes(searchTerm))
+            .sort();
+
+        listArea.innerHTML = filtered.map(c => {
+            const temsilci = musteriTemsilci[c];
+            return `<div class="customer-item">
+                <div style="flex:1;min-width:0;">
+                    <span class="customer-name">${c}</span>
+                    ${temsilci ? `<span style="font-size:10px;color:#8a94a6;margin-left:8px;">👤 ${temsilci}</span>` : ''}
+                </div>
                 <div class="cust-actions">
                     <button class="btn-cust-preview" onclick="previewCustomerList(event,'${c.replace(/'/g,"\\'")}')">ÖNİZLEME</button>
                     <button class="btn-cust-download" onclick="downloadCustomerList(event,'${c.replace(/'/g,"\\'")}')">İNDİR</button>
                 </div>
-            </div>`).join('') || '<div class="customer-item">Bulunamadı</div>';
+            </div>`;
+        }).join('') || '<div class="customer-item">Bulunamadı</div>';
     }
 
     function downloadCurrentSort() {
@@ -1509,7 +1489,7 @@
                     </div>
                     <div style="display:flex;gap:6px;flex-shrink:0;text-align:center;">
                         <div style="background:#fff0f0;border-radius:6px;padding:4px 10px;">
-                            <div style="font-size:9px;color:#e63946;font-weight:600;">BEKLEYEN</div>
+                            <div style="font-size:9px;color:#e63946;font-weight:600;">BEKLİYEN</div>
                             <div style="font-size:16px;font-weight:800;color:#e63946;">${total}</div>
                         </div>
                         <div style="background:#f0fff4;border-radius:6px;padding:4px 10px;">
@@ -3018,7 +2998,7 @@
         [secilenMarka].forEach(brand => {
             const bd = allData.filter(d => d.marka && d.marka.includes(brand));
             if(!bd.length) return;
-            XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...bd.map(toRow)]), uName(brand==='PROFORCE'?'PRO-TÜM':'PAN-TÜM'));
+            XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...bd.map(toRow)]), uName(brand==='PROFORCE'?'PRO-TÜM':brand==='TYR'?'TYR-TÜM':'PAN-TÜM'));
             [...new Set(bd.map(d=>d.ozelKod5).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true})).forEach(cat => {
                 const cd = bd.filter(d=>d.ozelKod5===cat);
                 if(!cd.length) return;
@@ -3446,6 +3426,7 @@
         <div style="display:flex;gap:12px;justify-content:center;">
             <button onclick="closeBrandModal('PROFORCE')" style="background:#00a859;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">PROFORCE</button>
             <button onclick="closeBrandModal('PANATTA')"  style="background:#ff0000;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">PANATTA</button>
+            <button onclick="closeBrandModal('TYR')"      style="background:#ff6b00;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">TYR</button>
         </div>
         <div style="margin-top:12px;">
             <button onclick="document.getElementById('brand-select-modal').style.display='none'" style="background:#eee;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:11px;">İptal</button>
@@ -3454,514 +3435,86 @@
 </div>
 <script>
 // ═══════════════════════════════════════════
-//  İSTİHBARAT PANELİ
+</script>
+<script>
+// ═══════════════════════════════════════════
+//  SATIŞ TEMSİLCİLERİ PANELİ
 // ═══════════════════════════════════════════
 
-let _ipAktifTab = 'kritik';
-let _ipAktifMarka = 'HEPSİ';
-
-function ipNorm(s) {
-    return (s||'').toLowerCase()
-        .replace(/ı/g,'i').replace(/ğ/g,'g').replace(/ü/g,'u')
-        .replace(/ş/g,'s').replace(/ö/g,'o').replace(/ç/g,'c');
-}
-
-function ipAramaQ() {
-    const el = document.getElementById('ip-arama');
-    return el ? ipNorm(el.value.trim()) : '';
-}
-
-function ipSetMarka(marka) {
-    _ipAktifMarka = marka;
-    ['HEPSİ','PROFORCE','PANATTA'].forEach(m => {
-        const btn = document.getElementById('ip-marka-' + m);
-        if (btn) btn.classList.toggle('aktif', m === marka);
-    });
-    ipRender(_ipAktifTab);
-}
-
-// Veriyi marka + arama ile filtrele
-function ipFiltrele(data) {
-    const q = ipAramaQ();
-    return data.filter(item => {
-        // Marka filtresi
-        if (_ipAktifMarka !== 'HEPSİ' && !(item.marka||'').includes(_ipAktifMarka)) return false;
-        // Arama filtresi (ürün kodu, adı veya müşteri adı)
-        if (q) {
-            const kodAd = ipNorm(item.stokKodu + ' ' + item.stokAdi);
-            const musteriler = (item.satisListesi||[]).map(s => ipNorm(s.musteri)).join(' ');
-            if (!kodAd.includes(q) && !musteriler.includes(q)) return false;
-        }
-        return true;
-    });
-}
-
-// Müşteri bazlı arama için (kritik müşteriler sekmesi)
-function ipFiltreleMusteri(musteriMap) {
-    const q = ipAramaQ();
-    return Object.values(musteriMap).filter(m => {
-        if (q && !ipNorm(m.musteri).includes(q)) return false;
-        return true;
-    });
-}
-
-function ipTabGec(tab) {
-    _ipAktifTab = tab;
-    ['kritik','stok','firsat','muadil','skor'].forEach(t => {
-        document.getElementById('ip-tab-' + t).classList.toggle('aktif', t === tab);
-    });
-    ipRender(tab);
-}
-
-function istihbaratPaneliAc() {
-    if (!allData || allData.length === 0) {
-        alert('Önce Excel dosyasını yükleyin.');
-        return;
+function toggleTemsilciModal(e) {
+    if (e) e.stopPropagation();
+    const modal = document.getElementById('temsilci-modal');
+    if (modal.style.display === 'flex') {
+        modal.style.display = 'none';
+    } else {
+        renderTemsilciListesi();
+        modal.style.display = 'flex';
     }
-    document.getElementById('istihbarat-modal').style.display = 'flex';
-    const bugun = new Date();
-    document.getElementById('istihbarat-subtitle').textContent =
-        `Son güncelleme: ${bugun.toLocaleDateString('tr-TR')} — ${allData.length} ürün analiz edildi`;
-    ipRender(_ipAktifTab);
 }
 
-// rawDate (Excel seri numarası) → JS Date
-function ipRawToDate(raw) {
-    if (!raw || isNaN(raw)) return null;
-    return new Date(Math.round((raw - 25569) * 86400 * 1000));
-}
-
-// Gün farkı hesapla
-function ipGunFarki(rawDate) {
-    const d = ipRawToDate(rawDate);
-    if (!d) return null;
-    return Math.floor((Date.now() - d.getTime()) / 86400000);
-}
-
-function ipRender(tab) {
-    const icerik = document.getElementById('istihbarat-icerik');
-    icerik.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:12px;">Analiz yapılıyor...</div>';
-    setTimeout(() => {
-        if (tab === 'kritik') icerik.innerHTML = ipKritikMusteriler();
-        else if (tab === 'stok') icerik.innerHTML = ipStokAlarm();
-        else if (tab === 'firsat') icerik.innerHTML = ipFirsatListesi();
-        else if (tab === 'muadil') icerik.innerHTML = ipMuadilOneriler();
-        else if (tab === 'skor') icerik.innerHTML = ipUrunSkor();
-    }, 50);
-}
-
-// ═══════════════════════════════════════════════════════
-//  MERKEZİ STOK DAĞITIM HESABI
-//  Her ürün için stoku tarihe göre sıralı siparişlere dağıtır.
-//  Döner: { stokKodu → [ { musteri, adet, rawDate, tarih, temsilci, karsilandi, eksik } ] }
-// ═══════════════════════════════════════════════════════
-function stokDagitimHesapla(data) {
-    const sonuc = new Map();
-    data.forEach(item => {
-        const siparisler = (item.satisListesi || [])
-            .map(s => ({ ...s, adetInt: parseInt(s.adet) || 0 }))
-            .filter(s => s.adetInt > 0)
-            .sort((a, b) => (a.rawDate || 0) - (b.rawDate || 0)); // eski önce
-
-        if (!siparisler.length) return;
-
-        let kalanStok = Math.max(item.fiili || 0, 0); // FİZİKİ stok baz alınır
-        const dagitim = siparisler.map(s => {
-            const karsilanan = Math.min(kalanStok, s.adetInt);
-            kalanStok = Math.max(0, kalanStok - s.adetInt);
-            return {
-                ...s,
-                karsilandi: karsilanan >= s.adetInt,
-                karsilananAdet: karsilanan,
-                eksik: Math.max(0, s.adetInt - karsilanan)
-            };
-        });
-        sonuc.set(item.stokKodu, dagitim);
-    });
-    return sonuc;
-}
-
-// ── TAB 1: KRİTİK MÜŞTERİLER ──
-function ipKritikMusteriler() {
-    const q = ipAramaQ();
-    const filtreliData = ipFiltrele(allData);
-    const dagitim = stokDagitimHesapla(filtreliData);
-    const musteriMap = {};
-
-    filtreliData.forEach(item => {
-        const sipDagitim = dagitim.get(item.stokKodu) || [];
-        sipDagitim.forEach(s => {
-            if (q && !ipNorm(s.musteri).includes(q) && !ipNorm(item.stokKodu + ' ' + item.stokAdi).includes(q)) return;
-            // Sadece karşılanamayan siparişler kritik müşteri olarak sayılır
-            if (s.karsilandi) return;
-            const gun = ipGunFarki(s.rawDate);
-            if (gun === null) return;
-            if (!musteriMap[s.musteri]) musteriMap[s.musteri] = { musteri: s.musteri, maxGun: 0, toplamAdet: 0, toplamEksik: 0, urunler: [], enEskiTarih: s.tarih };
-            const m = musteriMap[s.musteri];
-            if (gun > m.maxGun) { m.maxGun = gun; m.enEskiTarih = s.tarih; }
-            m.toplamAdet += s.adetInt;
-            m.toplamEksik += s.eksik;
-            if (!m.urunler.includes(item.stokKodu)) m.urunler.push(item.stokKodu);
-        });
-    });
-
-    const liste = Object.values(musteriMap).sort((a, b) => b.maxGun - a.maxGun);
-    if (!liste.length) return '<div class="ip-bosluk">✅ Tüm siparişler mevcut stokla karşılanabiliyor.</div>';
-
-    const kritikSayisi = liste.filter(m => m.maxGun >= 30).length;
-    const toplamEksik = liste.reduce((s, m) => s + m.toplamEksik, 0);
-    const enUzun = liste[0];
-
-    let html = `<div class="ip-ozet-bar">
-        <div class="ip-ozet-kutu"><b>${liste.length}</b><small>Karşılanamayan Müşteri</small></div>
-        <div class="ip-ozet-kutu"><b style="color:#e63946">${kritikSayisi}</b><small>30+ Gün Bekleyen</small></div>
-        <div class="ip-ozet-kutu"><b style="color:#e63946">${toplamEksik}</b><small>Toplam Eksik Adet</small></div>
-        <div class="ip-ozet-kutu"><b style="color:#e63946">${enUzun.maxGun}</b><small>En Uzun Bekleme (Gün)</small></div>
-    </div>`;
-
-    html += liste.map(m => {
-        const renk = m.maxGun >= 60 ? '#e63946' : m.maxGun >= 30 ? '#f59f00' : '#2f9e44';
-        const bg   = m.maxGun >= 60 ? '#fff0f0' : m.maxGun >= 30 ? '#fff8e6' : '#f0fff4';
-        const etiket = m.maxGun >= 60 ? 'KRİTİK' : m.maxGun >= 30 ? 'DİKKAT' : 'NORMAL';
-        return `<div class="ip-kart" onclick="previewCustomerList(null,'${m.musteri.replace(/'/g,"\\'")}')">
-            <div class="ip-kart-sol">
-                <div class="ip-kart-bas">${m.musteri}</div>
-                <div class="ip-kart-alt">
-                    ❌ ${m.toplamEksik} adet karşılanamıyor &nbsp;|&nbsp;
-                    🏷️ ${m.urunler.length} farklı ürün &nbsp;|&nbsp;
-                    📅 İlk sipariş: ${m.enEskiTarih}
-                </div>
-            </div>
-            <div class="ip-badge" style="background:${bg};color:${renk};">
-                <b>${m.maxGun}</b>
-                <small>GÜN</small>
-            </div>
-            <div style="background:${renk};color:white;border-radius:6px;padding:3px 8px;font-size:9px;font-weight:800;flex-shrink:0;">${etiket}</div>
-        </div>`;
-    }).join('');
-    return html;
-}
-
-// ── TAB 2: STOK ALARMI ──
-function ipStokAlarm() {
-    const filtreliData = ipFiltrele(allData);
-    const dagitim = stokDagitimHesapla(filtreliData);
-    const alarmlar = [];
-
-    filtreliData.forEach(item => {
-        const sipDagitim = dagitim.get(item.stokKodu) || [];
-        const toplamEksik = sipDagitim.reduce((s, x) => s + x.eksik, 0);
-        if (toplamEksik === 0) return; // tamamen karşılanıyor
-        const ithalat = item.ithalat || 0;
-        const ithalatSonrasiEksik = Math.max(0, toplamEksik - ithalat);
-        const kritiklik = ithalatSonrasiEksik > 0 ? (ithalat === 0 ? 'KRİTİK' : 'DİKKAT') : 'İTHALATLA KAPANIR';
-        if (kritiklik === 'İTHALATLA KAPANIR') return; // ithalat yeterli, alarm yok
-        const karsilanamayan = sipDagitim.filter(s => s.eksik > 0);
-        const musteriler = [...new Set(karsilanamayan.map(s => s.musteri))].join(', ');
-        alarmlar.push({ item, toplamEksik, ithalatSonrasiEksik, ithalat, kritiklik, musteriler });
-    });
-
-    alarmlar.sort((a, b) => {
-        if (a.kritiklik !== b.kritiklik) return a.kritiklik === 'KRİTİK' ? -1 : 1;
-        return b.toplamEksik - a.toplamEksik;
-    });
-
-    if (!alarmlar.length) return '<div class="ip-bosluk">✅ Tüm siparişler için yeterli stok veya ithalat mevcut.</div>';
-
-    const kritikSayisi = alarmlar.filter(a => a.kritiklik === 'KRİTİK').length;
-    let html = `<div class="ip-ozet-bar">
-        <div class="ip-ozet-kutu"><b style="color:#e63946">${kritikSayisi}</b><small>Kritik Ürün (İthalat Yok)</small></div>
-        <div class="ip-ozet-kutu"><b style="color:#f59f00">${alarmlar.length - kritikSayisi}</b><small>Dikkat (İthalat Yetersiz)</small></div>
-        <div class="ip-ozet-kutu"><b>${alarmlar.reduce((s,a)=>s+a.toplamEksik,0)}</b><small>Toplam Karşılanamayan Adet</small></div>
-    </div>`;
-
-    html += alarmlar.map(({ item, toplamEksik, ithalatSonrasiEksik, ithalat, kritiklik, musteriler }) => {
-        const renk = kritiklik === 'KRİTİK' ? '#e63946' : '#f59f00';
-        const bg   = kritiklik === 'KRİTİK' ? '#fff0f0' : '#fff8e6';
-        return `<div class="ip-kart" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')">
-            <div class="ip-kart-sol">
-                <div class="ip-kart-bas">${item.stokKodu} — ${item.stokAdi}</div>
-                <div class="ip-kart-alt">👥 ${musteriler}</div>
-                <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;">
-                    <span style="font-size:10px;color:#e63946;font-weight:800;">❌ Karşılanamayan: ${toplamEksik}</span>
-                    <span style="font-size:10px;color:#2f9e44;">🏪 Stok: ${item.kalan}</span>
-                    <span style="font-size:10px;color:#2d6be4;">🚢 İthalat: ${ithalat}</span>
-                    ${ithalat > 0 ? `<span style="font-size:10px;color:#e63946;">⚠ İthalat sonrası hâlâ eksik: ${ithalatSonrasiEksik}</span>` : ''}
-                </div>
-            </div>
-            <div style="background:${renk};color:white;border-radius:6px;padding:3px 8px;font-size:9px;font-weight:800;align-self:flex-start;">${kritiklik}</div>
-        </div>`;
-    }).join('');
-    return html;
-}
-
-// ── TAB 3: FIRSAT LİSTESİ ──
-function ipFirsatListesi() {
-    // Karşılanamayan siparişi var + ithalat geliyor → müşteri haberdar edilebilir
-    const firsatlar = [];
-    const filtreliData = ipFiltrele(allData);
-    const dagitim = stokDagitimHesapla(filtreliData);
-    filtreliData.forEach(item => {
-        const sipDagitim = dagitim.get(item.stokKodu) || [];
-        const karsilanamayanlar = sipDagitim.filter(s => s.eksik > 0);
-        if (!karsilanamayanlar.length) return;
-        if (!item.ithalatDetay || item.ithalatDetay.trim() === '') return;
-        const toplamEksik = karsilanamayanlar.reduce((s,x) => s+x.eksik, 0);
-        const satirlar = item.ithalatDetay.split('\n').filter(Boolean);
-        const ilkGelecek = satirlar[0] || '';
-        const tarihMatch = ilkGelecek.match(/(\d{2}\.\d{2}\.\d{4})/);
-        const gelecekTarih = tarihMatch ? tarihMatch[1] : '?';
-        const toplamIthalat = item.ithalat || 0;
-        const karsilanabilir = Math.min(toplamEksik, toplamIthalat);
-        if (karsilanabilir <= 0) return;
-        const musteriler = [...new Set(karsilanamayanlar.map(s=>s.musteri))];
-        const maxGun = Math.max(...karsilanamayanlar.map(s => ipGunFarki(s.rawDate)||0));
-        firsatlar.push({ item, bekleyen: toplamEksik, toplamIthalat, karsilanabilir, gelecekTarih, musteriler, maxGun });
-    });
-
-    firsatlar.sort((a, b) => b.maxGun - a.maxGun);
-
-    if (!firsatlar.length) return '<div class="ip-bosluk">Şu an için fırsat listesi boş.<br><small>Siparişi olan ve ithalatı gelmekte olan ürün bulunamadı.</small></div>';
-
-    let html = `<div class="ip-ozet-bar">
-        <div class="ip-ozet-kutu"><b style="color:#2f9e44">${firsatlar.length}</b><small>Haberdar Edilebilir Müşteri Grubu</small></div>
-        <div class="ip-ozet-kutu"><b>${[...new Set(firsatlar.flatMap(f=>f.musteriler))].length}</b><small>Benzersiz Müşteri</small></div>
-    </div>
-    <div style="font-size:10px;color:#6c757d;margin-bottom:10px;background:#f0fff4;border:1px solid #b2f2bb;border-radius:6px;padding:8px 12px;">
-        💡 Bu ürünlerde siparişi olan müşteriler <b>ithalat tarihinde haberdar edilebilir</b>.
-    </div>`;
-
-    html += firsatlar.map(({ item, bekleyen, acik, toplamIthalat, karsilanabilir, gelecekTarih, musteriler, maxGun }) => {
-        return `<div class="ip-kart" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')">
-            <div class="ip-kart-sol">
-                <div class="ip-kart-bas">${item.stokKodu} — ${item.stokAdi}</div>
-                <div class="ip-kart-alt">👥 ${musteriler.join(' · ')}</div>
-                <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;">
-                    <span style="font-size:10px;color:#e63946;">⏳ ${maxGun} gün bekliyor</span>
-                    <span style="font-size:10px;color:#2d6be4;">🚢 ${toplamIthalat} adet geliyor</span>
-                    <span style="font-size:10px;color:#2f9e44;font-weight:800;">📅 ${gelecekTarih}</span>
-                </div>
-            </div>
-            <div style="background:#f0fff4;color:#2f9e44;border:1px solid #b2f2bb;border-radius:8px;padding:5px 10px;text-align:center;flex-shrink:0;">
-                <b style="display:block;font-size:14px;font-weight:900;">${karsilanabilir}</b>
-                <small style="font-size:8px;font-weight:700;">KARŞILANABİLİR</small>
-            </div>
-        </div>`;
-    }).join('');
-
-    return html;
-}
-
-// ── TAB: MUADİL ÖNERİLER ──
-function ipMuadilOneriler() {
-
-    // showDetail → stokYokUyariGoster ile birebir aynı mantık:
-    // ürün adının ilk 2 anlamlı kelimesi → tamamı hedef üründe geçmeli, aynı marka
-    const muadilBul = (kritik) => {
-        const kelimeler = kritik.stokAdi.toLowerCase()
-            .replace(/[^a-z0-9çğışöü\s]/gi, ' ')
-            .split(/\s+/).filter(k => k.length >= 2)
-            .slice(0, 2);
-        const minEslesme = kelimeler.length;
-        return allData
-            .filter(d => d.stokKodu !== kritik.stokKodu && (d.kalan||0) > 0 && d.marka === kritik.marka)
-            .map(d => {
-                const adLower = d.stokAdi.toLowerCase();
-                const eslesme = kelimeler.filter(k => adLower.includes(k)).length;
-                return { ...d, eslesme };
-            })
-            .filter(d => d.eslesme >= minEslesme)
-            .sort((a, b) => b.eslesme - a.eslesme)
-            .slice(0, 3);
-    };
-
-    // Kritik ürünler: dağıtım sonrası hâlâ karşılanamayan siparişi olan ve ithalat da olmayan ürünler
-    const filtreliData = ipFiltrele(allData);
-    const dagitim = stokDagitimHesapla(filtreliData);
-
-    const kritikler = filtreliData.filter(item => {
-        const sipDagitim = dagitim.get(item.stokKodu) || [];
-        const eksikVar = sipDagitim.some(s => s.eksik > 0);
-        if (!eksikVar) return false;
-        // İthalat da yoksa veya yetersizse kritik
-        const toplamEksik = sipDagitim.reduce((s,x) => s+x.eksik, 0);
-        const ithalat = item.ithalat || 0;
-        return toplamEksik > ithalat; // ithalat bile yetmiyor
-    });
-
-    if (!kritikler.length) return `<div class="ip-bosluk">
-        ✅ Tüm siparişli ürünlerde stok veya ithalat mevcut.<br>
-        <small>Muadil öneri gerekmediğinde bu liste boş kalır.</small>
-    </div>`;
-
-    // Her kritik ürün için muadil bul
-    const oneriler = [];
-    kritikler.forEach(kritik => {
-        const sipDagitim = dagitim.get(kritik.stokKodu) || [];
-        const karsilanamayanlar = sipDagitim.filter(s => s.eksik > 0);
-        const bekleyen   = karsilanamayanlar.reduce((s,x) => s+x.eksik, 0);
-        const musteriler = [...new Set(karsilanamayanlar.map(s=>s.musteri))];
-        const maxGun     = Math.max(...karsilanamayanlar.map(s=>ipGunFarki(s.rawDate)||0));
-        const adaylar    = muadilBul(kritik);
-        if (adaylar.length > 0) oneriler.push({ kritik, bekleyen, musteriler, maxGun, adaylar });
-    });
-
-    // Muadil bulunamayanlar da göster
-    const muadilsizler = kritikler.filter(k => !oneriler.find(o => o.kritik.stokKodu === k.stokKodu));
-
-    if (!oneriler.length && !muadilsizler.length) return '<div class="ip-bosluk">Muadil öneri bulunamadı.</div>';
-
-    const dovizSembol = item => item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$';
-    const fiyatStr    = item => item.fiyat
-        ? `${item.fiyat.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${dovizSembol(item)}`
-        : '-';
-
-    let html = `<div class="ip-ozet-bar">
-        <div class="ip-ozet-kutu"><b style="color:#e63946">${kritikler.length}</b><small>Kritik Ürün (Stok+İthalat Yok)</small></div>
-        <div class="ip-ozet-kutu"><b style="color:#2f9e44">${oneriler.length}</b><small>Muadil Öneri Bulundu</small></div>
-        <div class="ip-ozet-kutu"><b style="color:#8a94a6">${muadilsizler.length}</b><small>Muadil Bulunamadı</small></div>
-    </div>
-    <div style="font-size:10px;color:#6c757d;margin-bottom:10px;background:#fff8e6;border:1px solid #ffe08a;border-radius:6px;padding:8px 12px;">
-        💡 Stok ve ithalatı olmayan, siparişi bekleyen ürünler için isim/kategori eşleşmesiyle muadil önerilir. Son kararı sen verirsin.
-    </div>`;
-
-    // Muadil bulunanlar
-    oneriler.forEach(({ kritik, bekleyen, musteriler, maxGun, adaylar }) => {
-        html += `<div style="background:white;border:1.5px solid #ffd6d6;border-radius:12px;margin-bottom:12px;overflow:hidden;">
-            <!-- Kritik ürün başlığı -->
-            <div style="background:#fff0f0;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="showDetail('${kritik.stokKodu.replace(/'/g,"\\'")}')">
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:11px;font-weight:800;color:#c92a2a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                        ❌ ${kritik.stokKodu} — ${kritik.stokAdi}
-                    </div>
-                    <div style="font-size:10px;color:#8a94a6;margin-top:3px;">
-                        👥 ${musteriler.join(' · ')} &nbsp;|&nbsp; ⏳ ${maxGun} gün bekliyor &nbsp;|&nbsp; 📦 ${bekleyen} adet karşılanamıyor
-                    </div>
-                    <div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;">
-                        <span style="font-size:10px;background:#f4f6f9;border-radius:4px;padding:2px 7px;color:#4a5568;">🏭 Fiziki: <b>${kritik.fiili}</b></span>
-                        <span style="font-size:10px;background:#f4f6f9;border-radius:4px;padding:2px 7px;color:#e63946;">📤 Satış/Bloke: <b>${Math.max(0,(kritik.fiili||0)-(kritik.kalan||0))}</b></span>
-                        <span style="font-size:10px;background:#f4f6f9;border-radius:4px;padding:2px 7px;color:${(kritik.kalan||0)>0?'#2f9e44':'#e63946'};">✅ Satılabilir: <b>${kritik.kalan}</b></span>
-                        ${(kritik.ithalat||0)>0?`<span style="font-size:10px;background:#e8f4fd;border-radius:4px;padding:2px 7px;color:#2d6be4;">🚢 İthalat: <b>${kritik.ithalat}</b></span>`:''}
-                    </div>
-                </div>
-                <div style="background:#e63946;color:white;border-radius:6px;padding:3px 8px;font-size:9px;font-weight:800;flex-shrink:0;align-self:flex-start;">STOK+İTHALAT YOK</div>
-            </div>
-            <!-- Muadil öneriler -->
-            <div style="padding:8px 14px 10px;">
-                <div style="font-size:9px;font-weight:800;color:#8a94a6;margin-bottom:6px;letter-spacing:0.5px;">MUADİL ÖNERİLER</div>
-                ${adaylar.map((m, idx) => {
-                    const farkStr  = (() => {
-                        if (!kritik.fiyat || !m.fiyat || kritik.doviz !== m.doviz) return '';
-                        const fark = ((m.fiyat - kritik.fiyat) / kritik.fiyat * 100).toFixed(1);
-                        const isaret = fark > 0 ? `+${fark}%` : `${fark}%`;
-                        const fc = fark > 0 ? '#e63946' : '#2f9e44';
-                        return `<span style="color:${fc};font-weight:700;">${isaret}</span>`;
-                    })();
-                    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;background:${idx===0?'#f0fff4':'#f8fafc'};margin-bottom:5px;cursor:pointer;" onclick="showDetail('${m.stokKodu.replace(/'/g,"\\'")}')">
-                        <div style="font-size:11px;font-weight:800;color:#8a94a6;width:16px;text-align:center;">${idx+1}</div>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-size:11px;font-weight:800;color:#1a1f36;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                ✅ ${m.stokKodu} — ${m.stokAdi}
-                            </div>
-                            <div style="font-size:10px;color:#8a94a6;margin-top:2px;">
-                                🏪 ${m.kalan} adet stokta &nbsp;|&nbsp; 💰 ${fiyatStr(m)} ${farkStr}
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('')}
-            </div>
-        </div>`;
-    });
-
-    // Muadil bulunamayanlar
-    if (muadilsizler.length > 0) {
-        html += `<div style="font-size:10px;font-weight:800;color:#8a94a6;margin:12px 0 6px;letter-spacing:0.5px;">MUADİL BULUNAMAYANLAR</div>`;
-        html += muadilsizler.map(item => {
-            const sipDagitim = dagitim.get(item.stokKodu) || [];
-            const karsilanamayanlar = sipDagitim.filter(s => s.eksik > 0);
-            const bekleyen  = karsilanamayanlar.reduce((s,x) => s+x.eksik, 0);
-            const musteriler = [...new Set(karsilanamayanlar.map(s=>s.musteri))];
-            return `<div class="ip-kart" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')">
-                <div class="ip-kart-sol">
-                    <div class="ip-kart-bas" style="color:#c92a2a;">${item.stokKodu} — ${item.stokAdi}</div>
-                    <div class="ip-kart-alt">👥 ${musteriler.join(' · ')} &nbsp;|&nbsp; ❌ ${bekleyen} adet karşılanamıyor</div>
-                </div>
-                <div style="background:#f4f6f9;color:#8a94a6;border-radius:6px;padding:3px 8px;font-size:9px;font-weight:800;">MUADIL YOK</div>
-            </div>`;
-        }).join('');
-    }
-
-    return html;
-}
-
-// ── TAB 4: ÜRÜN SKORU ──
-function ipUrunSkor() {
-    // Skor = (bekleyen / max(kalan,1)) * log(bekleyen+1) * gunFaktoru
-    const skorlar = [];
-    const filtreliDataS = ipFiltrele(allData);
-    const dagitimS = stokDagitimHesapla(filtreliDataS);
-    filtreliDataS.forEach(item => {
-        const sipDagitim = dagitimS.get(item.stokKodu) || [];
-        const karsilanamayanlar = sipDagitim.filter(s => s.eksik > 0);
-        if (!karsilanamayanlar.length) return;
-        const toplamEksik = karsilanamayanlar.reduce((s,x) => s+x.eksik, 0);
-        const maxGun = Math.max(...karsilanamayanlar.map(s => ipGunFarki(s.rawDate)||0));
-        const gunFaktor = Math.log10(maxGun + 2);
-        const stokFaktor = toplamEksik / Math.max(item.kalan + item.fiili, 1);
-        const skor = Math.round(toplamEksik * stokFaktor * gunFaktor * 10);
-        const musteriler = [...new Set(karsilanamayanlar.map(s=>s.musteri))];
-        skorlar.push({ item, bekleyen: toplamEksik, maxGun, skor, musteriler });
-    });
-
-    skorlar.sort((a, b) => b.skor - a.skor);
-    if (!skorlar.length) return '<div class="ip-bosluk">Skorlanacak veri bulunamadı.</div>';
-
-    const maxSkor = skorlar[0].skor;
-
-    let html = `<div style="font-size:10px;color:#6c757d;margin-bottom:10px;background:#f0f4ff;border:1px solid #c5d0f5;border-radius:6px;padding:8px 12px;">
-        📊 Skor = Bekleyen adet × Stok baskısı × Bekleme süresi — ne kadar yüksekse o kadar acil.
-    </div>`;
-
-    html += skorlar.slice(0, 20).map(({ item, bekleyen, maxGun, skor, musteriler }, idx) => {
-        const yuzde = Math.round((skor / maxSkor) * 100);
-        const renk = yuzde >= 70 ? '#e63946' : yuzde >= 40 ? '#f59f00' : '#2f9e44';
-        return `<div class="ip-kart" onclick="showDetail('${item.stokKodu.replace(/'/g,"\\'")}')">
-            <div style="font-size:18px;font-weight:900;color:#c8cdd8;width:24px;text-align:center;flex-shrink:0;">${idx+1}</div>
-            <div class="ip-kart-sol">
-                <div class="ip-kart-bas">${item.stokKodu} — ${item.stokAdi}</div>
-                <div class="ip-kart-alt">👥 ${musteriler.join(' · ')}</div>
-                <div style="margin-top:6px;background:#f0f2f8;border-radius:4px;height:5px;overflow:hidden;">
-                    <div style="height:100%;width:${yuzde}%;background:${renk};border-radius:4px;transition:width 0.4s;"></div>
-                </div>
-            </div>
-            <div style="text-align:right;flex-shrink:0;">
-                <div style="font-size:18px;font-weight:900;color:${renk};">${skor}</div>
-                <div style="font-size:9px;color:#8a94a6;font-weight:600;">${maxGun}G / ${bekleyen}AD</div>
-            </div>
-        </div>`;
-    }).join('');
-
-    if (skorlar.length > 20) html += `<div style="text-align:center;font-size:11px;color:#aaa;padding:10px;">... ve ${skorlar.length - 20} ürün daha</div>`;
-    return html;
-}
-
-// Veri yüklenince badge göster
-document.addEventListener('veriYuklendi', () => {
-    const badge = document.getElementById('istihbarat-badge');
-    if (!badge) return;
-    // Kritik müşteri sayısını hesapla
-    let kritik = 0;
-    (allData || []).forEach(item => {
-        (item.satisListesi || []).forEach(s => {
-            const gun = ipGunFarki(s.rawDate);
-            if (gun !== null && gun >= 30) kritik++;
-        });
-    });
-    if (kritik > 0) {
-        badge.style.display = 'inline-flex';
-        badge.textContent = kritik > 9 ? '!' : kritik;
+document.addEventListener('click', e => {
+    const modal = document.getElementById('temsilci-modal');
+    if (modal && modal.style.display === 'flex' && !modal.querySelector('div').contains(e.target)) {
+        modal.style.display = 'none';
     }
 });
+
+function buildTemsilciMap() {
+    const map = {}; // temsilci → { musteriler: Set, toplamBekleyen: 0 }
+    allData.forEach(item => {
+        (item.satisListesi||[]).forEach(s => {
+            if (!s.temsilci || !s.musteri) return;
+            if (!map[s.temsilci]) map[s.temsilci] = { musteriler: new Set(), toplamBekleyen: 0 };
+            map[s.temsilci].musteriler.add(s.musteri);
+            map[s.temsilci].toplamBekleyen += parseInt(s.adet) || 0;
+        });
+    });
+    return map;
+}
+
+function renderTemsilciListesi() {
+    const icerik = document.getElementById('temsilci-icerik');
+    const map = buildTemsilciMap();
+    const temsilciler = Object.keys(map).sort();
+
+    document.getElementById('temsilci-subtitle').textContent =
+        `${temsilciler.length} temsilci · ${Object.values(map).reduce((s,t)=>s+t.musteriler.size,0)} müşteri`;
+
+    if (!temsilciler.length) {
+        icerik.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px;">Temsilci verisi bulunamadı.</div>';
+        return;
+    }
+
+    let html = `<div style="display:flex;flex-direction:column;gap:6px;">`;
+    temsilciler.forEach(t => {
+        const data = map[t];
+        const musteriler = [...data.musteriler].sort();
+        html += `<div style="background:white;border:1px solid #e2e6f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="background:linear-gradient(135deg,#f4f0ff,#ede9fe);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;"
+                 onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+                <div>
+                    <span style="font-size:13px;font-weight:800;color:#5f3dc4;">🧑‍💼 ${t}</span>
+                    <span style="font-size:10px;color:#8a94a6;margin-left:10px;">${musteriler.length} müşteri · ${data.toplamBekleyen} adet bekliyor</span>
+                </div>
+                <span style="color:#7950f2;font-size:14px;font-weight:800;">›</span>
+            </div>
+            <div style="display:none;padding:8px 12px;display:block;">
+                ${musteriler.map(m => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 8px;border-radius:7px;margin-bottom:4px;background:#f8f9ff;border:1px solid #ede9fe;">
+                        <span style="font-size:11px;font-weight:700;color:#1a1f36;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m}</span>
+                        <div style="display:flex;gap:5px;flex-shrink:0;margin-left:8px;">
+                            <button onclick="previewCustomerList(null,'${m.replace(/'/g,"\\'")}');document.getElementById('temsilci-modal').style.display='none';"
+                                style="background:#5f3dc4;color:white;border:none;border-radius:5px;padding:4px 10px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;">ÖNİZLEME</button>
+                            <button onclick="downloadCustomerList(null,'${m.replace(/'/g,"\\'")}');"
+                                style="background:#f4f0ff;color:#5f3dc4;border:1px solid #c5b8f5;border-radius:5px;padding:4px 10px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;">İNDİR</button>
+                        </div>
+                    </div>`).join('')}
+            </div>
+        </div>`;
+    });
+    html += `</div>`;
+    icerik.innerHTML = html;
+}
 </script>
 </body>
 </html>
