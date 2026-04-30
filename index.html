@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- Şartname Modülü: Word (.docx) ayrıştırma için -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <style>
         :root {
             --proforce-color: #00a859;
@@ -395,6 +397,396 @@
             .arsiv-btns { gap: 4px; }
             .arsiv-btn { flex: 1; text-align: center; }
         }
+
+        /* ═══════════════════════════════════════
+           ŞARTNAME MODÜLÜ
+        ═══════════════════════════════════════ */
+        .nav-purple { background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important; color: white !important; }
+        .nav-purple:hover { background: linear-gradient(135deg, #5a32a3 0%, #4a2790 100%) !important; }
+        .nav-purple .nav-icon, .nav-purple .nav-label { color: white !important; }
+
+        /* Şartname yükleme sonuç modalı */
+        .sartname-result-modal { width: 560px !important; max-width: 95vw; }
+        .sartname-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .sartname-stat {
+            background: var(--bg-main);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 10px 12px;
+            text-align: center;
+        }
+        .sartname-stat .num { font-size: 22px; font-weight: 800; line-height: 1; }
+        .sartname-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+        .sartname-stat.success { background: #e8f7ed; border-color: #b8e0c4; }
+        .sartname-stat.success .num { color: #00a859; }
+        .sartname-stat.warn { background: #fff5e6; border-color: #fcd9a8; }
+        .sartname-stat.warn .num { color: #d97706; }
+        .sartname-stat.info { background: #eef2ff; border-color: #c7d2fe; }
+        .sartname-stat.info .num { color: #3b5bdb; }
+
+        .sartname-section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-mid);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin: 14px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .sartname-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: var(--bg-main);
+            border-radius: 6px;
+            padding: 6px;
+        }
+        .sartname-list-item {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border: 1px solid var(--border-light);
+        }
+        .sartname-list-item.matched { border-left: 3px solid #00a859; }
+        .sartname-list-item.unmatched { border-left: 3px solid #e63946; background: #fff7f7; }
+        .sartname-list-item .kod { font-family: monospace; font-weight: 800; color: var(--text-dark); font-size: 11px; }
+        .sartname-list-item .ad  { color: var(--text-mid); font-size: 11px; flex: 1; margin: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sartname-list-item .badge {
+            font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 10px;
+            text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .sartname-list-item.matched .badge { background: #d4f4dd; color: #00713e; }
+        .sartname-list-item.unmatched .badge { background: #fde2e4; color: #b71c2a; }
+
+        /* Şartname görüntüleme modalı (ürün kartından açılan) */
+        .sartname-view-modal { width: 720px !important; max-width: 95vw; }
+        .sartname-view-header {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+            margin: -24px -24px 16px -24px;
+            padding: 18px 24px;
+            border-radius: 12px 12px 0 0;
+            color: white;
+        }
+        .sartname-view-header .kod-pill {
+            display: inline-block; background: rgba(255,255,255,0.22);
+            padding: 3px 10px; border-radius: 20px; font-family: monospace;
+            font-size: 12px; font-weight: 800; margin-bottom: 6px;
+        }
+        .sartname-view-header .ad {
+            font-size: 17px; font-weight: 800; margin: 0;
+        }
+        .sartname-view-body {
+            max-height: 60vh;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 18px 22px;
+            font-size: 13px;
+            line-height: 1.65;
+            color: var(--text-dark);
+        }
+        .sartname-view-body p { margin: 0 0 10px 0; }
+        .sartname-view-body ul, .sartname-view-body ol { margin: 8px 0 12px 0; padding-left: 22px; }
+        .sartname-view-body li { margin-bottom: 5px; }
+        .sartname-view-body strong { color: #1a1f36; }
+        .sartname-view-body table { border-collapse: collapse; margin: 10px 0; width: 100%; }
+        .sartname-view-body th, .sartname-view-body td {
+            border: 1px solid var(--border-light); padding: 6px 10px; font-size: 12px;
+        }
+        .sartname-view-body th { background: var(--bg-main); font-weight: 700; }
+
+        .sartname-empty {
+            text-align: center; padding: 30px 20px; color: var(--text-muted);
+        }
+        .sartname-empty .icon { font-size: 40px; opacity: 0.5; margin-bottom: 8px; }
+        .sartname-empty .msg { font-size: 13px; font-weight: 600; color: var(--text-mid); }
+        .sartname-empty .hint { font-size: 11px; margin-top: 6px; }
+
+        .sartname-actions {
+            display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap;
+        }
+        .sartname-btn {
+            padding: 8px 16px; border: none; border-radius: 6px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: all 0.15s;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .sartname-btn-primary { background: #6f42c1; color: white; }
+        .sartname-btn-primary:hover { background: #5a32a3; }
+        .sartname-btn-secondary { background: var(--bg-main); color: var(--text-dark); border: 1px solid var(--border-color); }
+        .sartname-btn-secondary:hover { background: var(--border-light); }
+        .sartname-btn-danger { background: #e63946; color: white; }
+        .sartname-btn-danger:hover { background: #b71c2a; }
+
+        /* Yükleme sırasında loading durumu */
+        .sartname-loading {
+            display: flex; flex-direction: column; align-items: center; padding: 30px;
+        }
+        .sartname-spinner {
+            width: 36px; height: 36px;
+            border: 3px solid var(--border-light);
+            border-top-color: #6f42c1;
+            border-radius: 50%;
+            animation: sartname-spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes sartname-spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .sartname-summary { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+            .sartname-stat { padding: 8px 6px; }
+            .sartname-stat .num { font-size: 18px; }
+            .sartname-view-modal { width: 95vw !important; }
+            .sartname-view-header { padding: 14px 16px; margin: -16px -16px 12px -16px; }
+            .sartname-view-body { padding: 12px 14px; font-size: 12px; }
+        }
+
+        /* ═══════════════════════════════════════
+           TABLODA ŞARTNAME GÖSTERGESİ
+        ═══════════════════════════════════════ */
+        /* Şartnamesi olan satırın stok kodu hücresinde sol yeşil bant */
+        td.has-sartname {
+            position: relative;
+            background: linear-gradient(90deg, rgba(0,168,89,0.08) 0%, transparent 70%);
+        }
+        td.has-sartname::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 4px; bottom: 4px;
+            width: 3px;
+            background: #00a859;
+            border-radius: 0 2px 2px 0;
+        }
+        .sartname-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px; height: 16px;
+            background: #00a859;
+            color: white;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 800;
+            margin-left: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+            vertical-align: middle;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0,168,89,0.35);
+        }
+        .sartname-icon:hover {
+            background: #00713e;
+            transform: scale(1.1);
+        }
+        .stok-kodu-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            white-space: nowrap;
+        }
+
+        /* ═══════════════════════════════════════
+           VERİ YÜKLE MODALI (Sekmeli)
+        ═══════════════════════════════════════ */
+        .veri-yukle-modal { width: 560px !important; max-width: 95vw; padding: 0 !important; overflow: hidden !important; }
+        .veri-yukle-header {
+            background: linear-gradient(135deg, #3b5bdb 0%, #2c45c2 100%);
+            padding: 16px 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .veri-yukle-header .title { font-size: 14px; font-weight: 800; }
+        .veri-yukle-header .close-x {
+            font-size: 22px; cursor: pointer; opacity: 0.85;
+            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: all 0.15s;
+        }
+        .veri-yukle-header .close-x:hover { background: rgba(255,255,255,0.18); opacity: 1; }
+
+        .veri-yukle-tabs {
+            display: flex;
+            background: var(--bg-main);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .veri-yukle-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-bottom: 3px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .veri-yukle-tab:hover { color: var(--text-dark); background: rgba(59,91,219,0.05); }
+        .veri-yukle-tab.active {
+            color: var(--text-dark);
+            background: var(--bg-white);
+            border-bottom-color: var(--accent-blue);
+        }
+        .veri-yukle-tab.active.tab-sartname {
+            border-bottom-color: #6f42c1;
+        }
+        .veri-yukle-tab .tab-icon { font-size: 15px; }
+        .veri-yukle-tab .opsiyonel-rozet {
+            font-size: 8px;
+            background: #fff3bf;
+            color: #7a4f01;
+            padding: 1px 5px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-left: 4px;
+            letter-spacing: 0.2px;
+        }
+        .veri-yukle-tab .zorunlu-rozet {
+            font-size: 8px;
+            background: #ffe0e3;
+            color: #b71c2a;
+            padding: 1px 5px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-left: 4px;
+            letter-spacing: 0.2px;
+        }
+
+        .veri-yukle-body { padding: 22px 24px; max-height: 70vh; overflow-y: auto; }
+        .veri-yukle-pane { display: none; }
+        .veri-yukle-pane.active { display: block; }
+
+        /* Drop zone tarzı yükleme alanı */
+        .upload-dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-main);
+        }
+        .upload-dropzone:hover {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue-light);
+        }
+        .upload-dropzone.purple:hover {
+            border-color: #6f42c1;
+            background: #f3effa;
+        }
+        .upload-dropzone.dragover {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue-light);
+            transform: scale(1.02);
+        }
+        .upload-dropzone.purple.dragover {
+            border-color: #6f42c1;
+            background: #f3effa;
+        }
+        .upload-dropzone .upload-icon {
+            font-size: 38px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .upload-dropzone .upload-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+        .upload-dropzone .upload-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .upload-dropzone .upload-formats {
+            display: inline-block;
+            margin-top: 8px;
+            background: white;
+            border: 1px solid var(--border-light);
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-family: monospace;
+            color: var(--text-mid);
+            font-weight: 600;
+        }
+
+        /* Bilgi kartı */
+        .veri-yukle-info {
+            background: #f0f4ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 11px 14px;
+            margin-bottom: 14px;
+            font-size: 11px;
+            color: var(--text-mid);
+            line-height: 1.55;
+        }
+        .veri-yukle-info.purple {
+            background: #f6f1ff;
+            border-color: #d6c5ff;
+        }
+        .veri-yukle-info.warn {
+            background: #fff8e1;
+            border-color: #ffe082;
+            color: #7a4f01;
+        }
+        .veri-yukle-info strong { color: var(--text-dark); }
+        .veri-yukle-info.purple strong { color: #4a2790; }
+        .veri-yukle-info.warn strong { color: #6b3f00; }
+
+        /* Mevcut durum göstergesi */
+        .veri-yukle-status {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .veri-yukle-status .status-icon {
+            font-size: 22px;
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: var(--bg-main);
+            flex-shrink: 0;
+        }
+        .veri-yukle-status .status-icon.ok { background: #d4f4dd; }
+        .veri-yukle-status .status-icon.empty { background: #fff5e6; }
+        .veri-yukle-status .status-text { flex: 1; }
+        .veri-yukle-status .status-text .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        .veri-yukle-status .status-text .val { font-size: 13px; color: var(--text-dark); font-weight: 700; margin-top: 2px; }
+        .veri-yukle-status .status-text .sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+        @media (max-width: 768px) {
+            .veri-yukle-modal { width: 95vw !important; }
+            .veri-yukle-tab { padding: 10px 8px; font-size: 11px; }
+            .veri-yukle-body { padding: 16px 14px; }
+            .upload-dropzone { padding: 22px 14px; }
+            .upload-dropzone .upload-icon { font-size: 32px; }
+        }
     </style>
 </head>
 <body>
@@ -407,13 +799,14 @@
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-        <!-- Veri Yükle -->
-        <button class="nav-tab" id="veri-yukle-btn" onclick="document.getElementById('excel-file').click()" title="Excel veri dosyası yükle" style="color:var(--text-muted);">
+        <!-- Veri Yükle (Sekmeli Modal) -->
+        <button class="nav-tab" id="veri-yukle-btn" onclick="veriYukleModalAc()" title="Ürün ve şartname dosyalarını yükle" style="color:var(--text-muted);">
             <span class="nav-icon">📂</span>
             <span class="nav-label">Veri Yükle</span>
-
         </button>
+        <!-- Gizli file inputlar (modal içinden tetiklenir) -->
         <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
+        <input type="file" id="sartname-file" class="hidden-input" accept=".docx">
 
         <!-- Ürün Raporu -->
         <button class="nav-tab nav-orange" onclick="downloadReport()" title="Ürün raporu indir">
@@ -553,6 +946,133 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════
+     VERİ YÜKLE MODALI (Sekmeli: Ürün / Şartname)
+══════════════════════════════════════════════════ -->
+<div id="veri-yukle-modal" class="modal-overlay" onclick="closeModal(event,'veri-yukle-modal')">
+    <div class="modal-content veri-yukle-modal" onclick="event.stopPropagation()">
+        <div class="veri-yukle-header">
+            <span class="title">📂 Veri Yükleme Merkezi</span>
+            <span class="close-x" onclick="document.getElementById('veri-yukle-modal').style.display='none'">&times;</span>
+        </div>
+
+        <div class="veri-yukle-tabs">
+            <button class="veri-yukle-tab active" id="vy-tab-urun" onclick="veriYukleSekme('urun')">
+                <span class="tab-icon">📦</span>
+                <span>Ürün</span>
+                <span class="zorunlu-rozet">Zorunlu</span>
+            </button>
+            <button class="veri-yukle-tab tab-sartname" id="vy-tab-sartname" onclick="veriYukleSekme('sartname')">
+                <span class="tab-icon">📋</span>
+                <span>Şartname</span>
+                <span class="opsiyonel-rozet">Opsiyonel</span>
+            </button>
+        </div>
+
+        <div class="veri-yukle-body">
+            <!-- ── ÜRÜN SEKMESİ ── -->
+            <div class="veri-yukle-pane active" id="vy-pane-urun">
+                <div class="veri-yukle-info">
+                    <strong>📦 Ürün Verisi (Stok Listesi)</strong><br>
+                    Stok kodu, ad, fiyat, depo bilgileri ve satış geçmişi içeren Excel dosyasını yükleyin.
+                    Bu dosya sistem için <strong>zorunludur</strong> — tüm ürün portföyünün temelini oluşturur.
+                </div>
+
+                <div class="upload-dropzone" id="dz-urun" onclick="document.getElementById('excel-file').click()">
+                    <span class="upload-icon">📊</span>
+                    <div class="upload-title">Excel dosyasını seçin veya buraya sürükleyin</div>
+                    <div class="upload-hint">Stok listesi, fiyatlar, ithalat ve satış verisi</div>
+                    <div class="upload-formats">.xlsx · .xlsm</div>
+                </div>
+
+                <div class="veri-yukle-status" id="vy-status-urun">
+                    <div class="status-icon empty">⏳</div>
+                    <div class="status-text">
+                        <div class="lbl">Mevcut Durum</div>
+                        <div class="val" id="vy-urun-durum">Henüz yükleme yapılmadı</div>
+                        <div class="sub" id="vy-urun-detay">Excel dosyası yükleyerek başlayın</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── ŞARTNAME SEKMESİ ── -->
+            <div class="veri-yukle-pane" id="vy-pane-sartname">
+                <div class="veri-yukle-info purple">
+                    <strong>📋 Teknik Şartname Verisi</strong><br>
+                    Word dosyasındaki başlıklar <code style="background:rgba(0,0,0,0.05);padding:1px 5px;border-radius:3px;font-size:10px;">KOD - ÜRÜN ADI</code> formatında olmalıdır.
+                    Her başlığın altındaki tüm metin (paragraflar, listeler) ilgili ürünün şartnamesi olarak kaydedilir.
+                </div>
+
+                <div class="veri-yukle-info warn" id="vy-sartname-uyari" style="display:none;">
+                    ℹ <strong>Önce ürün verisini yüklemeniz önerilir.</strong>
+                    Ürün portföyü olmadan şartnameler sisteme eklense de, eşleştirme yapılamayacaktır.
+                </div>
+
+                <div class="upload-dropzone purple" id="dz-sartname" onclick="document.getElementById('sartname-file').click()">
+                    <span class="upload-icon">📋</span>
+                    <div class="upload-title">Word dosyasını seçin veya buraya sürükleyin</div>
+                    <div class="upload-hint">Teknik şartname metinleri</div>
+                    <div class="upload-formats">.docx</div>
+                </div>
+
+                <div class="veri-yukle-status" id="vy-status-sartname">
+                    <div class="status-icon empty">⏳</div>
+                    <div class="status-text">
+                        <div class="lbl">Mevcut Durum</div>
+                        <div class="val" id="vy-sartname-durum">Henüz şartname yüklenmedi</div>
+                        <div class="sub" id="vy-sartname-detay">Word dosyası ile şartname tanımlamak opsiyoneldir</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     ŞARTNAME GÖRÜNTÜLEME MODALI (Ürün kartından açılır)
+══════════════════════════════════════════════════ -->
+<div id="sartname-view-modal" class="modal-overlay" onclick="closeModal(event,'sartname-view-modal')">
+    <div class="modal-content sartname-view-modal" onclick="event.stopPropagation()">
+        <div class="modal-header" style="border:none;padding:0;margin:0;">
+            <span style="font-size:13px;color:var(--text-muted);">Teknik Şartname</span>
+            <span class="modal-close" onclick="document.getElementById('sartname-view-modal').style.display='none'">&times;</span>
+        </div>
+        <div class="sartname-view-header" id="sartname-view-header">
+            <span class="kod-pill" id="sartname-view-kod">--</span>
+            <div class="ad" id="sartname-view-ad">--</div>
+        </div>
+        <div class="sartname-view-body" id="sartname-view-body">
+            <div class="sartname-empty">
+                <div class="icon">📋</div>
+                <div class="msg">Bu ürün için henüz şartname yüklenmemiş.</div>
+                <div class="hint"><strong>📂 Veri Yükle → 📋 Şartname</strong> sekmesinden Word dosyası yükleyebilirsiniz.</div>
+            </div>
+        </div>
+        <div class="sartname-actions">
+            <button class="sartname-btn sartname-btn-secondary" onclick="document.getElementById('sartname-view-modal').style.display='none'">Kapat</button>
+            <button class="sartname-btn sartname-btn-primary" id="sartname-copy-btn" onclick="sartnameKopyala()" style="display:none;">📋 Kopyala</button>
+            <button class="sartname-btn sartname-btn-primary" id="sartname-print-btn" onclick="sartnameYazdir()" style="display:none;">🖨 Yazdır</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     ŞARTNAME YÜKLEME SONUÇ MODALI
+══════════════════════════════════════════════════ -->
+<div id="sartname-result-modal" class="modal-overlay" onclick="closeModal(event,'sartname-result-modal')">
+    <div class="modal-content sartname-result-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <span>📋 Şartname Aktarım Sonucu</span>
+            <span class="modal-close" onclick="document.getElementById('sartname-result-modal').style.display='none'">&times;</span>
+        </div>
+        <div id="sartname-result-body"></div>
+        <div class="sartname-actions">
+            <button class="sartname-btn sartname-btn-secondary" onclick="document.getElementById('sartname-result-modal').style.display='none'">Kapat</button>
+            <button class="sartname-btn sartname-btn-primary" onclick="document.getElementById('sartname-result-modal').style.display='none';veriYukleModalAc('sartname');">🔄 Yeniden Yükle</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
      TEKLİF / SEPET EKRANI
 ══════════════════════════════════════════════════ -->
 <div id="teklif-ekrani">
@@ -606,7 +1126,7 @@
             <!-- Aksiyonlar -->
             <button class="teklif-action-btn btn-onizle" onclick="teklifOnizle()">👁 Önizle</button>
             <button class="teklif-action-btn btn-indir-pdf" onclick="teklifPDFIndir()">📄 PDF İndir</button>
-            <button class="teklif-action-btn" style="background:#6f42c1;color:white;" onclick="alert('Şartname indirme özelliği yakında eklenecek.')">📋 Şartname İndir</button>
+            <button class="teklif-action-btn" style="background:#6f42c1;color:white;" onclick="teklifSartnameIndir()">📋 Şartname İndir</button>
             <button class="teklif-action-btn btn-kaydet" onclick="teklifKaydet()">💾 Kaydet</button>
             <button class="teklif-action-btn btn-yeni" onclick="yeniTeklif()">✚ Yeni Teklif</button>
             <!-- Arşiv -->
@@ -641,6 +1161,836 @@
     let teklifArsiv = JSON.parse(localStorage.getItem('teklif_arsiv') || '[]');
     let usdKur = 43.71;
     let eurKur = 46.50;
+
+    // ════════════════════════════════════════════════════════════════
+    // ŞARTNAME MODÜLÜ — Word'den Ürün Şartnamesi Aktarım Sistemi
+    // ────────────────────────────────────────────────────────────────
+    // KALICILIK STRATEJİSİ:
+    // Şartname HTML'leri büyük olduğu için (335 ürün × ~1.7 KB ortalama
+    // = ~570 KB) localStorage'ın 5 MB sınırı diğer verilerle birlikte
+    // kolayca dolar. Bu yüzden IndexedDB kullanıyoruz (yüzlerce MB).
+    //
+    // Bellekte hızlı erişim için productSpecifications nesnesi de
+    // ayrıca tutulur — render işlemleri senkron kalır. Diskteki kayıt
+    // ise asenkron olarak IndexedDB'ye yazılır.
+    //
+    // Veri yapısı (IndexedDB 'specs' object store):
+    //   key:   stokKodu (örn: "MS300")
+    //   value: { ad, html, text, yuklemeTarihi, maddeSayisi }
+    // ════════════════════════════════════════════════════════════════
+
+    let productSpecifications = {}; // Bellekteki cache — DOMContentLoaded'da yüklenir
+
+    // ── IndexedDB sarmalayıcı ──
+    const SARTNAME_DB_NAME    = 'ProforceSartnameDB';
+    const SARTNAME_DB_VERSION = 1;
+    const SARTNAME_STORE      = 'specs';
+
+    function sartnameDbAc() {
+        return new Promise((resolve, reject) => {
+            if (!window.indexedDB) {
+                reject(new Error('IndexedDB bu tarayıcıda desteklenmiyor.'));
+                return;
+            }
+            const req = indexedDB.open(SARTNAME_DB_NAME, SARTNAME_DB_VERSION);
+            req.onupgradeneeded = function(e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(SARTNAME_STORE)) {
+                    db.createObjectStore(SARTNAME_STORE, { keyPath: 'stokKodu' });
+                }
+            };
+            req.onsuccess = function(e) { resolve(e.target.result); };
+            req.onerror   = function(e) { reject(e.target.error); };
+        });
+    }
+
+    // Tüm kayıtları belleğe yükle (uygulama açılışında bir kez çağrılır)
+    async function sartnameDbHepsiniYukle() {
+        try {
+            const db = await sartnameDbAc();
+            return new Promise((resolve, reject) => {
+                const tx    = db.transaction(SARTNAME_STORE, 'readonly');
+                const store = tx.objectStore(SARTNAME_STORE);
+                const req   = store.getAll();
+                req.onsuccess = function(e) {
+                    const obj = {};
+                    (e.target.result || []).forEach(rec => {
+                        if (rec && rec.stokKodu) {
+                            obj[rec.stokKodu] = {
+                                ad: rec.ad,
+                                html: rec.html,
+                                text: rec.text,
+                                yuklemeTarihi: rec.yuklemeTarihi,
+                                maddeSayisi: rec.maddeSayisi
+                            };
+                        }
+                    });
+                    db.close();
+                    resolve(obj);
+                };
+                req.onerror = function(e) { db.close(); reject(e.target.error); };
+            });
+        } catch (e) {
+            console.warn('IndexedDB okuma başarısız:', e);
+            return {};
+        }
+    }
+
+    // Toplu yazma — bir transaction içinde tüm yeni şartnameleri ekler/günceller
+    async function sartnameDbToplulukYaz(yeniKayitlar) {
+        // yeniKayitlar: { "MS300": {ad, html, text, yuklemeTarihi, maddeSayisi}, ... }
+        try {
+            const db = await sartnameDbAc();
+            return new Promise((resolve, reject) => {
+                const tx    = db.transaction(SARTNAME_STORE, 'readwrite');
+                const store = tx.objectStore(SARTNAME_STORE);
+                Object.entries(yeniKayitlar).forEach(([stokKodu, spec]) => {
+                    store.put({ stokKodu: stokKodu, ...spec });
+                });
+                tx.oncomplete = function() { db.close(); resolve(true); };
+                tx.onerror    = function(e) { db.close(); reject(e.target.error); };
+                tx.onabort    = function(e) { db.close(); reject(e.target.error || new Error('Transaction iptal edildi')); };
+            });
+        } catch (e) {
+            console.warn('IndexedDB yazma başarısız:', e);
+            throw e;
+        }
+    }
+
+    // Tüm kayıtları sil (gerekirse)
+    async function sartnameDbTemizle() {
+        try {
+            const db = await sartnameDbAc();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(SARTNAME_STORE, 'readwrite');
+                tx.objectStore(SARTNAME_STORE).clear();
+                tx.oncomplete = function() { db.close(); resolve(true); };
+                tx.onerror    = function(e) { db.close(); reject(e.target.error); };
+            });
+        } catch (e) { console.warn('IndexedDB temizleme başarısız:', e); }
+    }
+
+    // localStorage'da eski kayıt varsa IndexedDB'ye taşı ve localStorage'dan sil
+    async function sartnameLegacyMigration() {
+        const eskiRaw = localStorage.getItem('productSpecifications');
+        if (!eskiRaw) return false;
+        try {
+            const eski = JSON.parse(eskiRaw);
+            if (eski && typeof eski === 'object' && Object.keys(eski).length > 0) {
+                console.log('[Şartname] Legacy localStorage kayıtları IndexedDB\'ye taşınıyor...');
+                await sartnameDbToplulukYaz(eski);
+                console.log('[Şartname] Taşıma başarılı:', Object.keys(eski).length, 'kayıt');
+            }
+            // Başarılı veya boş — her durumda localStorage'dan kaldır (kota serbest kalsın)
+            localStorage.removeItem('productSpecifications');
+            return true;
+        } catch (e) {
+            console.warn('[Şartname] Legacy migration hatası:', e);
+            // Bozuk veri — sil
+            try { localStorage.removeItem('productSpecifications'); } catch(_) {}
+            return false;
+        }
+    }
+
+    // Stok kodu normalizasyonu — eşleştirmede tutarlılık sağlar
+    // Türkçe büyük-küçük harf duyarsızlığı + boşluk/tire varyasyonları
+    function normalizeStokKodu(kod) {
+        if (!kod) return '';
+        return String(kod)
+            .trim()
+            .toUpperCase()
+            .replace(/İ/g, 'I')
+            .replace(/Ğ/g, 'G')
+            .replace(/Ü/g, 'U')
+            .replace(/Ş/g, 'S')
+            .replace(/Ö/g, 'O')
+            .replace(/Ç/g, 'C')
+            .replace(/\s+/g, '')
+            .replace(/[–—]/g, '-');
+    }
+
+    // Word başlık formatları:
+    //  • **MS300-SPİN BİKE**           (tek bold blok, tirseli)
+    //  • **MS300 - SPİN BİKE**         (boşluklu tire)
+    //  • **X9A-**** KOŞU BANDI**       (parçalanmış bold — Word kaynaklı bug)
+    //  • <strong>...</strong> formatları HTML çıktıda
+    function parseSartnameStartiMi(line) {
+        if (!line) return null;
+        // ** ve **** karakterlerini temizle
+        let temiz = line.replace(/\*+/g, '').trim();
+        if (!temiz) return null;
+
+        // Format: KOD - AD veya KOD-AD
+        // Kod: harf+rakam karışık, max ~15 karakter, boşluk içerebilir (Q9A, M6 PLUS gibi)
+        // Tire: -, –, —
+        const m = temiz.match(/^([A-Z0-9İĞÜŞÖÇ][A-Z0-9İĞÜŞÖÇ\s]{0,18}?)\s*[-–—]\s*(.+)$/);
+        if (!m) return null;
+
+        const kod = m[1].trim();
+        const ad  = m[2].trim();
+
+        // Sadece harf-rakam ve boşluk içeren kodlar geçerli
+        if (!/^[A-Z0-9İĞÜŞÖÇ\s]+$/.test(kod)) return null;
+        // Ad çok kısa veya çok uzun değilse
+        if (ad.length < 2 || ad.length > 200) return null;
+
+        return { kod: kod, ad: ad };
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // ANA YÜKLEME FONKSİYONU
+    // ────────────────────────────────────────────────────────────────
+    async function sartnameDosyaYukle(file) {
+        if (!file) return;
+        if (!file.name.toLowerCase().endsWith('.docx')) {
+            alert('⚠ Lütfen bir Word (.docx) dosyası seçin.');
+            return;
+        }
+        if (typeof mammoth === 'undefined') {
+            alert('⚠ Mammoth kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.');
+            return;
+        }
+
+        // Veri Yükle modalı açıksa kapat (sonuç modalı açılacak — modal üstüne modal olmasın)
+        const vyModal = document.getElementById('veri-yukle-modal');
+        if (vyModal && vyModal.style.display === 'flex') {
+            vyModal.style.display = 'none';
+        }
+
+        // Yükleme modalını aç ve loading göster
+        const resultBody = document.getElementById('sartname-result-body');
+        resultBody.innerHTML = `
+            <div class="sartname-loading">
+                <div class="sartname-spinner"></div>
+                <div style="font-size:13px;font-weight:700;color:var(--text-mid);">Word dosyası okunuyor...</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${file.name}</div>
+            </div>`;
+        document.getElementById('sartname-result-modal').style.display = 'flex';
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+            const html = result.value;
+
+            // Parse: HTML'i ürünlere böl
+            const parsed = sartnameHtmlAyristir(html);
+
+            // Eşleştir + kaydet
+            const rapor = await sartnameKaydetVeEslestir(parsed);
+
+            // Sonuç ekranını göster
+            sartnameSonucGoster(rapor, file.name);
+        } catch (err) {
+            console.error('Şartname yükleme hatası:', err);
+            resultBody.innerHTML = `
+                <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:14px;color:#b71c2a;">
+                    <strong style="font-size:13px;">❌ Dosya okunamadı</strong>
+                    <div style="font-size:11px;margin-top:6px;color:#7a1421;">${err.message || err}</div>
+                </div>`;
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // HTML AYRIŞTIRMA (Word → ürün blokları)
+    // Mantık: Mammoth çıktısında başlıklar genellikle <h1>/<h2> ya da
+    //         "<p><strong>KOD - AD</strong></p>" şeklinde gelir.
+    //         İki başlık arasındaki tüm bloklar o ürünün içeriğidir.
+    //         Parçalanmış başlıklar (örn: <strong>X9A-</strong> KOŞU BANDI)
+    //         da düzgün toparlanır.
+    // ────────────────────────────────────────────────────────────────
+    function sartnameHtmlAyristir(html) {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = html;
+
+        const nodes = Array.from(wrap.children);
+        const products = [];
+        let aktif = null;
+
+        for (const node of nodes) {
+            const tag = (node.tagName || '').toLowerCase();
+            const text = (node.textContent || '').trim();
+            if (!text) continue; // boş node'ları atla
+
+            let basligaBenziyor = false;
+            let parsedHeader = null;
+
+            // Senaryo 1: Mammoth <h1>/<h2>/<h3> üretmiş (en yaygın durum)
+            if (/^h[1-6]$/.test(tag)) {
+                parsedHeader = parseSartnameStartiMi(text);
+                if (parsedHeader) basligaBenziyor = true;
+            }
+            // Senaryo 2: <p> içinde <strong> ile bold başlık
+            else if (tag === 'p') {
+                const ilkStrong = node.querySelector('strong, b');
+                if (ilkStrong && ilkStrong === node.firstElementChild) {
+                    const strongText = (ilkStrong.textContent || '').trim();
+                    const sonrasi = text.replace(strongText, '').trim();
+
+                    // 2a: tüm metin tek strong içinde
+                    if (parseSartnameStartiMi(text)) {
+                        parsedHeader = parseSartnameStartiMi(text);
+                        basligaBenziyor = true;
+                    }
+                    // 2b: parçalanmış başlık — strong "KOD-" + normal metin "AD"
+                    else if (/^[A-Z0-9İĞÜŞÖÇ\s]{1,15}[-–—]\s*$/.test(strongText) && sonrasi) {
+                        const birlesik = strongText + sonrasi;
+                        parsedHeader = parseSartnameStartiMi(birlesik);
+                        if (parsedHeader) basligaBenziyor = true;
+                    }
+                }
+            }
+
+            if (basligaBenziyor && parsedHeader) {
+                if (aktif) products.push(aktif);
+                aktif = {
+                    kod: parsedHeader.kod,
+                    ad: parsedHeader.ad,
+                    htmlParcalari: [],
+                    textParcalari: [],
+                    maddeSayisi: 0
+                };
+                continue;
+            }
+
+            // Aktif ürün varsa, içeriği ona ekle
+            if (aktif) {
+                aktif.htmlParcalari.push(node.outerHTML);
+                aktif.textParcalari.push(text);
+                // Liste maddelerini ayrıca say (UI özet için)
+                const liler = node.querySelectorAll ? node.querySelectorAll('li') : [];
+                if (liler.length) {
+                    aktif.maddeSayisi += liler.length;
+                } else {
+                    aktif.maddeSayisi += 1;
+                }
+            }
+        }
+
+        if (aktif) products.push(aktif);
+        return products;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // EŞLEŞTİR + KAYDET (async — IndexedDB'ye yazar)
+    // allData içindeki stokKodu'larıyla karşılaştırır,
+    // IndexedDB'ye yazar, eşleşmeyenleri rapor eder.
+    // ────────────────────────────────────────────────────────────────
+    async function sartnameKaydetVeEslestir(parsed) {
+        // allData'daki tüm kodları normalize ederek index'le
+        const sistemKodlari = new Map(); // normalize → orijinal stokKodu
+        if (Array.isArray(allData)) {
+            allData.forEach(item => {
+                if (item && item.stokKodu) {
+                    sistemKodlari.set(normalizeStokKodu(item.stokKodu), item.stokKodu);
+                }
+            });
+        }
+
+        const eslesenler    = [];
+        const eslesmeyenler = [];
+        const yuklemeTarihi = new Date().toISOString();
+        const yeniKayitlar  = {}; // IndexedDB'ye toplu yazılacak
+
+        parsed.forEach(p => {
+            const normKod = normalizeStokKodu(p.kod);
+
+            if (sistemKodlari.has(normKod)) {
+                const orijinalKod = sistemKodlari.get(normKod);
+                const html = p.htmlParcalari.join('\n');
+                const text = sartnameHtmlToText(html);
+                const spec = {
+                    ad: p.ad,
+                    html: html,
+                    text: text,
+                    yuklemeTarihi: yuklemeTarihi,
+                    maddeSayisi: p.maddeSayisi || p.htmlParcalari.length
+                };
+                productSpecifications[orijinalKod] = spec;  // bellek
+                yeniKayitlar[orijinalKod] = spec;            // IndexedDB için
+                eslesenler.push({ kod: orijinalKod, ad: p.ad, madde: spec.maddeSayisi });
+            } else {
+                eslesmeyenler.push({ kod: p.kod, ad: p.ad });
+            }
+        });
+
+        // IndexedDB'ye toplu yaz (tek transaction = hızlı + atomik)
+        let kayitBasarili = true;
+        if (Object.keys(yeniKayitlar).length > 0) {
+            try {
+                await sartnameDbToplulukYaz(yeniKayitlar);
+            } catch (e) {
+                kayitBasarili = false;
+                console.error('IndexedDB yazma hatası:', e);
+                alert('⚠ Şartname verileri kalıcı olarak kaydedilemedi.\n\nHata: ' + (e.message || e) + '\n\nBu oturumda görüntüleme çalışacak ancak tarayıcıyı kapatınca kaybolabilir.');
+            }
+        }
+
+        // Tabloyu yeniden render et — yeşil şartname göstergeleri belirsin
+        try {
+            if (typeof renderTable === 'function') renderTable();
+        } catch (e) { /* tablo henüz çizilmemiş olabilir, sorun değil */ }
+
+        return {
+            toplam: parsed.length,
+            eslesen: eslesenler,
+            eslesmeyen: eslesmeyenler,
+            sistemUrunSayisi: sistemKodlari.size,
+            yuklemeTarihi: yuklemeTarihi,
+            kayitBasarili: kayitBasarili
+        };
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // SONUÇ MODALINI GÖSTER
+    // ────────────────────────────────────────────────────────────────
+    function sartnameSonucGoster(rapor, dosyaAdi) {
+        const body = document.getElementById('sartname-result-body');
+        const tarih = new Date(rapor.yuklemeTarihi).toLocaleString('tr-TR');
+
+        let html = `
+            <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--text-mid);">
+                <strong style="color:var(--text-dark);">📄 ${dosyaAdi}</strong><br>
+                <span style="color:var(--text-muted);">Yüklendi: ${tarih}</span>
+            </div>
+
+            <div class="sartname-summary">
+                <div class="sartname-stat info">
+                    <div class="num">${rapor.toplam}</div>
+                    <div class="lbl">Toplam Başlık</div>
+                </div>
+                <div class="sartname-stat success">
+                    <div class="num">${rapor.eslesen.length}</div>
+                    <div class="lbl">Eşleşti</div>
+                </div>
+                <div class="sartname-stat warn">
+                    <div class="num">${rapor.eslesmeyen.length}</div>
+                    <div class="lbl">Eşleşmedi</div>
+                </div>
+            </div>`;
+
+        if (rapor.sistemUrunSayisi === 0) {
+            html += `
+                <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px;font-size:12px;color:#7a4f01;margin-bottom:10px;">
+                    ⚠ <strong>Sistemde ürün verisi bulunamadı.</strong>
+                    Önce <strong>📂 Veri Yükle → 📦 Ürün</strong> sekmesinden Excel stok dosyasını yüklemeniz gerekir.
+                    Şartnameler kaydedildi ancak eşleştirilemedi.
+                </div>`;
+        }
+
+        // Eşleşmeyenler — kritik liste
+        if (rapor.eslesmeyen.length > 0) {
+            html += `
+                <div class="sartname-section-title" style="color:#b71c2a;">
+                    ⚠ Aşağıdaki başlıklar sistemde bulunamadı, lütfen kontrol edin:
+                </div>
+                <div class="sartname-list">`;
+            rapor.eslesmeyen.forEach(p => {
+                html += `
+                    <div class="sartname-list-item unmatched">
+                        <span class="kod">${escapeHtml(p.kod)}</span>
+                        <span class="ad">${escapeHtml(p.ad)}</span>
+                        <span class="badge">Yok</span>
+                    </div>`;
+            });
+            html += `</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:6px;font-style:italic;">
+                    💡 Word dosyasındaki başlıkları düzeltip yeniden yükleyebilirsiniz.
+                </div>`;
+        }
+
+        // Eşleşenler
+        if (rapor.eslesen.length > 0) {
+            html += `
+                <div class="sartname-section-title" style="color:#00713e;">
+                    ✓ Başarıyla yüklenen şartnameler (${rapor.eslesen.length}):
+                </div>
+                <div class="sartname-list">`;
+            rapor.eslesen.forEach(p => {
+                html += `
+                    <div class="sartname-list-item matched">
+                        <span class="kod">${escapeHtml(p.kod)}</span>
+                        <span class="ad">${escapeHtml(p.ad)}</span>
+                        <span class="badge">${p.madde} madde</span>
+                    </div>`;
+            });
+            html += `</div>`;
+        }
+
+        body.innerHTML = html;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // GÖRÜNTÜLEME — Ürün kartından açılır
+    // ────────────────────────────────────────────────────────────────
+    let _aktifSartnameKod = null;
+    function sartnameGoster(stokKodu) {
+        // Diğer modalı kapat (ürün detay)
+        document.getElementById('info-modal').style.display = 'none';
+
+        const item = (allData || []).find(d => d.stokKodu === stokKodu);
+        const spec = productSpecifications[stokKodu];
+
+        document.getElementById('sartname-view-kod').textContent = stokKodu;
+        document.getElementById('sartname-view-ad').textContent = item ? item.stokAdi : (spec ? spec.ad : stokKodu);
+
+        const body = document.getElementById('sartname-view-body');
+        const copyBtn = document.getElementById('sartname-copy-btn');
+        const printBtn = document.getElementById('sartname-print-btn');
+
+        if (spec && spec.html) {
+            body.innerHTML = spec.html;
+            copyBtn.style.display = 'inline-flex';
+            printBtn.style.display = 'inline-flex';
+            _aktifSartnameKod = stokKodu;
+        } else {
+            body.innerHTML = `
+                <div class="sartname-empty">
+                    <div class="icon">📋</div>
+                    <div class="msg">Bu ürün için henüz şartname yüklenmemiş.</div>
+                    <div class="hint"><strong>📂 Veri Yükle → 📋 Şartname</strong> sekmesinden Word dosyası yükleyebilirsiniz.</div>
+                </div>`;
+            copyBtn.style.display = 'none';
+            printBtn.style.display = 'none';
+            _aktifSartnameKod = null;
+        }
+
+        document.getElementById('sartname-view-modal').style.display = 'flex';
+    }
+
+    function sartnameKopyala() {
+        if (!_aktifSartnameKod) return;
+        const spec = productSpecifications[_aktifSartnameKod];
+        if (!spec) return;
+        const item = (allData || []).find(d => d.stokKodu === _aktifSartnameKod);
+        const baslik = `${_aktifSartnameKod} - ${item ? item.stokAdi : spec.ad}`;
+        const metin = baslik + '\n\n' + (spec.text || '');
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(metin).then(() => {
+                const btn = document.getElementById('sartname-copy-btn');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '✓ Kopyalandı';
+                btn.style.background = '#00a859';
+                setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 1500);
+            }).catch(() => alert('Kopyalama başarısız oldu.'));
+        } else {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = metin;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert('Şartname panoya kopyalandı.');
+        }
+    }
+
+    function sartnameYazdir() {
+        if (!_aktifSartnameKod) return;
+        const spec = productSpecifications[_aktifSartnameKod];
+        if (!spec) return;
+        const item = (allData || []).find(d => d.stokKodu === _aktifSartnameKod);
+        const baslik = `${_aktifSartnameKod} - ${item ? item.stokAdi : spec.ad}`;
+
+        const w = window.open('', '_blank', 'width=800,height=900');
+        w.document.write(`
+            <!DOCTYPE html><html><head><meta charset="UTF-8"><title>${baslik} - Teknik Şartname</title>
+            <style>
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px 40px; color: #1a1f36; line-height: 1.6; }
+                h1 { font-size: 18px; border-bottom: 3px solid #6f42c1; padding-bottom: 8px; margin-bottom: 4px; }
+                h2 { font-size: 12px; color: #6c757d; font-weight: 500; margin-top: 0; }
+                p { margin: 0 0 8px 0; font-size: 12px; }
+                ul, ol { padding-left: 22px; }
+                li { font-size: 12px; margin-bottom: 4px; }
+                strong { color: #1a1f36; }
+                @media print { body { padding: 15mm; } }
+            </style></head><body>
+            <h1>${baslik}</h1>
+            <h2>Teknik Şartname</h2>
+            <div>${spec.html}</div>
+            <script>window.onload=function(){window.print();};<\/script>
+            </body></html>`);
+        w.document.close();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // SEPETTEN TOPLU ŞARTNAME İNDİRME
+    // ────────────────────────────────────────────────────────────────
+    function teklifSartnameIndir() {
+        if (!sepet || sepet.length === 0) {
+            alert('⚠ Sepetinizde ürün yok. Önce ürün ekleyin.');
+            return;
+        }
+
+        const sartnameliUrunler = [];
+        const sartnamesizUrunler = [];
+        sepet.forEach(s => {
+            const kod = s.stokKodu;
+            if (productSpecifications[kod] && productSpecifications[kod].html) {
+                sartnameliUrunler.push(s);
+            } else {
+                sartnamesizUrunler.push(s);
+            }
+        });
+
+        if (sartnameliUrunler.length === 0) {
+            alert('⚠ Sepetteki ürünlerin hiçbirinde şartname tanımlı değil.\n\nÖnce 📂 Veri Yükle → 📋 Şartname sekmesinden Word dosyası yükleyin.');
+            return;
+        }
+
+        // HTML oluştur
+        const tarih = new Date().toLocaleDateString('tr-TR');
+        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Teklif Şartnameleri</title>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 25mm 20mm; color: #1a1f36; line-height: 1.55; }
+            .doc-header { text-align: center; border-bottom: 3px solid #6f42c1; padding-bottom: 12px; margin-bottom: 20px; }
+            .doc-title { font-size: 22px; font-weight: 800; color: #1a1f36; margin: 0; }
+            .doc-sub { font-size: 11px; color: #6c757d; margin-top: 4px; }
+            .urun-blok { margin-bottom: 28px; page-break-inside: avoid; }
+            .urun-baslik { background: #6f42c1; color: white; padding: 10px 14px; border-radius: 6px 6px 0 0; }
+            .urun-kod { font-family: 'Courier New', monospace; font-weight: 800; font-size: 13px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; margin-right: 8px; }
+            .urun-ad { font-size: 14px; font-weight: 700; }
+            .urun-icerik { border: 1px solid #dde2ec; border-top: none; border-radius: 0 0 6px 6px; padding: 14px 18px; font-size: 12px; }
+            .urun-icerik p { margin: 0 0 6px 0; }
+            .urun-icerik ul, .urun-icerik ol { padding-left: 20px; margin: 5px 0 8px 0; }
+            .urun-icerik li { margin-bottom: 3px; }
+            .urun-icerik strong { color: #1a1f36; }
+            .uyari { background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #7a4f01; margin-bottom: 18px; }
+            @media print { .urun-blok { page-break-inside: avoid; } }
+            @page { size: A4; margin: 18mm; }
+        </style></head><body>
+        <div class="doc-header">
+            <div class="doc-title">📋 TEKNİK ŞARTNAMELER</div>
+            <div class="doc-sub">Tarih: ${tarih} • Toplam ${sartnameliUrunler.length} ürün</div>
+        </div>`;
+
+        if (sartnamesizUrunler.length > 0) {
+            html += `<div class="uyari">
+                ⚠ <strong>Şartnamesi bulunmayan ürünler atlanmıştır:</strong> `;
+            html += sartnamesizUrunler.map(u => u.stokKodu).join(', ');
+            html += `</div>`;
+        }
+
+        sartnameliUrunler.forEach(s => {
+            const spec = productSpecifications[s.stokKodu];
+            const ad = s.stokAdi || spec.ad || '';
+            html += `
+                <div class="urun-blok">
+                    <div class="urun-baslik">
+                        <span class="urun-kod">${escapeHtml(s.stokKodu)}</span>
+                        <span class="urun-ad">${escapeHtml(ad)}</span>
+                    </div>
+                    <div class="urun-icerik">${spec.html}</div>
+                </div>`;
+        });
+        html += `<script>window.onload=function(){setTimeout(()=>window.print(),300);};<\/script></body></html>`;
+
+        const w = window.open('', '_blank', 'width=900,height=1000');
+        w.document.write(html);
+        w.document.close();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // YARDIMCI: HTML escape (kullanıcı verisi için XSS koruması)
+    // ────────────────────────────────────────────────────────────────
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // HTML'i satırlara dağıtılmış düz metne çevir (kopyalama / yazdırma için)
+    function sartnameHtmlToText(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const satirlar = [];
+        // Liste maddeleri ayrı satır
+        tmp.querySelectorAll('li').forEach(li => {
+            const t = (li.textContent || '').trim().replace(/\s+/g, ' ');
+            if (t) satirlar.push('• ' + t);
+        });
+        // Liste içermeyen <p>, <h2>, <h3> vs için
+        if (satirlar.length === 0) {
+            tmp.querySelectorAll('p, h1, h2, h3, h4, div').forEach(el => {
+                const t = (el.textContent || '').trim().replace(/\s+/g, ' ');
+                if (t) satirlar.push(t);
+            });
+        }
+        if (satirlar.length === 0) {
+            return (tmp.textContent || '').trim().replace(/\s+/g, ' ');
+        }
+        return satirlar.join('\n');
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Dosya input change listener'ı (DOMContentLoaded'da bağlanacak)
+    // ────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async function() {
+        // ── Şartnameleri IndexedDB'den belleğe yükle (varsa eski localStorage'dan migrate et) ──
+        try {
+            await sartnameLegacyMigration();        // tek seferlik geçiş
+            productSpecifications = await sartnameDbHepsiniYukle();
+            // Bellekteki şartnameler hazır olduğunda tabloyu yeniden render et (yeşil göstergeler)
+            if (typeof renderTable === 'function') {
+                try { renderTable(); } catch (e) { /* tablo henüz hazır değil */ }
+            }
+        } catch (e) {
+            console.warn('Şartname yüklemesi başlatılamadı:', e);
+            productSpecifications = {};
+        }
+
+        const fileInput = document.getElementById('sartname-file');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    sartnameDosyaYukle(file);
+                    // Aynı dosya tekrar seçilebilsin diye reset
+                    e.target.value = '';
+                }
+            });
+        }
+        // Veri Yükle modalı drag & drop kurulumu
+        veriYukleDragDropKur();
+    });
+
+    // ════════════════════════════════════════════════════════════════
+    // VERİ YÜKLE MODALI — Sekmeli ürün/şartname yükleme arayüzü
+    // ════════════════════════════════════════════════════════════════
+
+    function veriYukleModalAc(varsayilanSekme) {
+        // Mevcut durumları güncelle
+        veriYukleDurumGuncelle();
+        // İstenen sekmeye geç (varsayılan: ürün)
+        veriYukleSekme(varsayilanSekme || 'urun');
+        document.getElementById('veri-yukle-modal').style.display = 'flex';
+    }
+
+    function veriYukleSekme(sekme) {
+        // Tüm tab ve pane'leri sıfırla
+        document.querySelectorAll('.veri-yukle-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.veri-yukle-pane').forEach(p => p.classList.remove('active'));
+
+        if (sekme === 'sartname') {
+            document.getElementById('vy-tab-sartname').classList.add('active');
+            document.getElementById('vy-pane-sartname').classList.add('active');
+            // Ürün verisi yoksa şartname sekmesinde uyarı göster
+            const urunYok = !allData || allData.length === 0;
+            document.getElementById('vy-sartname-uyari').style.display = urunYok ? 'block' : 'none';
+        } else {
+            document.getElementById('vy-tab-urun').classList.add('active');
+            document.getElementById('vy-pane-urun').classList.add('active');
+        }
+    }
+
+    // Modaldaki "mevcut durum" kartlarını günceller — modal her açıldığında çağrılır
+    function veriYukleDurumGuncelle() {
+        // ÜRÜN durumu
+        const urunStatusIcon = document.querySelector('#vy-status-urun .status-icon');
+        const urunDurum = document.getElementById('vy-urun-durum');
+        const urunDetay = document.getElementById('vy-urun-detay');
+
+        if (allData && allData.length > 0) {
+            urunStatusIcon.className = 'status-icon ok';
+            urunStatusIcon.textContent = '✓';
+            urunDurum.textContent = `${allData.length} ürün yüklü`;
+            try {
+                const sonYukleme = JSON.parse(localStorage.getItem('son_yukleme_bilgi') || 'null');
+                if (sonYukleme && sonYukleme.zaman) {
+                    urunDetay.textContent = `Son yükleme: ${sonYukleme.zaman} • ${sonYukleme.ad || ''}`;
+                } else {
+                    urunDetay.textContent = 'Yeni Excel yüklerseniz mevcut veriler güncellenir';
+                }
+            } catch (e) {
+                urunDetay.textContent = 'Yeni Excel yüklerseniz mevcut veriler güncellenir';
+            }
+        } else {
+            urunStatusIcon.className = 'status-icon empty';
+            urunStatusIcon.textContent = '⏳';
+            urunDurum.textContent = 'Henüz yükleme yapılmadı';
+            urunDetay.textContent = 'Excel dosyası yükleyerek başlayın';
+        }
+
+        // ŞARTNAME durumu
+        const sartStatusIcon = document.querySelector('#vy-status-sartname .status-icon');
+        const sartDurum = document.getElementById('vy-sartname-durum');
+        const sartDetay = document.getElementById('vy-sartname-detay');
+        const sartSayisi = Object.keys(productSpecifications || {}).length;
+
+        if (sartSayisi > 0) {
+            sartStatusIcon.className = 'status-icon ok';
+            sartStatusIcon.textContent = '✓';
+            sartDurum.textContent = `${sartSayisi} ürün için şartname tanımlı`;
+            // En son yükleme tarihini bul
+            const tarihler = Object.values(productSpecifications)
+                .map(s => s && s.yuklemeTarihi)
+                .filter(Boolean)
+                .sort();
+            if (tarihler.length) {
+                const sonTarih = new Date(tarihler[tarihler.length - 1]).toLocaleString('tr-TR');
+                sartDetay.textContent = `Son yükleme: ${sonTarih}`;
+            } else {
+                sartDetay.textContent = 'Yeni Word yüklerseniz mevcut şartnameler güncellenir';
+            }
+        } else {
+            sartStatusIcon.className = 'status-icon empty';
+            sartStatusIcon.textContent = '⏳';
+            sartDurum.textContent = 'Henüz şartname yüklenmedi';
+            sartDetay.textContent = 'Word dosyası ile şartname tanımlamak opsiyoneldir';
+        }
+    }
+
+    // Drag & drop ile dosya yükleme desteği
+    function veriYukleDragDropKur() {
+        const dzUrun = document.getElementById('dz-urun');
+        const dzSart = document.getElementById('dz-sartname');
+
+        function setupDropzone(dz, fileInputId, validExt) {
+            if (!dz) return;
+            ['dragenter', 'dragover'].forEach(ev => {
+                dz.addEventListener(ev, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dz.classList.add('dragover');
+                });
+            });
+            ['dragleave', 'drop'].forEach(ev => {
+                dz.addEventListener(ev, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dz.classList.remove('dragover');
+                });
+            });
+            dz.addEventListener('drop', e => {
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (!files || files.length === 0) return;
+                const file = files[0];
+                const ad = file.name.toLowerCase();
+                const gecerli = validExt.some(ext => ad.endsWith(ext));
+                if (!gecerli) {
+                    alert(`⚠ Lütfen geçerli bir dosya seçin (${validExt.join(', ')})`);
+                    return;
+                }
+                // Dosyayı ilgili input'a aktar ve change event'i tetikle
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                const input = document.getElementById(fileInputId);
+                input.files = dt.files;
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        }
+
+        setupDropzone(dzUrun, 'excel-file', ['.xlsx', '.xlsm']);
+        setupDropzone(dzSart, 'sartname-file', ['.docx']);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // / ŞARTNAME MODÜLÜ SONU
+    // ════════════════════════════════════════════════════════════════
 
     document.addEventListener('keydown', function(e) {
         if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
@@ -1026,6 +2376,12 @@
     document.getElementById('excel-file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
+
+        // Veri Yükle modalı açıksa kapat (yükleme başlıyor — kullanıcı sonucu ana ekranda görsün)
+        const vyModal = document.getElementById('veri-yukle-modal');
+        if (vyModal && vyModal.style.display === 'flex') {
+            vyModal.style.display = 'none';
+        }
 
         const reader = new FileReader();
         reader.onerror = function(e) { alert('Dosya okunamadı: ' + e); };
@@ -1489,7 +2845,7 @@
                     </div>
                     <div style="display:flex;gap:6px;flex-shrink:0;text-align:center;">
                         <div style="background:#fff0f0;border-radius:6px;padding:4px 10px;">
-                            <div style="font-size:9px;color:#e63946;font-weight:600;">BEKLEYEN</div>
+                            <div style="font-size:9px;color:#e63946;font-weight:600;">BEKLİYEN</div>
                             <div style="font-size:16px;font-weight:800;color:#e63946;">${total}</div>
                         </div>
                         <div style="background:#f0fff4;border-radius:6px;padding:4px 10px;">
@@ -1839,6 +3195,11 @@
             const sepetteMi = !!sepetItem;
             // Sepetteki adet ile input adeti karşılaştır (güncelleme butonu için)
             const sepetAdet = sepetItem ? sepetItem.adet : 1;
+            // Şartname göstergesi: ürünün şartnamesi varsa yeşil ikon ve sol bant
+            const sartnameVar = !!(productSpecifications && productSpecifications[item.stokKodu] && productSpecifications[item.stokKodu].html);
+            const stokKoduCell = sartnameVar
+                ? `<td class="has-sartname"><span class="stok-kodu-cell">${item.stokKodu}<span class="sartname-icon" onclick="event.stopPropagation();sartnameGoster('${safeKod}')" title="Teknik şartnameyi görüntüle">📋</span></span></td>`
+                : `<td>${item.stokKodu}</td>`;
             return `<tr data-id="${item.stokKodu}" class="${item.kalan <= 0 ? 'critical-row' : ''}">
                 <td class="w-sort">⠿</td>
                 <td class="col-sepet">
@@ -1851,7 +3212,7 @@
                         }
                     </div>
                 </td>
-                <td>${item.stokKodu}</td>
+                ${stokKoduCell}
                 <td class="col-stok-adi" onclick="showDetail('${safeKod}')">${item.stokAdi}</td>
                 <td>${formatCurrency(item.fiyat)} ${item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$'}</td>
                 <td class="col-fiili">${item.fiili}</td>
@@ -2961,7 +4322,7 @@
         document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi + grupLabel;
         let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
         html += `<div style="text-align:center;margin-bottom:10px;">
-            <button onclick="alert('Şartname görüntüleme özelliği yakında eklenecek.')" style="background:#6f42c1;color:white;border:none;border-radius:6px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">📋 Şartname Görüntüle</button>
+            <button onclick="sartnameGoster('${item.stokKodu.replace(/'/g,"\\'")}')" style="background:#6f42c1;color:white;border:none;border-radius:6px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">📋 Şartname Görüntüle</button>
         </div>`;
         html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
             <div class="info-row" style="color:${item.stokDurumuRenk};cursor:pointer;" onclick="document.getElementById('info-modal').style.display='none';showAylikSatis('${item.stokKodu}')" title="Aylık satış geçmişini görmek için tıklayın"><strong>Durum</strong> ${item.stokDurumu} <span style="font-size:10px;opacity:0.65;">📅</span></div>
