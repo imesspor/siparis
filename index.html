@@ -553,47 +553,36 @@
         }
 
         /* ═══════════════════════════════════════
-           TABLODA ŞARTNAME GÖSTERGESİ
+           TABLODA ŞARTNAME GÖSTERGESİ (ayrı dar sütun)
         ═══════════════════════════════════════ */
-        /* Şartnamesi olan satırın stok kodu hücresinde sol yeşil bant */
-        td.has-sartname {
-            position: relative;
-            background: linear-gradient(90deg, rgba(0,168,89,0.08) 0%, transparent 70%);
-        }
-        td.has-sartname::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 4px; bottom: 4px;
-            width: 3px;
-            background: #00a859;
-            border-radius: 0 2px 2px 0;
+        /* Dar sütun: sadece ikon için yer açar, kod hizasını bozmaz */
+        .col-sartname {
+            width: 26px;
+            min-width: 26px;
+            max-width: 26px;
+            padding: 0 !important;
+            text-align: center;
+            vertical-align: middle;
         }
         .sartname-icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 16px; height: 16px;
+            width: 18px; height: 18px;
             background: #00a859;
             color: white;
             border-radius: 4px;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 800;
-            margin-left: 4px;
             cursor: pointer;
             transition: all 0.15s;
             vertical-align: middle;
-            flex-shrink: 0;
             box-shadow: 0 1px 2px rgba(0,168,89,0.35);
+            line-height: 1;
         }
         .sartname-icon:hover {
             background: #00713e;
-            transform: scale(1.1);
-        }
-        .stok-kodu-cell {
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-            white-space: nowrap;
+            transform: scale(1.12);
         }
 
         /* ═══════════════════════════════════════
@@ -871,6 +860,7 @@
             <tr>
                 <th style="width:25px;">#</th>
                 <th class="col-sepet" style="width:120px;">TEKLİF OLUŞTUR</th>
+                <th class="col-sartname" style="width:26px;padding:0;" title="Şartname"></th>
                 <th style="width:85px;">STOK KODU</th>
                 <th style="width:auto;">STOK ADI</th>
                 <th style="width:70px;">FİYAT</th>
@@ -3195,11 +3185,11 @@
             const sepetteMi = !!sepetItem;
             // Sepetteki adet ile input adeti karşılaştır (güncelleme butonu için)
             const sepetAdet = sepetItem ? sepetItem.adet : 1;
-            // Şartname göstergesi: ürünün şartnamesi varsa yeşil ikon ve sol bant
+            // Şartname göstergesi: ayrı dar sütunda — kodların hizalamasını bozmaz
             const sartnameVar = !!(productSpecifications && productSpecifications[item.stokKodu] && productSpecifications[item.stokKodu].html);
-            const stokKoduCell = sartnameVar
-                ? `<td class="has-sartname"><span class="stok-kodu-cell">${item.stokKodu}<span class="sartname-icon" onclick="event.stopPropagation();sartnameGoster('${safeKod}')" title="Teknik şartnameyi görüntüle">📋</span></span></td>`
-                : `<td>${item.stokKodu}</td>`;
+            const sartnameCell = sartnameVar
+                ? `<td class="col-sartname"><span class="sartname-icon" onclick="event.stopPropagation();sartnameGoster('${safeKod}')" title="Teknik şartnameyi görüntüle">📋</span></td>`
+                : `<td class="col-sartname"></td>`;
             return `<tr data-id="${item.stokKodu}" class="${item.kalan <= 0 ? 'critical-row' : ''}">
                 <td class="w-sort">⠿</td>
                 <td class="col-sepet">
@@ -3212,7 +3202,8 @@
                         }
                     </div>
                 </td>
-                ${stokKoduCell}
+                ${sartnameCell}
+                <td>${item.stokKodu}</td>
                 <td class="col-stok-adi" onclick="showDetail('${safeKod}')">${item.stokAdi}</td>
                 <td>${formatCurrency(item.fiyat)} ${item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$'}</td>
                 <td class="col-fiili">${item.fiili}</td>
