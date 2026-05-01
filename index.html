@@ -1777,7 +1777,7 @@
     function _sartnameDocxIndir(urunler, dosyaAdi) {
         // docxjs CDN'den yoksa yükle, sonra oluştur
         function _buildDocx() {
-            const { Document, Packer, Paragraph, TextRun, AlignmentType, LevelFormat } = docx;
+            const { Document, Packer, Paragraph, TextRun, AlignmentType, LevelFormat, LevelSuffix } = docx;
 
             const numberingConfig = [];
             urunler.forEach((_, i) => {
@@ -1788,9 +1788,10 @@
                         format: LevelFormat.DECIMAL,
                         text: '%1.',
                         alignment: AlignmentType.LEFT,
+                        suffix: LevelSuffix.SPACE,
                         style: {
-                            paragraph: { indent: { left: 360, hanging: 360 } },
-                            run: { font: 'Arial', size: 22 }
+                            paragraph: { indent: { left: 0, hanging: 0 } },
+                            run: { font: 'Calibri', size: 22 }
                         }
                     }]
                 });
@@ -1802,13 +1803,13 @@
                 // Başlık: ürün adı — büyük harf, bold, altı çizili
                 children.push(new Paragraph({
                     alignment: AlignmentType.LEFT,
-                    spacing: { before: idx === 0 ? 0 : 280, after: 160 },
+                    spacing: { before: idx === 0 ? 0 : 280, after: 120 },
+                    indent: { left: 0, hanging: 0 },
                     children: [new TextRun({
                         text: urun.ad.toUpperCase(),
                         bold: true,
-                        underline: {},
-                        font: 'Arial',
-                        size: 24
+                        font: 'Calibri',
+                        size: 22
                     })]
                 }));
 
@@ -1816,7 +1817,7 @@
                 urun.maddeler.forEach(madde => {
                     children.push(new Paragraph({
                         numbering: { reference: `num-${idx}`, level: 0 },
-                        children: [new TextRun({ text: madde, font: 'Arial', size: 22 })]
+                        children: [new TextRun({ text: madde, font: 'Calibri', size: 22 })]
                     }));
                 });
             });
@@ -1825,19 +1826,20 @@
             if (urunler.length > 1) {
                 // ÜRÜN İHTİYAÇ LİSTESİ
                 children.push(new Paragraph({
-                    spacing: { before: 400, after: 160 },
+                    alignment: AlignmentType.LEFT,
+                    spacing: { before: 400, after: 120 },
+                    indent: { left: 0, hanging: 0 },
                     children: [new TextRun({
                         text: 'ÜRÜN İHTİYAÇ LİSTESİ',
                         bold: true,
-                        underline: {},
-                        font: 'Arial',
-                        size: 24
+                        font: 'Calibri',
+                        size: 22
                     })]
                 }));
                 urunler.forEach((u, i) => {
                     children.push(new Paragraph({
                         numbering: { reference: `num-liste`, level: 0 },
-                        children: [new TextRun({ text: u.ad, font: 'Arial', size: 22 })]
+                        children: [new TextRun({ text: u.ad, font: 'Calibri', size: 22 })]
                     }));
                 });
                 numberingConfig.push({
@@ -1845,9 +1847,10 @@
                     levels: [{
                         level: 0, format: LevelFormat.DECIMAL, text: '%1.',
                         alignment: AlignmentType.LEFT,
+                        suffix: LevelSuffix.SPACE,
                         style: {
-                            paragraph: { indent: { left: 360, hanging: 360 } },
-                            run: { font: 'Arial', size: 22 }
+                            paragraph: { indent: { left: 0, hanging: 0 } },
+                            run: { font: 'Calibri', size: 22 }
                         }
                     }]
                 });
@@ -1856,13 +1859,13 @@
             const doc = new Document({
                 numbering: { config: numberingConfig },
                 styles: {
-                    default: { document: { run: { font: 'Arial', size: 22 } } }
+                    default: { document: { run: { font: 'Calibri', size: 22 } } }
                 },
                 sections: [{
                     properties: {
                         page: {
                             size: { width: 11906, height: 16838 },
-                            margin: { top: 1418, right: 1134, bottom: 1134, left: 1701 }
+                            margin: { top: 720, right: 720, bottom: 720, left: 720 }
                         }
                     },
                     children
