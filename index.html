@@ -888,6 +888,7 @@
             <button id="btn-proforce" class="tab-btn proforce active" onclick="switchBrand('PROFORCE')">PROFORCE</button>
             <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
             <button id="btn-tyr" class="tab-btn" style="background:#ff6b00;color:white;" onclick="switchBrand('TYR')">TYR</button>
+            <button id="btn-styku" class="tab-btn" style="background:#7b2d8b;color:white;" onclick="switchBrand('STYKU')">STYKU</button>
         </div>
     </div>
 </div>
@@ -1814,84 +1815,113 @@
     // urunler: [{ ad: string, maddeler: string[] }]
     // ────────────────────────────────────────────────────────────────
     function _sartnameDocxIndir(urunler, dosyaAdi) {
-        // docxjs CDN'den yoksa yükle, sonra oluştur
         function _buildDocx() {
-            const { Document, Packer, Paragraph, TextRun, AlignmentType, LevelFormat, LevelSuffix } = docx;
+            const { Document, Packer, Paragraph, TextRun, AlignmentType, LevelFormat, LevelSuffix, UnderlineType, LineRuleType } = docx;
+
+            // Python ölçüleri → twip dönüşümü (1pt = 20twip, font size = half-pt yani pt*2)
+            // Pt(18) indent = 360 twip  |  Pt(45) kenar = 900 twip
+            // Pt(12) font   = 24 hp     |  Pt(11) font  = 22 hp  |  Pt(13) font = 26 hp
+            // line_spacing 1.15 → 276 twip (EXACT rule)
 
             const numberingConfig = [];
+
+            // Bullet — her ürün için ayrı (sayaç sıfırlansın diye)
             urunler.forEach((_, i) => {
                 numberingConfig.push({
-                    reference: `num-${i}`,
+                    reference: `bullet-${i}`,
                     levels: [{
                         level: 0,
-                        format: LevelFormat.DECIMAL,
-                        text: '%1.',
+                        format: LevelFormat.BULLET,
+                        text: '\u2022',
                         alignment: AlignmentType.LEFT,
                         suffix: LevelSuffix.SPACE,
                         style: {
-                            paragraph: { indent: { left: 0, hanging: 0 } },
-                            run: { font: 'Calibri', size: 22 }
+                            paragraph: { indent: { left: 360, hanging: 360 } },
+                            run: { font: 'Symbol', size: 22 }
                         }
                     }]
                 });
+            });
+
+            // Numaralı liste — ÜRÜN İHTİYAÇ LİSTESİ
+            numberingConfig.push({
+                reference: 'num-liste',
+                levels: [{
+                    level: 0,
+                    format: LevelFormat.DECIMAL,
+                    text: '%1.',
+                    alignment: AlignmentType.LEFT,
+                    suffix: LevelSuffix.SPACE,
+                    style: {
+                        paragraph: { indent: { left: 360, hanging: 360 } },
+                        run: { font: 'Calibri', size: 22 }
+                    }
+                }]
             });
 
             const children = [];
 
             urunler.forEach((urun, idx) => {
-                // Başlık: ürün adı — büyük harf, bold, altı çizili
+                // Başlık: bold, 12pt, left_indent=Pt(18)=360, space_after=Pt(4)≈80twip
                 children.push(new Paragraph({
                     alignment: AlignmentType.LEFT,
-                    spacing: { before: idx === 0 ? 0 : 280, after: 120 },
-                    indent: { left: 0, hanging: 0 },
+                    indent: { left: 360 },
+                    spacing: { before: idx === 0 ? 0 : 200, after: 80 },
                     children: [new TextRun({
                         text: urun.ad.toUpperCase(),
                         bold: true,
                         font: 'Calibri',
-                        size: 22
+                        size: 24  // 12pt
                     })]
                 }));
 
-                // Maddeler: numaralı liste
+                // Bullet maddeler: left=360, hanging=360, space_after=0, line_spacing=1.15=276twip EXACT
                 urun.maddeler.forEach(madde => {
                     children.push(new Paragraph({
-                        numbering: { reference: `num-${idx}`, level: 0 },
-                        children: [new TextRun({ text: madde, font: 'Calibri', size: 22 })]
+                        numbering: { reference: `bullet-${idx}`, level: 0 },
+                        indent: { left: 360, hanging: 360 },
+                        spacing: {
+                            before: 0,
+                            after: 0,
+                            line: 276,
+                            lineRule: LineRuleType ? LineRuleType.EXACT : 'exact'
+                        },
+                        children: [new TextRun({ text: madde, font: 'Calibri', size: 22 })]  // 11pt
                     }));
                 });
+
+                // Ürünler arası boşluk: space_after=Pt(8)=160twip boş paragraf
+                children.push(new Paragraph({
+                    spacing: { before: 0, after: 160 },
+                    children: [new TextRun({ text: '', font: 'Calibri', size: 22 })]
+                }));
             });
 
-            // Eğer birden fazla ürün varsa alt bölüm başlığı ekle
+            // ÜRÜN İHTİYAÇ LİSTESİ — birden fazla ürün varsa
             if (urunler.length > 1) {
-                // ÜRÜN İHTİYAÇ LİSTESİ
+                // Başlık: bold + underline, 13pt, left=360, space_after=Pt(4)≈80twip
                 children.push(new Paragraph({
                     alignment: AlignmentType.LEFT,
-                    spacing: { before: 400, after: 120 },
-                    indent: { left: 0, hanging: 0 },
+                    indent: { left: 360 },
+                    spacing: { before: 0, after: 80 },
                     children: [new TextRun({
                         text: 'ÜRÜN İHTİYAÇ LİSTESİ',
                         bold: true,
+                        underline: { type: UnderlineType.SINGLE },
                         font: 'Calibri',
-                        size: 22
+                        size: 26  // 13pt
                     })]
                 }));
-                urunler.forEach((u, i) => {
+
+                // Numaralı liste: left=360, hanging=360, space_after=0, 11pt
+                urunler.forEach(u => {
+                    const adTemiz = u.ad.replace(/\s*\(\d+\s*ADET\)/i, '').trim().toUpperCase();
                     children.push(new Paragraph({
-                        numbering: { reference: `num-liste`, level: 0 },
-                        children: [new TextRun({ text: u.ad, font: 'Calibri', size: 22 })]
+                        numbering: { reference: 'num-liste', level: 0 },
+                        indent: { left: 360, hanging: 360 },
+                        spacing: { before: 0, after: 0 },
+                        children: [new TextRun({ text: adTemiz, font: 'Calibri', size: 22 })]
                     }));
-                });
-                numberingConfig.push({
-                    reference: 'num-liste',
-                    levels: [{
-                        level: 0, format: LevelFormat.DECIMAL, text: '%1.',
-                        alignment: AlignmentType.LEFT,
-                        suffix: LevelSuffix.SPACE,
-                        style: {
-                            paragraph: { indent: { left: 0, hanging: 0 } },
-                            run: { font: 'Calibri', size: 22 }
-                        }
-                    }]
                 });
             }
 
@@ -1904,7 +1934,7 @@
                     properties: {
                         page: {
                             size: { width: 11906, height: 16838 },
-                            margin: { top: 720, right: 720, bottom: 720, left: 720 }
+                            margin: { top: 1080, right: 900, bottom: 1080, left: 900 }  // sol/sağ = Pt(45)=900twip
                         }
                     },
                     children
@@ -1951,6 +1981,17 @@
         if (sartnameliUrunler.length === 0) {
             alert('⚠ Sepetteki ürünlerin hiçbirinde şartname tanımlı değil.\n\nÖnce 📂 Veri Yükle → 📋 Şartname sekmesinden Word dosyası yükleyin.');
             return;
+        }
+
+        if (sartnamesizUrunler.length > 0) {
+            const eksikKodlar = sartnamesizUrunler.map(s => s.stokKodu).join(', ');
+            const devamEt = confirm(
+                `⚠️ Eksik Şartname Uyarısı\n\n` +
+                `Şartnamesi olmayan ${sartnamesizUrunler.length} ürün:\n${eksikKodlar}\n\n` +
+                `Bu ürünler belgede yer almayacak. ${sartnameliUrunler.length} ürün dahil edilerek indirilecek.\n\n` +
+                `Yine de indirmek istiyor musunuz?`
+            );
+            if (!devamEt) return;
         }
 
         const urunListesi = sartnameliUrunler.map(s => {
@@ -2257,6 +2298,7 @@
         const proRenk = _aktifArsivMarka === 'PROFORCE';
         const panRenk = _aktifArsivMarka === 'PANATTA';
         const tyrRenk = _aktifArsivMarka === 'TYR';
+        const stykuRenk = _aktifArsivMarka === 'STYKU';
         cont.innerHTML = `
             <div style="display:flex;gap:6px;margin-right:12px;align-items:center;flex-shrink:0;">
                 <button onclick="_arsivMarkaDegistir('PROFORCE')" id="arsiv-marka-PROFORCE"
@@ -2271,6 +2313,10 @@
                     style="padding:4px 14px;border-radius:20px;border:2px solid ${tyrRenk?'#ff6b00':'#ddd'};
                     background:${tyrRenk?'#ff6b00':'white'};color:${tyrRenk?'white':'#555'};
                     font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;">TYR</button>
+                <button onclick="_arsivMarkaDegistir('STYKU')" id="arsiv-marka-STYKU"
+                    style="padding:4px 14px;border-radius:20px;border:2px solid ${stykuRenk?'#7b2d8b':'#ddd'};
+                    background:${stykuRenk?'#7b2d8b':'white'};color:${stykuRenk?'white':'#555'};
+                    font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;">STYKU</button>
                 <span style="width:1px;height:20px;background:#ddd;margin:0 4px;display:inline-block;"></span>
             </div>
             <div id="arsiv-tarih-btn-alani" style="display:flex;gap:5px;flex-wrap:wrap;flex:1;align-items:center;"></div>`;
@@ -2278,10 +2324,10 @@
 
     function _arsivMarkaDegistir(marka) {
         _aktifArsivMarka = marka;
-        ['PROFORCE','PANATTA','TYR'].forEach(m => {
+        ['PROFORCE','PANATTA','TYR','STYKU'].forEach(m => {
             const btn = document.getElementById('arsiv-marka-' + m);
             if (!btn) return;
-            const renk = m === 'PROFORCE' ? '#00a859' : m === 'TYR' ? '#ff6b00' : '#e63946';
+            const renk = m === 'PROFORCE' ? '#00a859' : m === 'TYR' ? '#ff6b00' : m === 'STYKU' ? '#7b2d8b' : '#e63946';
             const aktif = m === marka;
             btn.style.borderColor = aktif ? renk : '#ddd';
             btn.style.background  = aktif ? renk : 'white';
@@ -2350,7 +2396,7 @@
             return;
         }
 
-        const markaRenk = _aktifArsivMarka === 'PANATTA' ? '#e63946' : _aktifArsivMarka === 'TYR' ? '#ff6b00' : '#00a859';
+        const markaRenk = _aktifArsivMarka === 'PANATTA' ? '#e63946' : _aktifArsivMarka === 'TYR' ? '#ff6b00' : _aktifArsivMarka === 'STYKU' ? '#7b2d8b' : '#00a859';
         const label = tarih.split('-').reverse().join('.');
         let html = `<div style="font-size:12px;color:#888;margin-bottom:12px;font-weight:700;">
             <span style="background:${markaRenk};color:white;padding:2px 8px;border-radius:4px;font-size:10px;margin-right:6px;">${_aktifArsivMarka}</span>
@@ -2694,6 +2740,7 @@
                 const analiz       = satisAnalizMap.get(kodu) || { ortalama: 0, aktifAy: 0, totalSatis: 0 };
                 const marka        = String(r.C || '').toUpperCase();
                 const isTYR        = marka.includes('TYR');
+                const isSTYKU      = marka.includes('STYKU');
                 const fiili        = parseInt(r.H) || 0;
                 const ithalat      = parseInt(r.K) || 0;
                 const eldeki       = fiili + ithalat;
@@ -2712,7 +2759,7 @@
                     stokKodu: kodu,
                     stokAdi:  String(r.B || ''),
                     marka:    marka,
-                    ozelKod5: isTYR ? String(r.E || 'DİĞER') : String(r.F || 'DİĞER'),
+                    ozelKod5: (isTYR || isSTYKU) ? String(r.E || 'DİĞER') : String(r.F || 'DİĞER'),
                     fiyat:    parseFloat(String(r.G).replace(',','.')) || 0,
                     doviz:    doviz,
                     fiili, satis: parseInt(r.I)||0, kalan: parseInt(r.J)||0, ithalat,
@@ -3935,21 +3982,32 @@
         const fiyatsizilar = sepet.filter(i => !i.fiyat || i.fiyat === 0);
         if (fiyatsizilar.length > 0) uyarilar.push(`⚠️ <b>${fiyatsizilar.map(i=>i.stokKodu).join(', ')}</b> ürün(ler)inde liste fiyatı <b>0 veya girilmemiş</b>.`);
 
-        // 3. Anormal indirim uyarısı (2+ ürün varsa kontrol et)
+        // 3 & 4. İndirim uyarıları (birleşik, sadeleştirilmiş)
         if (sepet.length >= 2) {
             const indirimler = sepet.map(i => i.indirim || 0).filter(v => !isNaN(v));
             const ortIndirimSepet = indirimler.reduce((a,b)=>a+b,0) / indirimler.length;
-            const anormal = sepet.filter(i => {
-                const fark = Math.abs((i.indirim||0) - ortIndirimSepet);
-                return fark > 15 && ortIndirimSepet > 0; // ortalamanın 15 puan üstü/altı
-            });
-            if (anormal.length > 0) uyarilar.push(`⚠️ <b>${anormal.map(i=>i.stokKodu).join(', ')}</b> ürününde indirim oranı diğerlerinden belirgin farklı (ortalama %${ortIndirimSepet.toFixed(1)}).`);
-
-            // 4. Toplu indirim uygulanmış ama sıfır indirimli ürün var
             const sifirIndirimli = sepet.filter(i => (i.indirim || 0) === 0 && i.manuelFiyat === null);
             const indirimliler   = sepet.filter(i => (i.indirim || 0) > 0);
-            if (indirimliler.length > 0 && sifirIndirimli.length > 0)
-                uyarilar.push(`⚠️ <b>${sifirIndirimli.map(i=>i.stokKodu).join(', ')}</b> ürününde indirim yok, diğer ürünlerde indirim uygulanmış.`);
+            const anormal = sepet.filter(i => {
+                const fark = Math.abs((i.indirim||0) - ortIndirimSepet);
+                return fark > 15 && ortIndirimSepet > 0;
+            });
+
+            // İndirim dağılımı farklıysa → tek birleşik uyarı
+            const indirimFarkliligi = (indirimliler.length > 0 && sifirIndirimli.length > 0) || anormal.length > 0;
+            if (indirimFarkliligi) {
+                if (indirimliler.length > 0 && sifirIndirimli.length > 0) {
+                    uyarilar.push(`⚠️ <b>${indirimliler.length} kalem</b> üründe indirim uygulanmış, <b>${sifirIndirimli.length} kalem</b> üründe indirim yok.`);
+                } else {
+                    uyarilar.push(`⚠️ İndirim oranlarında belirgin farklılık var (ortalama %${ortIndirimSepet.toFixed(1)}).`);
+                }
+            }
+
+            // Genel ağırlıklı ortalama indirim %35 eşiği aşıldıysa kırmızı uyarı
+            const agirlikliIndirim = listeToplam > 0 ? (indirimTutari / listeToplam) * 100 : 0;
+            if (agirlikliIndirim > 35) {
+                uyarilar.push(`🔴 Genel indirim oranı <b>%${agirlikliIndirim.toFixed(1)}</b> — eşik aşıldı (%35 üzeri).`);
+            }
         }
 
         // 5. Mükerrer ürün adı uyarısı (aynı isim farklı kod)
@@ -3961,29 +4019,7 @@
             uyarilar.push(`⚠️ <b>"${ad}"</b> isimli ürün teklifte <b>${isimSayac[ad]} kez</b> var (${kodlar}).`);
         });
 
-        // 6. Benzer ürün adı uyarısı (kelime örtüşmesi %60 ve üzeri) — gruplu özet
-        const sepetIsimler = sepet.map(i => ({ kod: i.stokKodu, ad: i.stokAdi.trim().toUpperCase() }));
-        const stopWords = new Set(['VE','İLE','THE','BİR','FOR','AND','OR','OF','DE','DA','LE','LA']);
-        const kelimeleriAl = ad => ad.split(/\s+/).filter(k => k.length >= 3 && !stopWords.has(k));
-        const benzerGruplar = []; // her eleman: [kod1, kod2, ...]
-        const islendi = new Set();
-        for (let a = 0; a < sepetIsimler.length; a++) {
-            if (islendi.has(a)) continue;
-            const grup = [a];
-            for (let b = a+1; b < sepetIsimler.length; b++) {
-                const adA = sepetIsimler[a].ad, adB = sepetIsimler[b].ad;
-                if (adA === adB) continue;
-                const kwA = kelimeleriAl(adA), kwB = kelimeleriAl(adB);
-                if (kwA.length < 2 || kwB.length < 2) continue;
-                const oran = kwA.filter(k => kwB.includes(k)).length / Math.max(kwA.length, kwB.length);
-                if (oran >= 0.6) { grup.push(b); islendi.add(b); }
-            }
-            if (grup.length > 1) benzerGruplar.push(grup);
-        }
-        benzerGruplar.forEach(grup => {
-            const kodlar = grup.map(i => sepetIsimler[i].kod).join(', ');
-            uyarilar.push(`⚠️ Benzer isimli ürünler teklifte bir arada: <b>${kodlar}</b> — mükerrer olabilir.`);
-        });
+        // 6. Benzer ürün adı uyarısı — kaldırıldı (kod varyantları BAR120/BAR120Z gibi yanlış uyarı veriyordu)
 
         let uyariBox = document.getElementById('teklif-uyari-box');
         if (!uyariBox) {
@@ -4534,7 +4570,7 @@
         [secilenMarka].forEach(brand => {
             const bd = allData.filter(d => d.marka && d.marka.includes(brand));
             if(!bd.length) return;
-            XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...bd.map(toRow)]), uName(brand==='PROFORCE'?'PRO-TÜM':brand==='TYR'?'TYR-TÜM':'PAN-TÜM'));
+            XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...bd.map(toRow)]), uName(brand==='PROFORCE'?'PRO-TÜM':brand==='TYR'?'TYR-TÜM':brand==='STYKU'?'STYKU-TÜM':'PAN-TÜM'));
             [...new Set(bd.map(d=>d.ozelKod5).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true})).forEach(cat => {
                 const cd = bd.filter(d=>d.ozelKod5===cat);
                 if(!cd.length) return;
@@ -4963,6 +4999,7 @@
             <button onclick="closeBrandModal('PROFORCE')" style="background:#00a859;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">PROFORCE</button>
             <button onclick="closeBrandModal('PANATTA')"  style="background:#ff0000;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">PANATTA</button>
             <button onclick="closeBrandModal('TYR')"      style="background:#ff6b00;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">TYR</button>
+            <button onclick="closeBrandModal('STYKU')"    style="background:#7b2d8b;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">STYKU</button>
         </div>
         <div style="margin-top:12px;">
             <button onclick="document.getElementById('brand-select-modal').style.display='none'" style="background:#eee;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:11px;">İptal</button>
