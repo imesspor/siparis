@@ -427,8 +427,8 @@
 
             /* ── Ana Tablo → Mobil Kart Grid ── */
             .mob-kart-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
+                display: flex;
+                flex-direction: column;
                 gap: 10px;
                 padding: 8px;
             }
@@ -438,65 +438,75 @@
                 border: 1.5px solid var(--border-light);
                 overflow: hidden;
                 box-shadow: 0 1px 6px rgba(26,31,54,0.07);
-                display: flex; flex-direction: column;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
             }
+            /* Üst satır: resim sol, bilgi sağ */
+            .mob-kart-ust { display: flex; gap: 10px; align-items: flex-start; }
             .mob-kart-resim-wrap {
+                width: 90px; min-width: 90px; height: 90px;
                 background: var(--bg-main);
-                display: flex; align-items: center; justify-content: center;
-                height: 110px; position: relative;
-                cursor: pointer;
-            }
-            .mob-kart-resim { max-height: 95px; max-width: 100%; object-fit: contain; padding: 6px; }
-            .mob-kart-resim-placeholder { font-size: 32px; opacity: 0.3; }
-            .mob-kart-kod-badge {
-                position: absolute; top: 6px; left: 6px;
-                background: rgba(26,31,54,0.75); color: white;
-                font-size: 9px; font-weight: 800; font-family: monospace;
-                padding: 2px 6px; border-radius: 6px;
-                backdrop-filter: blur(4px);
-            }
-            .mob-kart-stok-badge {
-                position: absolute; top: 6px; right: 6px;
-                font-size: 9px; font-weight: 800;
-                padding: 2px 6px; border-radius: 6px;
-            }
-            .mob-kart-stok-badge.yesil { background: #d4f4dd; color: #00713e; }
-            .mob-kart-stok-badge.kirmizi { background: #fde2e4; color: #b71c2a; }
-            .mob-kart-body { padding: 8px 10px; flex: 1; display: flex; flex-direction: column; }
-            .mob-kart-isim {
-                font-size: 11px; font-weight: 700; color: var(--text-dark);
-                line-height: 1.3; margin-bottom: 6px;
-                display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-            }
-            .mob-kart-fiyat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 6px; }
-            .mob-kart-fiyat-box {
-                background: var(--bg-main); border-radius: 8px;
-                padding: 5px 6px; text-align: center;
+                border-radius: 10px;
                 border: 1px solid var(--border-light);
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer; overflow: hidden; flex-shrink: 0;
             }
-            .mob-kart-fiyat-label { font-size: 9px; color: #8a94a6; font-weight: 700; margin-bottom: 1px; }
-            .mob-kart-fiyat-val { font-size: 11px; font-weight: 800; color: var(--text-dark); }
-            .mob-kart-fiyat-usd { font-size: 9px; color: #8a94a6; }
-            .mob-kart-fiyat-box.liste-box { background: white; border-color: var(--border-color); }
+            .mob-kart-resim { max-height: 82px; max-width: 82px; object-fit: contain; }
+            .mob-kart-resim-placeholder { font-size: 28px; opacity: 0.25; }
+            /* Sağ bilgi alanı */
+            .mob-kart-bilgi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+            .mob-kart-kod-badge {
+                display: inline-block;
+                background: #1a1f36; color: white;
+                font-size: 10px; font-weight: 800; font-family: monospace;
+                padding: 2px 8px; border-radius: 20px;
+                align-self: flex-start; margin-bottom: 2px;
+            }
+            .mob-kart-isim {
+                font-size: 13px; font-weight: 700; color: var(--text-dark);
+                line-height: 1.3;
+            }
+            .mob-kart-stok-text {
+                font-size: 12px; font-weight: 800; color: #00a859;
+            }
+            .mob-kart-stok-text.kirmizi { color: #e63946; }
+            /* Fiyat kutuları — 4'lü yatay */
+            .mob-kart-fiyat-row {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
+            }
+            .mob-kart-fiyat-box {
+                border-radius: 8px;
+                padding: 5px 4px; text-align: center;
+                border: 1px solid var(--border-light);
+                background: white;
+            }
+            .mob-kart-fiyat-label { font-size: 9px; color: #8a94a6; font-weight: 700; margin-bottom: 2px; }
+            .mob-kart-fiyat-val { font-size: 11px; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
+            .mob-kart-fiyat-usd { font-size: 9px; color: #8a94a6; margin-top: 1px; }
             .mob-kart-fiyat-box.d25-box { background: #f0fff4; border-color: #b7e4c7; }
             .mob-kart-fiyat-box.d30-box { background: #fff8f0; border-color: #fcd5a0; }
             .mob-kart-fiyat-box.d35-box { background: #fff0f0; border-color: #fbb; }
             .mob-kart-fiyat-box.d25-box .mob-kart-fiyat-val { color: #1a7a2e; }
             .mob-kart-fiyat-box.d30-box .mob-kart-fiyat-val { color: #b35c00; }
             .mob-kart-fiyat-box.d35-box .mob-kart-fiyat-val { color: #b71c2a; }
+            /* Alt sepet satırı */
             .mob-kart-sepet-row {
-                display: flex; align-items: center; gap: 4px; margin-top: auto; padding-top: 6px;
-                border-top: 1px solid var(--border-light);
+                display: flex; align-items: center; gap: 6px;
+                padding-top: 6px; border-top: 1px solid var(--border-light);
             }
-            .mob-kart-adet { width: 40px; font-size: 12px; text-align: center; border: 1.5px solid var(--accent-blue); border-radius: 6px; padding: 4px 2px; font-family: inherit; }
+            .mob-kart-adet { width: 48px; font-size: 13px; text-align: center; border: 1.5px solid var(--accent-blue); border-radius: 7px; padding: 5px 2px; font-family: inherit; }
             .mob-kart-ekle-btn {
-                flex: 1; font-size: 10px; font-weight: 800; padding: 5px 6px;
-                border: none; border-radius: 7px; cursor: pointer; font-family: inherit;
+                flex: 1; font-size: 12px; font-weight: 800; padding: 7px 6px;
+                border: none; border-radius: 8px; cursor: pointer; font-family: inherit;
                 background: linear-gradient(135deg,#3b5bdb,#4c6ef5); color: white;
             }
             .mob-kart-ekle-btn.kaldir { background: linear-gradient(135deg,#e63946,#ff6b6b); }
             /* Mobilde kart grid görünür, masa tablosu gizli */
-            .mob-kart-grid { display: grid !important; }
+            .mob-kart-grid { display: flex !important; }
             #masa-tablo-wrap { display: none !important; }
 
             /* ── Önizleme Modal ── */
@@ -3612,77 +3622,65 @@
     function renderMobilKartlar(filtered) {
         const grid = document.getElementById('mob-kart-grid');
         if (!grid) return;
-        const dovizSembol = i => i.doviz === 'TL' ? '₺' : i.doviz === 'EUR' ? '€' : '$';
-        const fiyatHesap = (f, ind) => f != null && f !== '' ? (parseFloat(f) * (1 - ind/100)) : null;
-        const formatTL = v => v != null ? v.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
-        const formatDoviz = (f, ind) => {
-            const v = fiyatHesap(f, ind);
-            return v != null ? '$' + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
-        };
+        const fmt = v => v != null ? v.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
+        const fmtU = v => v != null ? '$' + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+        const kur = parseFloat(localStorage.getItem('dovizKuru') || '38') || 38;
 
         grid.innerHTML = filtered.map(item => {
             const safeKod = item.stokKodu.replace(/'/g,"\\'");
             const sepetteMi = !!sepet.find(s => s.stokKodu === item.stokKodu);
-            const sembol = dovizSembol(item);
             const f = item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat) : null;
-            const kur = parseFloat(localStorage.getItem('dovizKuru') || '38') || 38;
-
             const listeTL  = f != null ? (item.doviz === 'TL' ? f : f * kur) : null;
-            const d25TL    = listeTL != null ? listeTL * 0.75 : null;
-            const d30TL    = listeTL != null ? listeTL * 0.70 : null;
-            const d35TL    = listeTL != null ? listeTL * 0.65 : null;
-
             const listeUSD = f != null && item.doviz !== 'TL' ? f : null;
-            const d25USD   = listeUSD != null ? listeUSD * 0.75 : null;
-            const d30USD   = listeUSD != null ? listeUSD * 0.70 : null;
-            const d35USD   = listeUSD != null ? listeUSD * 0.65 : null;
-
-            const stokRenk = item.kalan > 0 ? 'yesil' : 'kirmizi';
-            const stokText = item.kalan > 0 ? `✓ ${item.kalan}` : '✗ 0';
+            const d25TL = listeTL != null ? listeTL * 0.75 : null;
+            const d30TL = listeTL != null ? listeTL * 0.70 : null;
+            const d35TL = listeTL != null ? listeTL * 0.65 : null;
+            const stokClass = item.kalan > 0 ? '' : 'kirmizi';
+            const stokText = item.kalan > 0 ? `(${item.kalan})` : '(0)';
 
             return `<div class="mob-urun-kart">
-                <div class="mob-kart-resim-wrap" onclick="showDetail('${safeKod}')">
-                    ${item.resim
-                        ? `<img class="mob-kart-resim" src="${item.resim}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                        : ''
-                    }
-                    <div class="mob-kart-resim-placeholder" style="${item.resim ? 'display:none' : ''}">🏋️</div>
-                    <span class="mob-kart-kod-badge">${item.stokKodu}</span>
-                    <span class="mob-kart-stok-badge ${stokRenk}">${stokText}</span>
-                </div>
-                <div class="mob-kart-body">
-                    <div class="mob-kart-isim">${item.stokAdi}</div>
-                    <div class="mob-kart-fiyat-row">
-                        <div class="mob-kart-fiyat-box liste-box">
-                            <div class="mob-kart-fiyat-label">LİSTE</div>
-                            <div class="mob-kart-fiyat-val">${listeTL != null ? formatTL(listeTL) + ' ₺' : '-'}</div>
-                            <div class="mob-kart-fiyat-usd">${listeUSD != null ? '$' + formatTL(listeUSD) : ''}</div>
-                        </div>
-                        <div class="mob-kart-fiyat-box d25-box">
-                            <div class="mob-kart-fiyat-label">%25</div>
-                            <div class="mob-kart-fiyat-val">${d25TL != null ? formatTL(d25TL) + ' ₺' : '-'}</div>
-                            <div class="mob-kart-fiyat-usd">${d25USD != null ? '$' + formatTL(d25USD) : ''}</div>
-                        </div>
-                    </div>
-                    <div class="mob-kart-fiyat-row">
-                        <div class="mob-kart-fiyat-box d30-box">
-                            <div class="mob-kart-fiyat-label">%30</div>
-                            <div class="mob-kart-fiyat-val">${d30TL != null ? formatTL(d30TL) + ' ₺' : '-'}</div>
-                            <div class="mob-kart-fiyat-usd">${d30USD != null ? '$' + formatTL(d30USD) : ''}</div>
-                        </div>
-                        <div class="mob-kart-fiyat-box d35-box">
-                            <div class="mob-kart-fiyat-label">%35</div>
-                            <div class="mob-kart-fiyat-val">${d35TL != null ? formatTL(d35TL) + ' ₺' : '-'}</div>
-                            <div class="mob-kart-fiyat-usd">${d35USD != null ? '$' + formatTL(d35USD) : ''}</div>
-                        </div>
-                    </div>
-                    <div class="mob-kart-sepet-row">
-                        <input type="number" class="mob-kart-adet" id="mob-adet-${safeKod}" value="1" min="1" max="9999" onclick="this.select()">
-                        ${!sepetteMi
-                            ? `<button class="mob-kart-ekle-btn" onclick="mobKartEkle('${safeKod}',this)">+ Ekle</button>`
-                            : `<button class="mob-kart-ekle-btn kaldir" onclick="sepettenKodlaKaldir('${safeKod}',this)">✕ Kaldır</button>`
+                <div class="mob-kart-ust">
+                    <div class="mob-kart-resim-wrap" onclick="showDetail('${safeKod}')">
+                        ${item.resim
+                            ? `<img class="mob-kart-resim" src="${item.resim}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                            : ''
                         }
+                        <div class="mob-kart-resim-placeholder" style="${item.resim ? 'display:none' : ''}">🏋️</div>
                     </div>
+                    <div class="mob-kart-bilgi">
+                        <span class="mob-kart-kod-badge">${item.stokKodu}</span>
+                        <div class="mob-kart-isim">${item.stokAdi}</div>
+                        <div class="mob-kart-stok-text ${stokClass}">${stokText}</div>
+                    </div>
+                </div>
+                <div class="mob-kart-fiyat-row">
+                    <div class="mob-kart-fiyat-box">
+                        <div class="mob-kart-fiyat-label">LİSTE</div>
+                        <div class="mob-kart-fiyat-val">${listeTL != null ? fmt(listeTL) + ' ₺' : '-'}</div>
+                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD) : ''}</div>
+                    </div>
+                    <div class="mob-kart-fiyat-box d25-box">
+                        <div class="mob-kart-fiyat-label">%25</div>
+                        <div class="mob-kart-fiyat-val">${d25TL != null ? fmt(d25TL) + ' ₺' : '-'}</div>
+                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD*0.75) : ''}</div>
+                    </div>
+                    <div class="mob-kart-fiyat-box d30-box">
+                        <div class="mob-kart-fiyat-label">%30</div>
+                        <div class="mob-kart-fiyat-val">${d30TL != null ? fmt(d30TL) + ' ₺' : '-'}</div>
+                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD*0.70) : ''}</div>
+                    </div>
+                    <div class="mob-kart-fiyat-box d35-box">
+                        <div class="mob-kart-fiyat-label">%35</div>
+                        <div class="mob-kart-fiyat-val">${d35TL != null ? fmt(d35TL) + ' ₺' : '-'}</div>
+                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD*0.65) : ''}</div>
+                    </div>
+                </div>
+                <div class="mob-kart-sepet-row">
+                    <input type="number" class="mob-kart-adet" id="mob-adet-${safeKod}" value="1" min="1" max="9999" onclick="this.select()">
+                    ${!sepetteMi
+                        ? `<button class="mob-kart-ekle-btn" onclick="mobKartEkle('${safeKod}',this)">+ Sepete Ekle</button>`
+                        : `<button class="mob-kart-ekle-btn kaldir" onclick="sepettenKodlaKaldir('${safeKod}',this)">✕ Sepetten Kaldır</button>`
+                    }
                 </div>
             </div>`;
         }).join('');
