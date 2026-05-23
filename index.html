@@ -154,7 +154,7 @@
         .cust-actions { display: flex; gap: 4px; }
         .btn-cust-preview { background: var(--accent-purple); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
         .btn-cust-download { background: var(--proforce-color); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
-        .table-container { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow-x: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
+        .table-container { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
         table { width: 100%; border-collapse: collapse; min-width: 1200px; table-layout: auto; }
         thead { background: linear-gradient(to bottom, #f8faff, #eef1f8); position: sticky; top: 0; z-index: 10; }
         th { padding: 5px 6px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; height: 22px; text-align: center; font-weight: 800; color: var(--text-mid); letter-spacing: 0.4px; text-transform: uppercase; }
@@ -333,181 +333,6 @@
             .preview-table th, .preview-table td { font-size: 9px; padding: 3px; }
             .product-image { max-width: 180px; max-height: 150px; }
             .info-row { font-size: 12px !important; padding: 4px 0 !important; }
-
-            /* ── info-modal Mobil Bottom-Sheet ── */
-            #info-modal { align-items: flex-end !important; }
-            #info-modal .modal-content {
-                border-radius: 20px 20px 0 0 !important;
-                max-height: 88vh !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-            }
-            #info-modal .modal-header {
-                padding: 14px 18px 12px;
-                margin: 0;
-                border-bottom: 1px solid var(--border-light);
-                font-size: 12px;
-                font-weight: 800;
-                flex-shrink: 0;
-                position: relative;
-            }
-            #info-modal .modal-header::before {
-                content: '';
-                display: block;
-                width: 36px; height: 4px;
-                background: #d0d5e8;
-                border-radius: 2px;
-                margin: 0 auto 10px;
-            }
-            #info-modal #modal-body {
-                overflow-y: auto;
-                padding: 0 16px 24px;
-                flex: 1;
-            }
-            /* Mobil detay kart bölümleri */
-            .mob-section { margin-top: 14px; }
-            .mob-section-title {
-                font-size: 10px; font-weight: 800; text-transform: uppercase;
-                letter-spacing: 0.6px; color: #8a94a6;
-                border-bottom: 1px solid var(--border-light);
-                padding-bottom: 4px; margin-bottom: 8px;
-            }
-            .mob-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-            .mob-stat-box {
-                background: var(--bg-main);
-                border: 1px solid var(--border-light);
-                border-radius: 10px;
-                padding: 10px 12px;
-            }
-            .mob-stat-label { font-size: 10px; color: #8a94a6; font-weight: 600; margin-bottom: 2px; }
-            .mob-stat-value { font-size: 15px; font-weight: 800; color: var(--text-dark); }
-            .mob-depo-row { font-size: 11px; color: #555; padding: 3px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; }
-            .mob-info-row { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--border-light); line-height: 1.5; }
-            .mob-price-box {
-                background: linear-gradient(135deg, #f0fdf4, #e6f7ef);
-                border: 1.5px solid #b7e4c7;
-                border-radius: 10px;
-                padding: 10px 14px;
-                margin-bottom: 10px;
-                display: flex; justify-content: space-between; align-items: center;
-            }
-            .mob-price-label { font-size: 10px; color: #2d7a4a; font-weight: 700; }
-            .mob-price-value { font-size: 17px; font-weight: 800; color: #1a7a2e; }
-            .mob-discount-row {
-                display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px;
-            }
-            .mob-disc-box {
-                border-radius: 10px; padding: 8px 6px; text-align: center;
-                border: 1.5px solid #e2e8f8;
-            }
-            .mob-disc-box.d25 { background: #f0fff4; border-color: #b7e4c7; }
-            .mob-disc-box.d30 { background: #fff8f0; border-color: #fcd5a0; }
-            .mob-disc-box.d35 { background: #fff0f0; border-color: #fbb; }
-            .mob-disc-label { font-size: 10px; font-weight: 800; color: #8a94a6; margin-bottom: 3px; }
-            .mob-disc-value { font-size: 12px; font-weight: 800; color: var(--text-dark); }
-            .mob-disc-usd { font-size: 10px; color: #8a94a6; margin-top: 2px; }
-            .mob-product-img {
-                width: 100%; max-height: 200px; object-fit: contain;
-                background: var(--bg-main); border-radius: 12px;
-                margin-bottom: 12px; margin-top: 12px;
-                border: 1px solid var(--border-light);
-            }
-            .mob-durum-pill {
-                display: inline-flex; align-items: center; gap: 5px;
-                padding: 5px 12px; border-radius: 20px;
-                font-size: 11px; font-weight: 800;
-                background: var(--bg-main); border: 1.5px solid var(--border-light);
-                cursor: pointer; margin-bottom: 10px;
-            }
-
-            /* ── Ana Tablo → Mobil Kart Grid ── */
-            .mob-kart-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                padding: 8px;
-            }
-            .mob-urun-kart {
-                background: white;
-                border-radius: 14px;
-                border: 1.5px solid var(--border-light);
-                overflow: hidden;
-                box-shadow: 0 1px 6px rgba(26,31,54,0.07);
-                padding: 10px;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-            /* Üst satır: resim sol, bilgi sağ */
-            .mob-kart-ust { display: flex; gap: 10px; align-items: flex-start; }
-            .mob-kart-resim-wrap {
-                width: 90px; min-width: 90px; height: 90px;
-                background: var(--bg-main);
-                border-radius: 10px;
-                border: 1px solid var(--border-light);
-                display: flex; align-items: center; justify-content: center;
-                cursor: pointer; overflow: hidden; flex-shrink: 0;
-            }
-            .mob-kart-resim { max-height: 82px; max-width: 82px; object-fit: contain; }
-            .mob-kart-resim-placeholder { font-size: 28px; opacity: 0.25; }
-            /* Sağ bilgi alanı */
-            .mob-kart-bilgi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-            .mob-kart-kod-badge {
-                display: inline-block;
-                background: #1a1f36; color: white;
-                font-size: 10px; font-weight: 800; font-family: monospace;
-                padding: 2px 8px; border-radius: 20px;
-                align-self: flex-start; margin-bottom: 2px;
-            }
-            .mob-kart-isim {
-                font-size: 13px; font-weight: 700; color: var(--text-dark);
-                line-height: 1.3;
-            }
-            .mob-kart-stok-text {
-                font-size: 12px; font-weight: 800; color: #00a859;
-            }
-            .mob-kart-stok-text.kirmizi { color: #e63946; }
-            /* Fiyat kutuları — 4'lü yatay */
-            .mob-kart-fiyat-row {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 5px;
-            }
-            .mob-kart-fiyat-box {
-                border-radius: 8px;
-                padding: 5px 4px; text-align: center;
-                border: 1px solid var(--border-light);
-                background: white;
-            }
-            .mob-kart-fiyat-label { font-size: 9px; color: #8a94a6; font-weight: 700; margin-bottom: 2px; }
-            .mob-kart-fiyat-val { font-size: 11px; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
-            .mob-kart-fiyat-usd { font-size: 9px; color: #8a94a6; margin-top: 1px; }
-            .mob-kart-fiyat-box.d25-box { background: #f0fff4; border-color: #b7e4c7; }
-            .mob-kart-fiyat-box.d30-box { background: #fff8f0; border-color: #fcd5a0; }
-            .mob-kart-fiyat-box.d35-box { background: #fff0f0; border-color: #fbb; }
-            .mob-kart-fiyat-box.d25-box .mob-kart-fiyat-val { color: #1a7a2e; }
-            .mob-kart-fiyat-box.d30-box .mob-kart-fiyat-val { color: #b35c00; }
-            .mob-kart-fiyat-box.d35-box .mob-kart-fiyat-val { color: #b71c2a; }
-            /* Alt sepet satırı */
-            .mob-kart-sepet-row {
-                display: flex; align-items: center; gap: 6px;
-                padding-top: 6px; border-top: 1px solid var(--border-light);
-            }
-            .mob-kart-adet { width: 48px; font-size: 13px; text-align: center; border: 1.5px solid var(--accent-blue); border-radius: 7px; padding: 5px 2px; font-family: inherit; }
-            .mob-kart-ekle-btn {
-                flex: 1; font-size: 12px; font-weight: 800; padding: 7px 6px;
-                border: none; border-radius: 8px; cursor: pointer; font-family: inherit;
-                background: linear-gradient(135deg,#3b5bdb,#4c6ef5); color: white;
-            }
-            .mob-kart-ekle-btn.kaldir { background: linear-gradient(135deg,#e63946,#ff6b6b); }
-            /* Mobilde kart grid görünür, masa tablosu gizli */
-            .mob-kart-grid { display: flex !important; }
-            #masa-tablo-wrap { display: none !important; }
 
             /* ── Önizleme Modal ── */
             .onizleme-icerik { width: 97vw; border-radius: 10px; max-height: 94vh; }
@@ -1073,14 +898,14 @@
     <div id="slicer-area"></div>
 </div>
 
-<div class="table-container" id="masa-tablo-wrap">
+<div class="table-container">
     <table>
         <thead>
             <tr>
                 <th style="width:25px;">#</th>
                 <th class="col-sepet" style="width:120px;">TEKLİF OLUŞTUR</th>
                 <th class="col-sartname" style="width:26px;padding:0;" title="Şartname"></th>
-                <th style="width:85px;">STOK KODU</th>
+                <th style="width:85px;cursor:pointer;user-select:none;" onclick="sortByStokKodu(this)" title="Alfabetik sıralama için tıklayın">STOK KODU <span id="stok-kodu-sort-icon">⇅</span></th>
                 <th style="width:auto;">STOK ADI</th>
                 <th style="width:70px;">FİYAT</th>
                 <th class="col-fiili" style="width:55px;">FİİLİ</th>
@@ -1101,9 +926,6 @@
         <tbody id="table-body"></tbody>
     </table>
 </div>
-
-<!-- Mobil Kart Grid -->
-<div class="mob-kart-grid" id="mob-kart-grid"></div>
 
 </div><!-- /page-content -->
 
@@ -3050,6 +2872,9 @@
     function switchBrand(brand) {
         currentBrand  = brand;
         currentFilter = 'HEPSİ';
+        _stokKoduSortDir = null;
+        const icon = document.getElementById('stok-kodu-sort-icon');
+        if (icon) icon.textContent = '⇅';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`btn-${brand.toLowerCase()}`).classList.add('active');
         initSlicers();
@@ -3490,7 +3315,14 @@
         if(dd && !dd.contains(e.target)) dd.style.display = 'none';
     });
 
-    function filterCategory(cat) { currentFilter = cat; initSlicers(); renderTable(); }
+    function filterCategory(cat) {
+        currentFilter = cat;
+        _stokKoduSortDir = null;
+        const icon = document.getElementById('stok-kodu-sort-icon');
+        if (icon) icon.textContent = '⇅';
+        initSlicers();
+        renderTable();
+    }
 
     // =============================================
     // AYLIK SATIŞ POPUP
@@ -3545,29 +3377,42 @@
         modal.style.display = 'flex';
     }
 
+    let _stokKoduSortDir = null; // null | 'asc' | 'desc'
+    function sortByStokKodu(th) {
+        _stokKoduSortDir = _stokKoduSortDir === 'asc' ? 'desc' : 'asc';
+        const icon = document.getElementById('stok-kodu-sort-icon');
+        if (icon) icon.textContent = _stokKoduSortDir === 'asc' ? '▲' : '▼';
+        renderTable();
+    }
+
     function renderTable() {
         const tbody      = document.getElementById('table-body');
         const searchInput = document.getElementById('search-input');
         const slug = t => t ? t.replace(/İ/g,'i').replace(/I/g,'ı').toLowerCase() : '';
         const searchTerm = searchInput ? slug(searchInput.value) : '';
-        const filtered = allData.filter(d => {
+        let filtered = allData.filter(d => {
             const mb = d.marka && d.marka.includes(currentBrand);
             const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
             return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter==='HEPSİ' || d.ozelKod5===currentFilter));
         });
+        if (_stokKoduSortDir) {
+            filtered = filtered.slice().sort((a, b) => {
+                const ka = a.stokKodu || '', kb = b.stokKodu || '';
+                return _stokKoduSortDir === 'asc' ? ka.localeCompare(kb, 'tr') : kb.localeCompare(ka, 'tr');
+            });
+        }
         tbody.innerHTML = filtered.map(item => {
             const omurVal   = parseFloat(item.stokOmru);
             const omurSimge = omurVal < 5 ? '⚠️' : '✅';
             const safeKod   = item.stokKodu.replace(/'/g,"\\'");
             const sepetItem = sepet.find(s => s.stokKodu === item.stokKodu);
             const sepetteMi = !!sepetItem;
-            // Sepetteki adet ile input adeti karşılaştır (güncelleme butonu için)
             const sepetAdet = sepetItem ? sepetItem.adet : 1;
-            // Şartname göstergesi: ayrı dar sütunda — kodların hizalamasını bozmaz
             const sartnameVar = !!(productSpecifications && productSpecifications[item.stokKodu] && productSpecifications[item.stokKodu].html);
             const sartnameCell = sartnameVar
                 ? `<td class="col-sartname"><span class="sartname-icon" onclick="event.stopPropagation();sartnameGoster('${safeKod}')" title="Teknik şartnameyi görüntüle">📋</span></td>`
                 : `<td class="col-sartname"></td>`;
+
             return `<tr data-id="${item.stokKodu}" class="${item.kalan <= 0 ? 'critical-row' : ''}">
                 <td class="w-sort">⠿</td>
                 <td class="col-sepet">
@@ -3614,95 +3459,8 @@
                 localStorage.setItem('masterInventoryData', JSON.stringify(allData));
             }
         });
-
-        // Mobil kart grid render
-        renderMobilKartlar(filtered);
     }
 
-    function renderMobilKartlar(filtered) {
-        const grid = document.getElementById('mob-kart-grid');
-        if (!grid) return;
-        const fmt = v => v != null ? v.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
-        const fmtU = v => v != null ? '$' + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
-        const kur = parseFloat(localStorage.getItem('dovizKuru') || '38') || 38;
-
-        grid.innerHTML = filtered.map(item => {
-            const safeKod = item.stokKodu.replace(/'/g,"\\'");
-            const sepetteMi = !!sepet.find(s => s.stokKodu === item.stokKodu);
-            const f = item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat) : null;
-            const listeTL  = f != null ? (item.doviz === 'TL' ? f : f * kur) : null;
-            const listeUSD = f != null && item.doviz !== 'TL' ? f : null;
-            const d25TL = listeTL != null ? listeTL * 0.75 : null;
-            const d30TL = listeTL != null ? listeTL * 0.70 : null;
-            const d35TL = listeTL != null ? listeTL * 0.65 : null;
-            const stokClass = item.kalan > 0 ? '' : 'kirmizi';
-            const stokText = item.kalan > 0 ? `(${item.kalan})` : '(0)';
-
-            return `<div class="mob-urun-kart">
-                <div class="mob-kart-ust">
-                    <div class="mob-kart-resim-wrap" onclick="showDetail('${safeKod}')">
-                        ${item.resim
-                            ? `<img class="mob-kart-resim" src="${item.resim}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                            : ''
-                        }
-                        <div class="mob-kart-resim-placeholder" style="${item.resim ? 'display:none' : ''}">🏋️</div>
-                    </div>
-                    <div class="mob-kart-bilgi">
-                        <span class="mob-kart-kod-badge">${item.stokKodu}</span>
-                        <div class="mob-kart-isim">${item.stokAdi}</div>
-                        <div class="mob-kart-stok-text ${stokClass}">${stokText}</div>
-                    </div>
-                </div>
-                <div class="mob-kart-fiyat-row">
-                    <div class="mob-kart-fiyat-box">
-                        <div class="mob-kart-fiyat-label">LİSTE</div>
-                        <div class="mob-kart-fiyat-val">${listeTL != null ? fmt(listeTL) + ' ₺' : '-'}</div>
-                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD) : ''}</div>
-                    </div>
-                    <div class="mob-kart-fiyat-box d25-box">
-                        <div class="mob-kart-fiyat-label">%25</div>
-                        <div class="mob-kart-fiyat-val">${d25TL != null ? fmt(d25TL) + ' ₺' : '-'}</div>
-                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD*0.75) : ''}</div>
-                    </div>
-                    <div class="mob-kart-fiyat-box d30-box">
-                        <div class="mob-kart-fiyat-label">%30</div>
-                        <div class="mob-kart-fiyat-val">${d30TL != null ? fmt(d30TL) + ' ₺' : '-'}</div>
-                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD*0.70) : ''}</div>
-                    </div>
-                    <div class="mob-kart-fiyat-box d35-box">
-                        <div class="mob-kart-fiyat-label">%35</div>
-                        <div class="mob-kart-fiyat-val">${d35TL != null ? fmt(d35TL) + ' ₺' : '-'}</div>
-                        <div class="mob-kart-fiyat-usd">${listeUSD != null ? fmtU(listeUSD*0.65) : ''}</div>
-                    </div>
-                </div>
-                <div class="mob-kart-sepet-row">
-                    <input type="number" class="mob-kart-adet" id="mob-adet-${safeKod}" value="1" min="1" max="9999" onclick="this.select()">
-                    ${!sepetteMi
-                        ? `<button class="mob-kart-ekle-btn" onclick="mobKartEkle('${safeKod}',this)">+ Sepete Ekle</button>`
-                        : `<button class="mob-kart-ekle-btn kaldir" onclick="sepettenKodlaKaldir('${safeKod}',this)">✕ Sepetten Kaldır</button>`
-                    }
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function mobKartEkle(stokKodu, btn) {
-        const adetEl = document.getElementById('mob-adet-' + stokKodu);
-        const adet = parseInt(adetEl ? adetEl.value : 1) || 1;
-        // adet-input-mini'ye aktar ve sepeteEkle çağır
-        let inp = document.getElementById('adet-' + stokKodu);
-        if (!inp) {
-            // masaüstü input yoksa geçici yap
-            inp = { value: adet };
-        } else {
-            inp.value = adet;
-        }
-        const fakeBtn = { classList: { add: ()=>{}, remove: ()=>{}, contains: ()=>false }, textContent: '' };
-        sepeteEkle(stokKodu, fakeBtn);
-        btn.textContent = '✕ Kaldır';
-        btn.classList.add('kaldir');
-        btn.onclick = () => sepettenKodlaKaldir(stokKodu, btn);
-    }
 
     // =============================================
     // SEPET FONKSİYONLARI
@@ -4300,10 +4058,12 @@
         document.getElementById('teklif-musteri').value = '';
         document.getElementById('toplu-indirim-input').value = '';
         document.getElementById('hedef-toplam-input').value = '';
-        // Aktif teklif başlık sıfırla
         window._aktifTeklifId = null;
         window._aktifTeklifBaslik = null;
         window._musteriSorIndirim = 0;
+        // Uyarı kutusunu temizle
+        const uyariBox = document.getElementById('teklif-uyari-box');
+        if (uyariBox) { uyariBox.innerHTML = ''; uyariBox.style.display = 'none'; }
         sepetBadgeGuncelle();
         teklifGuncelle();
         renderTable();
@@ -4760,121 +4520,31 @@
         if(!item) return;
         const totalReserved = item.satisListesi ? item.satisListesi.reduce((s,x) => s+(parseInt(x.adet)||0), 0) : 0;
         const kalanRenk = item.kalan > 0 ? '#00a859' : '#ff0000';
-        const isMobile = window.innerWidth <= 768;
-
         let depoHtml = '';
         [{isim:'ÖMERLİ DEPO',adet:item.depoL},{isim:'MERKEZ DEPO',adet:item.depoM},{isim:'SHOWROOM',adet:item.depoN},{isim:'ŞİRKET DEPO',adet:item.depoO},{isim:'TAMİR DEPO',adet:item.depoP},{isim:'İNTERNET DEPO',adet:item.depoV}]
-            .forEach(d => { if(parseInt(d.adet)>=1) depoHtml+=`<div class="${isMobile?'mob-depo-row':'info-row'}" style="${isMobile?'':'font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;'}"><span>• ${d.isim}</span><strong>${d.adet} Adet</strong></div>`; });
+            .forEach(d => { if(parseInt(d.adet)>=1) depoHtml+=`<div class="info-row" style="font-size:10px;color:#555;padding-left:10px;border-bottom:1px dashed #eee;">• ${d.isim}: <strong>${d.adet} Adet</strong></div>`; });
 
         const grupLabel = item.ozelKod5 ? ' (' + item.ozelKod5.replace(/^\d+-/, '') + ')' : '';
         document.getElementById('modal-title').textContent = item.stokKodu + ' - ' + item.stokAdi + grupLabel;
 
-        let html = '';
-
-        if (isMobile) {
-            // ── MOBİL BOTTOM-SHEET LAYOUT ──
-            const kur = parseFloat(localStorage.getItem('dovizKuru') || '38') || 38;
-            const f = item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat) : null;
-            const sembol = item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$';
-            const fmt = v => v != null ? v.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
-            const fmtU = v => v != null ? v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
-            const listeTL  = f != null ? (item.doviz === 'TL' ? f : f * kur) : null;
-            const listeUSD = f != null && item.doviz !== 'TL' ? f : null;
-
-            // Resim
-            if (item.resim) html += `<img src="${item.resim}" class="mob-product-img" onerror="this.style.display='none'">`;
-
-            // Durum pill
-            html += `<div>
-                <span class="mob-durum-pill" style="color:${item.stokDurumuRenk};border-color:${item.stokDurumuRenk}20;background:${item.stokDurumuRenk}10;"
-                    onclick="document.getElementById('info-modal').style.display='none';showAylikSatis('${stokKodu}')">
-                    ${item.stokDurumu} <span style="font-size:10px;opacity:0.6;">📅</span>
-                </span>
+        let html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
+        html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
+            <div class="info-row" style="color:${item.stokDurumuRenk};cursor:pointer;" onclick="document.getElementById('info-modal').style.display='none';showAylikSatis('${stokKodu}')" title="Aylık satış geçmişini görmek için tıklayın"><strong>Durum</strong> ${item.stokDurumu} <span style="font-size:10px;opacity:0.65;">📅</span></div>
+            <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$') : '-'}</div>
+            <div class="info-row" style="font-weight:800;margin-top:6px;color:#1a1f36;"><strong>FİZİKİ STOK:</strong> ${item.fiili}</div>
+            ${depoHtml}
+            <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
             </div>`;
-
-            // Analiz özeti stat grid
-            html += `<div class="mob-section">
-                <div class="mob-section-title">📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</div>
-                <div class="mob-stat-grid">
-                    <div class="mob-stat-box">
-                        <div class="mob-stat-label">FİZİKİ STOK</div>
-                        <div class="mob-stat-value" style="color:#1a1f36">${item.fiili}</div>
-                    </div>
-                    <div class="mob-stat-box">
-                        <div class="mob-stat-label">SATILABİLİR</div>
-                        <div class="mob-stat-value" style="color:${kalanRenk}">${item.kalan}</div>
-                    </div>
-                </div>
-                ${depoHtml}
-            </div>`;
-
-            // Fiyat kutusu
-            if (listeTL != null) {
-                html += `<div class="mob-section">
-                    <div class="mob-section-title">💰 FİYAT</div>
-                    <div class="mob-price-box">
-                        <div><div class="mob-price-label">LİSTE FİYATI</div>
-                        ${listeUSD != null ? `<div style="font-size:11px;color:#2d7a4a;">$${fmtU(listeUSD)}</div>` : ''}</div>
-                        <div class="mob-price-value">${fmt(listeTL)} ₺</div>
-                    </div>
-                    <div class="mob-discount-row">
-                        <div class="mob-disc-box d25">
-                            <div class="mob-disc-label">%25</div>
-                            <div class="mob-disc-value">${fmt(listeTL*0.75)} ₺</div>
-                            ${listeUSD != null ? `<div class="mob-disc-usd">$${fmtU(listeUSD*0.75)}</div>` : ''}
-                        </div>
-                        <div class="mob-disc-box d30">
-                            <div class="mob-disc-label">%30</div>
-                            <div class="mob-disc-value">${fmt(listeTL*0.70)} ₺</div>
-                            ${listeUSD != null ? `<div class="mob-disc-usd">$${fmtU(listeUSD*0.70)}</div>` : ''}
-                        </div>
-                        <div class="mob-disc-box d35">
-                            <div class="mob-disc-label">%35</div>
-                            <div class="mob-disc-value">${fmt(listeTL*0.65)} ₺</div>
-                            ${listeUSD != null ? `<div class="mob-disc-usd">$${fmtU(listeUSD*0.65)}</div>` : ''}
-                        </div>
-                    </div>
-                </div>`;
-            }
-
-            // Gelecek ürünler
-            html += `<div class="mob-section">
-                <div class="mob-section-title">📦 GELECEK ÜRÜNLER (${item.ithalat})</div>`;
-            if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(l => html+=`<div class="mob-info-row" style="color:#00a859">✔ ${l}</div>`);
-            else html += `<div class="mob-info-row" style="color:#999">Gelecek ürün yok.</div>`;
-            html += `</div>`;
-
-            // Siparişler
-            html += `<div class="mob-section">
-                <div class="mob-section-title">👥 SİPARİŞLER (${totalReserved})</div>`;
-            if(item.satisListesi && item.satisListesi.length > 0) {
-                item.satisListesi.forEach(s => {
-                    html += `<div class="mob-info-row" style="color:#d35400">✔ ${s.adet} Adet — <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}','${s.rawDate||''}')">${s.musteri}</span>${s.temsilci ? ' <span style="color:#8a94a6;font-size:10px;">('+s.temsilci+')</span>' : ''} <span style="color:#8a94a6;font-size:10px;">(${s.tarih||'-'})</span></div>`;
-                });
-            } else html += `<div class="mob-info-row" style="color:#999">Sipariş yok.</div>`;
-            html += `</div>`;
-
-        } else {
-            // ── MASAÜSTÜ LAYOUT (mevcut) ──
-            html = item.resim ? `<img src="${item.resim}" class="product-image" onerror="this.style.display='none'">` : '';
-            html += `<div class="modal-section"><h4>📊 ANALİZ ÖZETİ (${item.avgSatis.toFixed(2)})</h4>
-                <div class="info-row" style="color:${item.stokDurumuRenk};cursor:pointer;" onclick="document.getElementById('info-modal').style.display='none';showAylikSatis('${stokKodu}')" title="Aylık satış geçmişini görmek için tıklayın"><strong>Durum</strong> ${item.stokDurumu} <span style="font-size:10px;opacity:0.65;">📅</span></div>
-                <div class="info-row" style="color:#2c7a3a"><strong>FİYAT</strong> ${item.fiyat != null && item.fiyat !== '' ? parseFloat(item.fiyat).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + (item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$') : '-'}</div>
-                <div class="info-row" style="font-weight:800;margin-top:6px;color:#1a1f36;"><strong>FİZİKİ STOK:</strong> ${item.fiili}</div>
-                ${depoHtml}
-                <div class="info-row" style="color:${kalanRenk}"><strong>SATILABİLİR STOK:</strong> ${item.kalan}</div>
-                </div>`;
-            html += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
-            if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(l => html+=`<div class="info-row" style="color:#00a859">✔ ${l}</div>`);
-            else html += `<div class="info-row" style="color:#999">Gelecek ürün yok.</div>`;
-            html += `</div><div class="modal-section"><h4>👥 SİPARİŞLER (${totalReserved})</h4>`;
-            if(item.satisListesi && item.satisListesi.length > 0) {
-                item.satisListesi.forEach(s => {
+        html += `<div class="modal-section"><h4>📦 GELECEK ÜRÜNLER (${item.ithalat})</h4>`;
+        if(item.ithalatDetay) item.ithalatDetay.split('\n').forEach(l => html+=`<div class="info-row" style="color:#00a859">✔ ${l}</div>`);
+        else html += `<div class="info-row" style="color:#999">Gelecek ürün yok.</div>`;
+        html += `</div><div class="modal-section"><h4>👥 SİPARİŞLER (${totalReserved})</h4>`;
+        if(item.satisListesi && item.satisListesi.length > 0) {
+            item.satisListesi.forEach(s => {
                     html += `<div class="info-row" style="color:#d35400">✔ ${s.adet} Adet - <span class="cust-link" onclick="previewCustomerList(null,'${s.musteri.replace(/'/g,"\\'")}','${s.rawDate||''}')">${s.musteri}</span>${s.temsilci ? ' <span style="color:#8a94a6;font-size:10px;">('+s.temsilci+')</span>' : ''} (${s.tarih||'-'})</div>`;
                 });
-            } else html += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
-            html += '</div>';
-        }
+        } else html += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
+        html += '</div>';
 
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('info-modal').style.display = 'flex';
