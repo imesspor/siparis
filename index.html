@@ -183,7 +183,7 @@
         tr:hover td { background-color: #f5f8ff !important; }
         .w-sort { width: 25px; cursor: move; color: var(--border-color); text-align: center; font-size: 16px; }
         .variant-divider td { padding: 0 !important; height: 4px !important; background: transparent !important; border: none !important; pointer-events: none; }
-        .variant-divider td .divider-line { display: block; height: 1.5px; background: linear-gradient(to right, transparent 2%, #000 15%, #000 85%, transparent 98%); margin: 1px 4px; opacity: 0.5; }
+        .variant-divider td .divider-line { display: block; height: 1px; background: linear-gradient(to right, transparent 2%, #000 15%, #000 85%, transparent 98%); margin: 1px 4px; opacity: 0.5; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,31,54,0.45); display: none; z-index: 6000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
         .modal-content { background: var(--bg-white); padding: 24px; border-radius: 12px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); }
         .cust-link { color: var(--accent-blue); text-decoration: underline; cursor: pointer; font-weight: 700; }
@@ -243,7 +243,9 @@
         .teklif-ozet-col { flex: 2; min-width: 0; flex-shrink: 0; }
         @media (max-width: 900px) { .teklif-body { flex-direction: column; } .teklif-ozet-col { width: 100%; } }
         .teklif-card { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-sm); }
-        .teklif-urun-item { background: var(--bg-white); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
+        .teklif-urun-item { background: var(--bg-white); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--shadow-sm); position: relative; }
+        .teklif-drag-handle { cursor: grab; color: #bbb; font-size: 15px; padding: 0 6px 0 0; flex-shrink: 0; user-select: none; line-height: 1; margin-top: 2px; }
+        .teklif-drag-handle:active { cursor: grabbing; }
         .teklif-urun-ust { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
         .teklif-urun-resim { width: 52px; height: 52px; object-fit: contain; border-radius: 6px; background: var(--bg-main); border: 1px solid var(--border-color); flex-shrink: 0; }
         .teklif-urun-adi { font-size: 12px; font-weight: 700; color: var(--accent-blue); flex: 1; cursor: pointer; }
@@ -3046,6 +3048,7 @@
                 html += `<div style="display:flex;align-items:center;gap:10px;background:white;border:1px solid #eaecf2;border-radius:8px;padding:8px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                     <img src="${item.resim||''}" onerror="this.style.display='none'"
                          style="width:52px;height:52px;object-fit:contain;border-radius:6px;background:#f4f6f9;border:1px solid #eaecf2;flex-shrink:0;">
+                    <img src="${item.resim || 'https://placehold.jp/52x52.png?text=YOK'}" class="teklif-urun-resim" onerror="this.src='https://placehold.jp/52x52.png?text=YOK'">
                     <div style="flex:1;min-width:0;">
                         <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap;">
                             <span style="background:#1a1f36;color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;flex-shrink:0;">${item.stokKodu}</span>
@@ -3937,18 +3940,21 @@
         }
         bos.style.display = 'none';
 
-        // Sepeti grup hiyerarşisine göre sırala (slicerOrderMap'teki sıraya göre)
+        // Sepeti sırala: manuel _sira varsa ona göre, yoksa kategori hiyerarşisine göre
         const orderedCats = slicerOrderMap[currentBrand] || [];
-        const sepetSirali = [...sepet].sort((a, b) => {
-            const itemA = allData.find(d => d.stokKodu === a.stokKodu);
-            const itemB = allData.find(d => d.stokKodu === b.stokKodu);
-            const catA = itemA ? (itemA.ozelKod5 || '') : '';
-            const catB = itemB ? (itemB.ozelKod5 || '') : '';
-            const idxA = orderedCats.length ? (orderedCats.indexOf(catA) >= 0 ? orderedCats.indexOf(catA) : 9999) : catA.localeCompare(catB, 'tr', {numeric:true});
-            const idxB = orderedCats.length ? (orderedCats.indexOf(catB) >= 0 ? orderedCats.indexOf(catB) : 9999) : 0;
-            if (orderedCats.length) return idxA - idxB;
-            return catA.localeCompare(catB, 'tr', {numeric:true});
-        });
+        const _manuelSiraVar = sepet.some(i => typeof i._sira === 'number');
+        const sepetSirali = _manuelSiraVar
+            ? [...sepet].sort((a, b) => (a._sira || 0) - (b._sira || 0))
+            : [...sepet].sort((a, b) => {
+                const itemA = allData.find(d => d.stokKodu === a.stokKodu);
+                const itemB = allData.find(d => d.stokKodu === b.stokKodu);
+                const catA = itemA ? (itemA.ozelKod5 || '') : '';
+                const catB = itemB ? (itemB.ozelKod5 || '') : '';
+                const idxA = orderedCats.length ? (orderedCats.indexOf(catA) >= 0 ? orderedCats.indexOf(catA) : 9999) : catA.localeCompare(catB, 'tr', {numeric:true});
+                const idxB = orderedCats.length ? (orderedCats.indexOf(catB) >= 0 ? orderedCats.indexOf(catB) : 9999) : 0;
+                if (orderedCats.length) return idxA - idxB;
+                return catA.localeCompare(catB, 'tr', {numeric:true});
+            });
 
         liste.innerHTML = sepetSirali.map(item => {
             const birimFiyat = hesaplaUrunFiyat(item, cur);
@@ -3969,9 +3975,9 @@
                         : `<span style="color:#868e96;font-weight:600;">Sipariş Yok</span>`}
                 </span>` : '';
             return `
-            <div class="teklif-urun-item">
+            <div class="teklif-urun-item" data-id="${item.id}">
                 <div class="teklif-urun-ust">
-                    <img src="${item.resim || 'https://placehold.jp/52x52.png?text=YOK'}" class="teklif-urun-resim" onerror="this.src='https://placehold.jp/52x52.png?text=YOK'">
+                    <span class="teklif-drag-handle" title="Sıralamak için sürükle">⠿</span>
                     <div style="flex:1;min-width:0;">
                         <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
                             <span class="teklif-urun-kod">${item.stokKodu}</span>
@@ -4020,6 +4026,21 @@
                 </div>
             </div>`;
         }).join('');
+
+        // Teklif listesi Sortable
+        if (window._teklifSortable) window._teklifSortable.destroy();
+        window._teklifSortable = new Sortable(liste, {
+            animation: 150,
+            handle: '.teklif-drag-handle',
+            onEnd: function() {
+                const ids = Array.from(liste.querySelectorAll('.teklif-urun-item')).map(el => parseInt(el.getAttribute('data-id')));
+                ids.forEach((id, idx) => {
+                    const item = sepet.find(i => i.id === id);
+                    if (item) item._sira = idx;
+                });
+                // _sira güncellendi, tekrar render etmeye gerek yok (DOM zaten doğru sırada)
+            }
+        });
 
         // Özet
         const araToplam = sepet.reduce((s, i) => s + hesaplaUrunFiyat(i, cur) * i.adet, 0);
