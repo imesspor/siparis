@@ -2856,8 +2856,23 @@
                 slicerOrderMap = newMap;
                 localStorage.setItem('slicerOrderData', JSON.stringify(slicerOrderMap));
             }
+            // Stok kodu sıralama durumunu geri yükle
+            const sortSheet = workbook.Sheets['Stok_Kodu_Siralama'];
+            if(sortSheet) {
+                const sortData = XLSX.utils.sheet_to_json(sortSheet);
+                // Mevcut sort state'i temizle
+                Object.keys(_sortStatePerContext).forEach(k => delete _sortStatePerContext[k]);
+                sortData.forEach(row => {
+                    if(row.MARKA && row.SIRALAMA && (row.SIRALAMA === 'asc' || row.SIRALAMA === 'desc')) {
+                        const kat = row.KATEGORI || 'HEPSİ';
+                        _sortStatePerContext[row.MARKA + '::' + kat] = row.SIRALAMA;
+                    }
+                });
+                try { localStorage.setItem('stokKoduSortState', JSON.stringify(_sortStatePerContext)); } catch(e) {}
+            }
             saveManuelSiparisMap();
             saveAndRender();
+            _applyCurrentSortIcon();
             alert('Tüm verileriniz başarıyla diğer bilgisayardan aktarıldı!');
         };
         reader.readAsArrayBuffer(file);
@@ -2872,12 +2887,10 @@
     function switchBrand(brand) {
         currentBrand  = brand;
         currentFilter = 'HEPSİ';
-        _stokKoduSortDir = null;
-        const icon = document.getElementById('stok-kodu-sort-icon');
-        if (icon) icon.textContent = '⇅';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`btn-${brand.toLowerCase()}`).classList.add('active');
         initSlicers();
+        _applyCurrentSortIcon();
         renderTable();
     }
 
@@ -2974,9 +2987,15 @@
         const combinedData = allData.map((item, idx) => ({'STOK KODU': item.stokKodu, 'SIRA': idx+1, 'MANUEL_SIPARIS': item.manuelSiparis||0}));
         const slicerData = [];
         Object.keys(slicerOrderMap).forEach(brand => { slicerOrderMap[brand].forEach((cat,idx) => slicerData.push({MARKA:brand,KATEGORI:cat,KAT_SIRA:idx+1})); });
+        // Stok kodu sıralama durumunu da dışa aktar (BRAND::KATEGORİ bazlı)
+        const sortData = Object.keys(_sortStatePerContext).map(key => {
+            const [brand, kat] = key.split('::');
+            return {MARKA: brand, KATEGORI: kat || 'HEPSİ', SIRALAMA: _sortStatePerContext[key]};
+        });
         const wb2 = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb2, XLSX.utils.json_to_sheet(combinedData), 'Urun_Duzen_Ve_Siparis');
         XLSX.utils.book_append_sheet(wb2, XLSX.utils.json_to_sheet(slicerData),   'Kategori_Siralamasi');
+        if (sortData.length > 0) XLSX.utils.book_append_sheet(wb2, XLSX.utils.json_to_sheet(sortData), 'Stok_Kodu_Siralama');
         XLSX.writeFile(wb2, `Sistem_Yedek_${new Date().toLocaleDateString()}.xlsx`);
         alert('Tüm değişiklikleriniz Excel olarak paketlendi.');
     }
@@ -3317,9 +3336,6 @@
 
     function filterCategory(cat) {
         currentFilter = cat;
-        _stokKoduSortDir = null;
-        const icon = document.getElementById('stok-kodu-sort-icon');
-        if (icon) icon.textContent = '⇅';
         initSlicers();
         renderTable();
     }
@@ -3377,12 +3393,38 @@
         modal.style.display = 'flex';
     }
 
-    let _stokKoduSortDir = null; // null | 'asc' | 'desc'
+    // Sıralama: her BRAND::KATEGORİ kombinasyonu bağımsız sıralanır
+    const _sortStatePerContext = {}; // key: 'BRAND::KATEGORI', value: 'asc'|'desc'
+    function _sortKey() { return currentBrand + '::' + (currentFilter || 'HEPSİ'); }
+    function _getSortDir() { return _sortStatePerContext[_sortKey()] || null; }
+    function _setSortDir(dir) {
+        const k = _sortKey();
+        if (dir === null) delete _sortStatePerContext[k];
+        else _sortStatePerContext[k] = dir;
+        try { localStorage.setItem('stokKoduSortState', JSON.stringify(_sortStatePerContext)); } catch(e) {}
+    }
+    // Sayfa açılışında kayıtlı sort durumunu geri yükle
+    (function() {
+        try {
+            const saved = localStorage.getItem('stokKoduSortState');
+            if (saved) { const obj = JSON.parse(saved); Object.assign(_sortStatePerContext, obj); }
+        } catch(e) {}
+    })();
+
     function sortByStokKodu(th) {
-        _stokKoduSortDir = _stokKoduSortDir === 'asc' ? 'desc' : 'asc';
+        const cur = _getSortDir();
+        const next = cur === 'asc' ? 'desc' : 'asc';
+        _setSortDir(next);
         const icon = document.getElementById('stok-kodu-sort-icon');
-        if (icon) icon.textContent = _stokKoduSortDir === 'asc' ? '▲' : '▼';
+        if (icon) icon.textContent = next === 'asc' ? '▲' : '▼';
         renderTable();
+    }
+
+    function _applyCurrentSortIcon() {
+        const icon = document.getElementById('stok-kodu-sort-icon');
+        if (!icon) return;
+        const dir = _getSortDir();
+        icon.textContent = dir === 'asc' ? '▲' : dir === 'desc' ? '▼' : '⇅';
     }
 
     function renderTable() {
@@ -3395,10 +3437,10 @@
             const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
             return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter==='HEPSİ' || d.ozelKod5===currentFilter));
         });
-        if (_stokKoduSortDir) {
+        if (_getSortDir()) {
             filtered = filtered.slice().sort((a, b) => {
                 const ka = a.stokKodu || '', kb = b.stokKodu || '';
-                return _stokKoduSortDir === 'asc' ? ka.localeCompare(kb, 'tr') : kb.localeCompare(ka, 'tr');
+                return _getSortDir() === 'asc' ? ka.localeCompare(kb, 'tr') : kb.localeCompare(ka, 'tr');
             });
         }
         tbody.innerHTML = filtered.map(item => {
