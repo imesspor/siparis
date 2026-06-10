@@ -4159,21 +4159,9 @@
         }
         bos.style.display = 'none';
 
-        // Sepeti sırala: manuel _sira varsa ona göre, yoksa kategori hiyerarşisine göre
-        const orderedCats = slicerOrderMap[currentBrand] || [];
-        const _manuelSiraVar = sepet.some(i => typeof i._sira === 'number');
-        const sepetSirali = _manuelSiraVar
-            ? [...sepet].sort((a, b) => (a._sira || 0) - (b._sira || 0))
-            : [...sepet].sort((a, b) => {
-                const itemA = allData.find(d => d.stokKodu === a.stokKodu);
-                const itemB = allData.find(d => d.stokKodu === b.stokKodu);
-                const catA = itemA ? (itemA.ozelKod5 || '') : '';
-                const catB = itemB ? (itemB.ozelKod5 || '') : '';
-                const idxA = orderedCats.length ? (orderedCats.indexOf(catA) >= 0 ? orderedCats.indexOf(catA) : 9999) : catA.localeCompare(catB, 'tr', {numeric:true});
-                const idxB = orderedCats.length ? (orderedCats.indexOf(catB) >= 0 ? orderedCats.indexOf(catB) : 9999) : 0;
-                if (orderedCats.length) return idxA - idxB;
-                return catA.localeCompare(catB, 'tr', {numeric:true});
-            });
+        // Sepet, eklenme sırasıyla gösterilir (ilk eklenen en üstte). Kullanıcı sürükleyerek
+        // sırayı değiştirebilir; bu sıra dizide kalıcıdır. Kategori/başlık bazlı otomatik sıralama YOK.
+        const sepetSirali = sepet;
 
         liste.innerHTML = sepetSirali.map(item => {
             const birimFiyat = hesaplaUrunFiyat(item, cur);
@@ -4380,6 +4368,9 @@
         if (sepet.length > 0 && !confirm('Mevcut teklifi temizleyip yeni teklif oluşturmak istiyor musunuz?')) return;
         sepet = [];
         document.getElementById('teklif-musteri').value = '';
+        // Yeni teklif para birimi otomatik TL
+        const paraBirimiEl = document.getElementById('teklif-para-birimi');
+        if (paraBirimiEl) paraBirimiEl.value = 'TL';
         document.getElementById('toplu-indirim-input').value = '';
         document.getElementById('hedef-toplam-input').value = '';
         window._aktifTeklifId = null;
@@ -4616,8 +4607,8 @@
                 <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:#555;border-bottom:1px solid #ddd;padding-bottom:8px;">
                     <span>KDV (%20):</span><span>${formatCurrency(kdv)} ${sembol}</span>
                 </div>
-                <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;padding-top:8px;">
-                    <span>GENEL TOPLAM (KDV DAHİL):</span><span style="font-size:20px;">${formatCurrency(genel)} ${sembol}</span>
+                <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:#555;padding-top:8px;">
+                    <span>GENEL TOPLAM (KDV DAHİL):</span><span>${formatCurrency(genel)} ${sembol}</span>
                 </div>
             </div>`;
         document.getElementById('onizleme-modal').style.display = 'flex';
@@ -4703,22 +4694,9 @@
         doc.text(musteri.toUpperCase(), 15, 40);
         doc.line(15, 55, 195, 55);
 
-        // PDF sırası: manuel sürükleme sırası (_sira) varsa ONA göre, yoksa grup/kategori sırasına göre
-        const pdfOrderedCats = slicerOrderMap[currentBrand] || [];
-        const _pdfManuelSiraVar = sepet.some(i => typeof i._sira === 'number');
-        const sepetPDF = _pdfManuelSiraVar
-            ? [...sepet].sort((a, b) => (a._sira || 0) - (b._sira || 0))
-            : [...sepet].sort((a, b) => {
-                const iA = allData.find(d => d.stokKodu === a.stokKodu);
-                const iB = allData.find(d => d.stokKodu === b.stokKodu);
-                const cA = iA ? (iA.ozelKod5 || '') : '';
-                const cB = iB ? (iB.ozelKod5 || '') : '';
-                if (pdfOrderedCats.length) {
-                    const iA2 = pdfOrderedCats.indexOf(cA); const iB2 = pdfOrderedCats.indexOf(cB);
-                    return (iA2 >= 0 ? iA2 : 9999) - (iB2 >= 0 ? iB2 : 9999);
-                }
-                return cA.localeCompare(cB, 'tr', {numeric:true});
-            });
+        // PDF, sepetteki güncel sıraya göre oluşturulur (ekleme + sürükleme sırası).
+        // Kategori/başlık bazlı otomatik sıralama yok.
+        const sepetPDF = [...sepet];
 
         const b64Cache = JSON.parse(localStorage.getItem('imes_gorsel_b64') || '{}');
         let cacheUpdated = false;
