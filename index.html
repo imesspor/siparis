@@ -946,24 +946,31 @@
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-        <!-- Veri Yükle (Sekmeli Modal) -->
-        <button class="nav-tab" id="veri-yukle-btn" onclick="veriYukleModalAc()" title="Ürün ve şartname dosyalarını yükle" style="color:var(--text-muted);">
-            <span class="nav-icon">📂</span>
-            <span class="nav-label">Veri Yükle</span>
-        </button>
-        <!-- Gizli file inputlar (modal içinden tetiklenir) -->
-        <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
-        <input type="file" id="sartname-file" class="hidden-input" accept=".docx">
-
-        <!-- Ürün Raporu -->
-        <button class="nav-tab nav-orange" onclick="downloadReport()" title="Ürün raporu indir">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Ürün Raporu</span>
+        <!-- ===== SOL GRUP: Teklif işlemleri ===== -->
+        <!-- Tekliflerim (Kayıtlı Teklifler) -->
+        <button class="nav-tab" onclick="kayitliTeklifleriAc()" id="btn-kayitli-teklifler" title="Kayıtlı teklifleri görüntüle">
+            <span class="nav-icon">📁</span>
+            <span class="nav-label">Tekliflerim</span>
         </button>
 
+        <!-- Teklife Git -->
+        <button class="nav-tab nav-green" onclick="teklifEkraniniAc()" id="btn-sepet-goto" title="Teklife git">
+            <span class="nav-icon">🛒</span>
+            <span class="nav-label">Teklife Git</span>
+            <span class="sepet-badge" id="sepet-badge" style="background:#e63946;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;">0</span>
+        </button>
 
-        <div class="nav-divider"></div>
+        <!-- Teklif İçeri Al -->
+        <button class="nav-tab" onclick="document.getElementById('teklif-import-file').click()" title="PDF veya Excel teklif dosyası yükle">
+            <span class="nav-icon">📥</span>
+            <span class="nav-label">Teklif İçeri Al</span>
+        </button>
+        <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
 
+        <!-- ===== Esnek boşluk: sol grubu sağ gruptan ayırır ===== -->
+        <div class="nav-flex-spacer" style="flex:1 1 auto;"></div>
+
+        <!-- ===== SAĞ GRUP: Veri işlemleri ===== -->
         <!-- Dışa Aktar -->
         <button class="nav-tab" onclick="downloadCurrentSort()" title="Bilgileri dışa aktar">
             <span class="nav-icon">📤</span>
@@ -977,33 +984,23 @@
         </button>
         <input type="file" id="notes-file" class="hidden-input" accept=".xlsx">
 
-        <div class="nav-divider"></div>
-
-        <!-- Teklifi İçeri Al -->
-        <button class="nav-tab" onclick="document.getElementById('teklif-import-file').click()" title="PDF veya Excel teklif dosyası yükle">
-            <span class="nav-icon">📥</span>
-            <span class="nav-label">Teklif İçeri Al</span>
-        </button>
-        <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
-
-        <!-- İstihbarat Paneli -->
+        <!-- Ürün Raporu -->
+        <button class="nav-tab nav-orange" onclick="downloadReport()" title="Ürün raporu indir">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Ürün Raporu</span>
         </button>
 
-        <!-- Teklife Git -->
-        <button class="nav-tab nav-green" onclick="teklifEkraniniAc()" id="btn-sepet-goto" title="Teklife git">
-            <span class="nav-icon">🛒</span>
-            <span class="nav-label">Teklife Git</span>
-            <span class="sepet-badge" id="sepet-badge" style="background:#e63946;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;">0</span>
+        <!-- Veri Yükle (Sekmeli Modal) -->
+        <button class="nav-tab" id="veri-yukle-btn" onclick="veriYukleModalAc()" title="Ürün ve şartname dosyalarını yükle" style="color:var(--text-muted);">
+            <span class="nav-icon">📂</span>
+            <span class="nav-label">Veri Yükle</span>
         </button>
-
-        <!-- Kayıtlı Teklifler -->
-        <button class="nav-tab" onclick="kayitliTeklifleriAc()" id="btn-kayitli-teklifler" title="Tekliflerim görüntüle">
-            <span class="nav-icon">📁</span>
-            <span class="nav-label">Tekliflerim</span>
-        </button>
+        <!-- Gizli file inputlar (modal içinden tetiklenir) -->
+        <input type="file" id="excel-file" class="hidden-input" accept=".xlsx, .xlsm">
+        <input type="file" id="sartname-file" class="hidden-input" accept=".docx">
     </div>
 
-    <!-- Right: Brand Switcher -->
+    <!-- Right: Brand Switcher + Toggles -->
     <div class="nav-right">
         <div class="brand-tabs">
             <button id="btn-proforce" class="tab-btn proforce active" onclick="switchBrand('PROFORCE')">PROFORCE</button>
@@ -1235,8 +1232,8 @@
 ══════════════════════════════════════════════════ -->
 <div id="teklif-ekrani">
     <div class="teklif-topbar">
-        <button class="btn-geri" onclick="teklifEkraniniKapat()" title="Ürün eklemek için ürün ekranına dön">➕Ürünler</button>
-        <button class="btn-geri" onclick="kayitliTeklifleriAc()" title="Kayıtlı teklifleri görüntüle"> </button>
+        <button class="btn-geri" onclick="teklifEkraniniKapat()" title="Ürün eklemek için ürün ekranına dön">➕ Ürün Ekle</button>
+        <button class="btn-geri" onclick="kayitliTeklifleriAc()" title="Kayıtlı teklifleri görüntüle">📁 Kayıtlı Teklifler</button>
         <div class="teklif-topbar-title">🛒 Teklif / Ürün Detayı</div>
         <div id="kur-gosterge" style="font-size:10px; color:#00a859; font-weight:700; background:#f0fff4; padding:4px 10px; border-radius:5px; border:1px solid #b7ebc8;">USD: -- ₺ | EUR: -- ₺</div>
         <button id="gizli-toggle-teklif" class="mini-toggle" onclick="toggleGizliMod()" title="Gizli mod" aria-label="Gizli mod"><span class="mini-toggle-knob"></span></button>
@@ -1299,7 +1296,7 @@
         <button class="btn-geri" onclick="kayitliTeklifleriKapat()">← Geri Dön</button>
         <button class="btn-geri" onclick="document.getElementById('kayitli-teklifler-ekrani').style.display='none';teklifEkraniniKapat();" title="Ürünlerin olduğu ana ekrana git">📦 Ürünler</button>
         <button class="btn-geri" onclick="document.getElementById('kayitli-teklifler-ekrani').style.display='none';teklifEkraniniAc();" title="Teklif / Ürün Detayı ekranına git">🛒 Teklif Detayı</button>
-        <div class="teklif-topbar-title">📁 Tekliflerim</div>
+        <div class="teklif-topbar-title">📁 Kayıtlı Teklifler</div>
     </div>
     <div class="teklif-body" style="display:block;">
         <div class="kayitli-teklif-wrap">
