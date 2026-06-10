@@ -143,13 +143,17 @@
         .search-input::placeholder { color: var(--text-muted); font-weight: 500; }
         .btn-customer-trigger { background: var(--accent-blue); height: 100%; padding: 0 14px; border: none; color: white; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background 0.15s; border-radius: 0 4px 4px 0; font-family: inherit; }
         .btn-customer-trigger:hover { background: #2f4ac0; }
-        .customer-dropdown { position: absolute; top: 34px; right: 0; background: var(--bg-white); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: var(--shadow-md); z-index: 1000; min-width: 320px; display: none; flex-direction: column; max-width: calc(100vw - 20px); }
-        .cust-search-wrapper { padding: 10px; border-bottom: 1px solid var(--border-light); background: var(--bg-main); border-radius: 10px 10px 0 0; }
+        .customer-dropdown { position: absolute; top: 34px; left: 0; background: var(--bg-white); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: var(--shadow-md); z-index: 1000; width: 680px; max-width: calc(100vw - 20px); display: none; flex-direction: column; }
+        .cust-header { background: linear-gradient(135deg,#3b5bdb,#4c6ef5); padding: 12px 16px; border-radius: 10px 10px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .cust-header-title { color: white; font-size: 13px; font-weight: 800; }
+        .cust-header-sub { color: rgba(255,255,255,0.7); font-size: 10px; margin-top: 2px; }
+        .cust-search-wrapper { padding: 10px; border-bottom: 1px solid var(--border-light); background: var(--bg-main); }
         .cust-inner-search { width: 100%; padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 11px; box-sizing: border-box; font-family: inherit; outline: none; }
         .cust-inner-search:focus { border-color: var(--accent-blue); }
-        .customer-list-area { max-height: 350px; overflow-y: auto; }
-        .customer-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .customer-list-area { max-height: 420px; overflow-y: auto; }
+        .customer-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); transition: background 0.12s; }
         .customer-item:hover { background: var(--accent-blue-light); }
+        .customer-item:last-child { border-bottom: none; }
         .customer-name { flex: 1; padding-right: 10px; font-weight: 700; color: var(--text-dark); }
         .cust-actions { display: flex; gap: 4px; }
         .btn-cust-preview { background: var(--accent-purple); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
@@ -321,7 +325,7 @@
             .search-container-in-slicer { grid-column: 1 / -1; height: 36px; }
             .search-input { font-size: 13px; padding: 0 10px; }
             .btn-customer-trigger { font-size: 11px; padding: 0 12px; }
-            .customer-dropdown { min-width: calc(100vw - 20px); right: auto; left: 0; }
+            .customer-dropdown { width: calc(100vw - 20px); right: auto; left: 0; }
 
             /* ── Ana Tablo ── */
             .table-container { max-height: 60vh; border-radius: 6px; }
@@ -3124,8 +3128,14 @@
                 <button class="btn-customer-trigger" style="border-radius:6px;height:29px;" onclick="toggleCustomerDropdown(event)">👥 MÜŞTERİLER</button>
                 <button class="btn-customer-trigger" style="border-radius:6px;height:29px;margin-left:4px;background:#7950f2;" onclick="toggleTemsilciModal(event)">🧑‍💼 TEMSİLCİLER</button>
                 <div id="customer-dropdown" class="customer-dropdown">
+                    <div class="cust-header">
+                        <div>
+                            <div class="cust-header-title">👥 MÜŞTERİLER</div>
+                            <div class="cust-header-sub" id="cust-header-sub">Yükleniyor...</div>
+                        </div>
+                    </div>
                     <div class="cust-search-wrapper">
-                        <input type="text" id="cust-search-input" class="cust-inner-search" placeholder="Müşteri veya Sipariş Ara..." oninput="filterCustomers()">
+                        <input type="text" id="cust-search-input" class="cust-inner-search" placeholder="Müşteri veya Temsilci Ara..." oninput="filterCustomers()">
                     </div>
                     <div id="customer-list-area" class="customer-list-area"></div>
                 </div>
@@ -3165,34 +3175,62 @@
         const searchTerm = norm(raw);
         const listArea = document.getElementById('customer-list-area');
 
-        // Müşteri → en son temsilci map
+        // Müşteri → en son temsilci + en son tarih map
         const musteriTemsilci = {};
+        const musteriTarih = {};
+        const musteriRawDate = {};
+        const musteriMarkalar = {};
         allData.forEach(item => {
             (item.satisListesi||[]).forEach(s => {
                 if (s.musteri) {
                     if (!musteriTemsilci[s.musteri]) musteriTemsilci[s.musteri] = '';
                     if (s.temsilci) musteriTemsilci[s.musteri] = s.temsilci;
+                    if (!musteriRawDate[s.musteri] || (s.rawDate||0) > musteriRawDate[s.musteri]) {
+                        musteriRawDate[s.musteri] = s.rawDate||0;
+                        musteriTarih[s.musteri] = s.tarih||'';
+                    }
+                    if (item.marka) {
+                        if (!musteriMarkalar[s.musteri]) musteriMarkalar[s.musteri] = new Set();
+                        const temizMarka = item.marka.replace(/^\d+[-\s]*/,'').trim();
+                        musteriMarkalar[s.musteri].add(temizMarka);
+                    }
                 }
             });
         });
 
         const filtered = Object.keys(musteriTemsilci)
             .filter(c => !searchTerm || norm(c).includes(searchTerm) || norm(musteriTemsilci[c]).includes(searchTerm))
-            .sort();
+            .sort((a, b) => (musteriRawDate[b]||0) - (musteriRawDate[a]||0));
 
+        const markaRenk = { 'PROFORCE': '#3b5bdb', 'PANATTA': '#e67700', 'TYR': '#2f9e44', 'STYKU': '#7b2d8b' };
         listArea.innerHTML = filtered.map(c => {
             const temsilci = musteriTemsilci[c];
-            return `<div class="customer-item">
+            const tarih = musteriTarih[c];
+            const markalar = musteriMarkalar[c] ? [...musteriMarkalar[c]] : [];
+            const initials = c.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+            const colors = ['#3b5bdb','#2f9e44','#e67700','#c92a2a','#5f3dc4','#0c8599','#862e9c','#1864ab'];
+            const colorIdx = c.split('').reduce((a,ch)=>a+ch.charCodeAt(0),0) % colors.length;
+            const bgColor = colors[colorIdx];
+            const markaBadge = markalar.map(m => `<span style="background:${markaRenk[m]||'#4a5568'};color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:0.3px;">${m}</span>`).join('');
+            return `<div class="customer-item" style="padding:10px 14px;gap:10px;">
+                <div style="width:34px;height:34px;border-radius:50%;background:${bgColor};color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:0.5px;">${initials}</div>
                 <div style="flex:1;min-width:0;">
-                    <span class="customer-name">${c}</span>
-                    ${temsilci ? `<span style="font-size:10px;color:#8a94a6;margin-left:8px;">👤 ${temsilci}</span>` : ''}
+                    <div class="customer-name" style="font-size:11px;font-weight:700;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c}</div>
+                    <div style="font-size:10px;color:#8a94a6;margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                        ${temsilci ? `<span>👤 ${temsilci}</span>` : ''}
+                        ${tarih ? `<span>📅 ${tarih}</span>` : ''}
+                        ${markaBadge ? `<span style="display:flex;gap:3px;">${markaBadge}</span>` : ''}
+                    </div>
                 </div>
                 <div class="cust-actions">
                     <button class="btn-cust-preview" onclick="previewCustomerList(event,'${c.replace(/'/g,"\\'")}')">ÖNİZLEME</button>
                     <button class="btn-cust-download" onclick="downloadCustomerList(event,'${c.replace(/'/g,"\\'")}')">İNDİR</button>
                 </div>
             </div>`;
-        }).join('') || '<div class="customer-item">Bulunamadı</div>';
+        }).join('') || '<div class="customer-item" style="padding:16px;text-align:center;color:#8a94a6;">Bulunamadı</div>';
+
+        const sub = document.getElementById('cust-header-sub');
+        if (sub) sub.textContent = `${filtered.length} müşteri`;
     }
 
     function downloadCurrentSort() {
