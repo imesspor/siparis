@@ -860,6 +860,7 @@
            GİZLİ MOD — müşteri yanındayken bilgileri gizle
         ═══════════════════════════════════════ */
         body.gizli-mod .col-fiili,
+        body.gizli-mod .col-fiyat,
         body.gizli-mod .col-satis,
         body.gizli-mod .col-kalan,
         body.gizli-mod .col-ithalat,
@@ -1029,7 +1030,7 @@
                 <th class="col-sartname" style="width:26px;padding:0;" title="Şartname"></th>
                 <th style="width:85px;cursor:pointer;user-select:none;" onclick="sortByStokKodu(this)" title="Alfabetik sıralama için tıklayın">STOK KODU <span id="stok-kodu-sort-icon">⇅</span></th>
                 <th style="width:auto;">STOK ADI</th>
-                <th style="width:70px;">FİYAT</th>
+                <th class="col-fiyat" style="width:70px;">FİYAT</th>
                 <th class="col-fiili" style="width:55px;">FİİLİ</th>
                 <th class="col-satis" style="width:55px;">SATIŞ</th>
                 <th class="col-kalan" style="width:55px;">KALAN</th>
@@ -1234,7 +1235,7 @@
 ══════════════════════════════════════════════════ -->
 <div id="teklif-ekrani">
     <div class="teklif-topbar">
-        <button class="btn-geri" onclick="teklifEkraniniKapat()">← Geri Dön</button>
+        <button class="btn-geri" onclick="teklifEkraniniKapat()" title="Ürün eklemek için ürün ekranına dön">➕ Ürün Ekle</button>
         <button class="btn-geri" onclick="kayitliTeklifleriAc()" title="Kayıtlı teklifleri görüntüle">📁 Kayıtlı Teklifler</button>
         <div class="teklif-topbar-title">🛒 Teklif / Ürün Detayı</div>
         <div id="kur-gosterge" style="font-size:10px; color:#00a859; font-weight:700; background:#f0fff4; padding:4px 10px; border-radius:5px; border:1px solid #b7ebc8;">USD: -- ₺ | EUR: -- ₺</div>
@@ -1270,7 +1271,7 @@
                 <div class="teklif-ozet-satir"><span>Ara Toplam:</span><span id="ozet-ara-toplam">0,00</span></div>
                 <div class="teklif-ozet-satir"><span>KDV (%20):</span><span id="ozet-kdv">0,00</span></div>
                 <div class="teklif-ozet-toplam" style="font-size:12px;font-weight:800;"><span style="font-weight:800;">GENEL TOPLAM:</span><span id="ozet-genel-toplam" style="font-weight:800;">0,00</span></div>
-                <div class="teklif-ozet-satir" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:6px;opacity:1;">
+                <div class="teklif-ozet-satir teklif-gizli-bilgi" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:6px;opacity:1;">
                     <span>📉 Ort. İndirim:</span><span id="ozet-ort-indirim" style="color:#ffd43b;font-weight:800;">%0,00</span>
                 </div>
                 <span id="ozet-indirim-tutar" style="display:none;">0,00</span>
@@ -1296,6 +1297,8 @@
 <div id="kayitli-teklifler-ekrani">
     <div class="teklif-topbar">
         <button class="btn-geri" onclick="kayitliTeklifleriKapat()">← Geri Dön</button>
+        <button class="btn-geri" onclick="document.getElementById('kayitli-teklifler-ekrani').style.display='none';teklifEkraniniKapat();" title="Ürünlerin olduğu ana ekrana git">📦 Ürünler</button>
+        <button class="btn-geri" onclick="document.getElementById('kayitli-teklifler-ekrani').style.display='none';teklifEkraniniAc();" title="Teklif / Ürün Detayı ekranına git">🛒 Teklif Detayı</button>
         <div class="teklif-topbar-title">📁 Kayıtlı Teklifler</div>
     </div>
     <div class="teklif-body" style="display:block;">
@@ -3599,10 +3602,33 @@
         } catch(e) {}
     })();
 
+    // Geçerli görünüm (marka + kategori) için stok kodu sırasını fiziksel olarak
+    // allData içine işler ve kaydeder. Böylece sayfa yenilense veya yeni dosya
+    // yüklense bile uygulanan sıralama korunur (kullanıcı değiştirene kadar).
+    function _commitContextSort(dir) {
+        const inCtx = (d) => {
+            const mb = d.marka && d.marka.includes(currentBrand);
+            if (!mb) return false;
+            if (currentFilter === 'HEPSİ') return true;
+            return d.ozelKod5 === currentFilter;
+        };
+        const positions = [];
+        const items = [];
+        allData.forEach((d, i) => { if (inCtx(d)) { positions.push(i); items.push(d); } });
+        items.sort((a, b) => {
+            const ka = a.stokKodu || '', kb = b.stokKodu || '';
+            return dir === 'asc' ? ka.localeCompare(kb, 'tr') : kb.localeCompare(ka, 'tr');
+        });
+        positions.forEach((pos, k) => { allData[pos] = items[k]; });
+        try { localStorage.setItem('masterInventoryData', JSON.stringify(allData)); } catch(e) {}
+    }
+
     function sortByStokKodu(th) {
         const cur = _getSortDir();
         const next = cur === 'asc' ? 'desc' : 'asc';
         _setSortDir(next);
+        // Sıralamayı kalıcı olması için fiziksel olarak allData'ya uygula
+        _commitContextSort(next);
         const icon = document.getElementById('stok-kodu-sort-icon');
         if (icon) icon.textContent = next === 'asc' ? '▲' : '▼';
         renderTable();
@@ -3625,12 +3651,10 @@
             const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
             return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter==='HEPSİ' || d.ozelKod5===currentFilter));
         });
-        if (_getSortDir()) {
-            filtered = filtered.slice().sort((a, b) => {
-                const ka = a.stokKodu || '', kb = b.stokKodu || '';
-                return _getSortDir() === 'asc' ? ka.localeCompare(kb, 'tr') : kb.localeCompare(ka, 'tr');
-            });
-        }
+        // NOT: Sıralama artık fiziksel olarak allData içine işleniyor (hem sütun
+        // sıralaması hem de sürükle-bırak). Bu yüzden burada yeniden sıralama yapmıyoruz;
+        // allData hangi sıradaysa o sırada gösteriliyor. Böylece sıralama sayfa
+        // yenilemede ve dosya yüklemede korunur.
         const _baseKod = k => k ? k.split('.')[0] : '';
         const isPanatta = currentBrand === 'PANATTA';
         const rows = [];
@@ -3662,7 +3686,7 @@
                 ${sartnameCell}
                 <td>${item.stokKodu}</td>
                 <td class="col-stok-adi" onclick="showDetail('${safeKod}')">${item.stokAdi}</td>
-                <td>${formatCurrency(item.fiyat)} ${item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$'}</td>
+                <td class="col-fiyat">${formatCurrency(item.fiyat)} ${item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$'}</td>
                 <td class="col-fiili">${item.fiili}</td>
                 <td class="col-satis">${item.satis}</td>
                 <td class="col-kalan">${item.kalan}</td>
@@ -3724,6 +3748,11 @@
                 allData.forEach(item => { if(!ids.includes(item.stokKodu)) sorted.push(item); });
                 allData = sorted;
                 localStorage.setItem('masterInventoryData', JSON.stringify(allData));
+                // Manuel sürükleme yapıldı: artık özel (manuel) sıra geçerli.
+                // Sütun sıralama yönünü temizle ve ikonu nötr (⇅) yap.
+                _setSortDir(null);
+                const _si = document.getElementById('stok-kodu-sort-icon');
+                if (_si) _si.textContent = '⇅';
                 // Panatta'da sürükleme sonrası ayraçları yeniden çiz
                 if (currentBrand === 'PANATTA') {
                     const _baseKodFn = k => k ? k.split('.')[0] : '';
@@ -4344,11 +4373,14 @@
     }
 
     function topluIndirimUygula() {
-        const indirim = parseFloat(document.getElementById('toplu-indirim-input').value);
+        const indirimEl = document.getElementById('toplu-indirim-input');
+        const indirim = parseFloat(indirimEl.value);
         if (isNaN(indirim)) return showToast('Geçerli bir indirim girin!', '#e63946');
         sepet.forEach(i => { i.indirim = indirim; i.manuelFiyat = null; });
         teklifGuncelle();
         showToast(`%${indirim} toplu indirim uygulandı`, '#3b5bdb');
+        // Uygulandıktan sonra indirim kutusunu temizle
+        indirimEl.value = '';
     }
 
     function hedefToplamHesapla() {
