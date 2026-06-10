@@ -871,6 +871,7 @@
         body.gizli-mod .col-stok-durumu { display: none !important; }
         /* Teklif / ürün detayı kartında stok bilgilerini gizle */
         body.gizli-mod .teklif-gizli-bilgi { display: none !important; }
+        body.gizli-mod .ort-indirim-label { display: none !important; }
 
         /* ═══════════════════════════════════════
            STOK AYRACI (ürün aramasında stokta olmayanlar altta)
@@ -1268,8 +1269,8 @@
                 <div class="teklif-ozet-satir"><span>Ara Toplam:</span><span id="ozet-ara-toplam">0,00</span></div>
                 <div class="teklif-ozet-satir"><span>KDV (%20):</span><span id="ozet-kdv">0,00</span></div>
                 <div class="teklif-ozet-toplam" style="font-size:12px;font-weight:800;"><span style="font-weight:800;">GENEL TOPLAM:</span><span id="ozet-genel-toplam" style="font-weight:800;">0,00</span></div>
-                <div class="teklif-ozet-satir teklif-gizli-bilgi" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:6px;opacity:1;">
-                    <span>📉 Ort. İndirim:</span><span id="ozet-ort-indirim" style="color:#ffd43b;font-weight:800;">%0,00</span>
+                <div class="teklif-ozet-satir" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:6px;opacity:1;">
+                    <span class="ort-indirim-label">📉 Ort. İndirim:</span><span id="ozet-ort-indirim" style="color:#ffd43b;font-weight:800;">%0,00</span>
                 </div>
                 <span id="ozet-indirim-tutar" style="display:none;">0,00</span>
             </div>
@@ -2405,7 +2406,7 @@
         return ordered;
     }
 
-    function cleanLabel(cat) { return cat.replace(/^\d+-/, ''); }
+    function cleanLabel(cat) { return cat.replace(/^\d+\s*-\s*/, ''); }
 
     function saveManuelSiparisMap() {
         localStorage.setItem('manuelSiparisData', JSON.stringify(manuelSiparisMap));
@@ -3068,6 +3069,28 @@
     });
 
     function saveAndRender() {
+        // Kayıtlı tüm sıralama durumlarını allData'ya fiziksel olarak uygula
+        // (hem başlık sıralaması hem de drag-drop sıralaması veri yüklemede korunsun)
+        Object.keys(_sortStatePerContext).forEach(ctxKey => {
+            const [brand, kat] = ctxKey.split('::');
+            if (!brand) return;
+            const dir = _sortStatePerContext[ctxKey];
+            if (!dir) return;
+            const inCtx = (d) => {
+                const mb = d.marka && d.marka.includes(brand);
+                if (!mb) return false;
+                if (!kat || kat === 'HEPSİ') return true;
+                return d.ozelKod5 === kat;
+            };
+            const positions = [];
+            const items = [];
+            allData.forEach((d, i) => { if (inCtx(d)) { positions.push(i); items.push(d); } });
+            items.sort((a, b) => {
+                const ka = a.stokKodu || '', kb = b.stokKodu || '';
+                return dir === 'asc' ? ka.localeCompare(kb, 'tr') : kb.localeCompare(ka, 'tr');
+            });
+            positions.forEach((pos, k) => { allData[pos] = items[k]; });
+        });
         localStorage.setItem('masterInventoryData', JSON.stringify(allData));
         initSlicers();
         renderTable();
@@ -3893,9 +3916,9 @@
         document.getElementById('musteri-sor-modal').style.display = 'flex';
         document.getElementById('musteri-sor-input').value = '';
         document.getElementById('musteri-sor-indirim').value = '';
-        // Döviz seçimini güncelle (mevcut ürüne göre)
+        // Döviz seçimini güncelle (varsayılan TL)
         const item = allData.find(d => d.stokKodu === stokKodu);
-        const itemDoviz = (item && item.doviz) ? item.doviz : 'USD';
+        const itemDoviz = 'TL';  // Varsayılan TL; kullanıcı gerekirse değiştirir
         document.getElementById('musteri-sor-doviz').value = itemDoviz;
         // Kur/Tarih alanlarını güncelle
         document.getElementById('musteri-sor-kur').value = '';
