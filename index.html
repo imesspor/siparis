@@ -2660,7 +2660,6 @@
             item.manuelSiparis = yeni;
             manuelSiparisMap[stokKodu] = yeni;
             saveManuelSiparisMap();
-            localStorage.setItem('masterInventoryData', JSON.stringify(allData));
             // Arşive kaydet (0 olsa bile bugünün kaydına yaz)
             arsiveKaydet(stokKodu, item.stokAdi, yeni);
             td.innerHTML = yeni;
@@ -2685,11 +2684,8 @@
 
     async function onStartCacheGorseller() {
         const b64Cache = JSON.parse(localStorage.getItem('imes_gorsel_b64') || '{}');
-        const savedData = localStorage.getItem('masterInventoryData');
-        if (!savedData) return;
-        let data;
-        try { data = JSON.parse(savedData); } catch(e) { return; }
-        const eksikler = data.filter(item => item.resim && !b64Cache[item.stokKodu]);
+        if (!allData || allData.length === 0) return;
+        const eksikler = allData.filter(item => item.resim && !b64Cache[item.stokKodu]);
         if (eksikler.length === 0) return;
         let updated = false;
         for (const item of eksikler) {
@@ -2725,20 +2721,21 @@
 
         const savedData = localStorage.getItem('masterInventoryData');
         if (savedData) {
-            allData = JSON.parse(savedData);
-            // manuelSiparis'leri sıfırla — tabloda 0 göster
-            allData.forEach(item => { item.manuelSiparis = 0; });
-            localStorage.setItem('masterInventoryData', JSON.stringify(allData));
-            switchBrand(currentBrand);
-            // Nav butonunu güncelle — önceden yüklenmiş veri var
-            const sonYukleme = localStorage.getItem('son_yukleme_bilgi');
-            if (sonYukleme) {
-                try {
-                    const bilgi = JSON.parse(sonYukleme);
-                    const vBtn = document.getElementById('veri-yukle-btn');
-                    if (vBtn) { vBtn.style.color = '#2f9e44'; vBtn.title = 'Son yükleme: ' + bilgi.zaman + '\n' + bilgi.tamAd; }
-                } catch(e) {}
-            }
+            try {
+                allData = JSON.parse(savedData);
+                allData.forEach(item => { item.manuelSiparis = 0; });
+                switchBrand(currentBrand);
+                const sonYukleme = localStorage.getItem('son_yukleme_bilgi');
+                if (sonYukleme) {
+                    try {
+                        const bilgi = JSON.parse(sonYukleme);
+                        const vBtn = document.getElementById('veri-yukle-btn');
+                        if (vBtn) { vBtn.style.color = '#2f9e44'; vBtn.title = 'Son yükleme: ' + bilgi.zaman + '\n' + bilgi.tamAd; }
+                    } catch(e) {}
+                }
+            } catch(e) {}
+            // Artık localStorage'daki eski masterInventoryData'yı temizle (yer açmak için)
+            try { localStorage.removeItem('masterInventoryData'); } catch(e) {}
         }
         kurCek();
         teklifArsivGoster();
@@ -3095,7 +3092,6 @@
             });
             positions.forEach((pos, k) => { allData[pos] = items[k]; });
         });
-        localStorage.setItem('masterInventoryData', JSON.stringify(allData));
         initSlicers();
         renderTable();
     }
@@ -3678,7 +3674,6 @@
             return dir === 'asc' ? ka.localeCompare(kb, 'tr') : kb.localeCompare(ka, 'tr');
         });
         positions.forEach((pos, k) => { allData[pos] = items[k]; });
-        try { localStorage.setItem('masterInventoryData', JSON.stringify(allData)); } catch(e) {}
     }
 
     function sortByStokKodu(th) {
@@ -3805,7 +3800,6 @@
                 ids.forEach(id => { const f = allData.find(d => d.stokKodu===id); if(f) sorted.push(f); });
                 allData.forEach(item => { if(!ids.includes(item.stokKodu)) sorted.push(item); });
                 allData = sorted;
-                localStorage.setItem('masterInventoryData', JSON.stringify(allData));
                 // Manuel sürükleme yapıldı: artık özel (manuel) sıra geçerli.
                 // Sütun sıralama yönünü temizle ve ikonu nötr (⇅) yap.
                 _setSortDir(null);
