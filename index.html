@@ -1012,6 +1012,7 @@
             <button id="btn-panatta" class="tab-btn panatta" onclick="switchBrand('PANATTA')">PANATTA</button>
             <button id="btn-tyr" class="tab-btn" style="background:#ff6b00;color:white;" onclick="switchBrand('TYR')">TYR</button>
             <button id="btn-styku" class="tab-btn" style="background:#7b2d8b;color:white;" onclick="switchBrand('STYKU')">STYKU</button>
+            <button id="btn-ypara" class="tab-btn" style="background:#0c8599;color:white;" onclick="switchBrand('Y.PARÇA')">Y.PARÇA</button>
         </div>
         <button id="gizli-toggle" class="mini-toggle" onclick="toggleGizliMod()" title="Gizli mod" aria-label="Gizli mod"><span class="mini-toggle-knob"></span></button>
         <button id="tema-toggle" class="tema-btn" onclick="toggleKoyuTema()" title="Tema değiştir" aria-label="Tema değiştir">🌙</button>
@@ -1327,6 +1328,19 @@
 <script>
     let allData      = [];
     let currentBrand = 'PROFORCE';
+    // ── Y.PARÇA (Yedek Parça) sekmesi yardımcıları ───────────────────────────
+    // ANLIK_STOK_DATA "D" sütunu = "YDM" olan satırlar yedek parçadır.
+    // Y.PARÇA sekmesinde ürünler "C" sütununa (marka) göre gruplanır ve bu
+    // satırlar diğer marka sekmelerinde (PROFORCE/PANATTA/TYR/STYKU) GÖRÜNMEZ.
+    const YEDEK_BRAND = 'Y.PARÇA';
+    function _itemInBrand(d, brand) {
+        if (brand === YEDEK_BRAND) return !!d.isYedek;
+        return !!(d.marka && d.marka.includes(brand)) && !d.isYedek;
+    }
+    function _itemCat(d, brand) {
+        // Y.PARÇA'da üstteki başlıklar "C" sütunundan (marka); diğerlerinde ozelKod5'ten gelir.
+        return brand === YEDEK_BRAND ? (d.marka || 'DİĞER') : d.ozelKod5;
+    }
     let currentFilter = 'HEPSİ';
     let sortableRows = null;
 
@@ -2920,6 +2934,7 @@
                     stokKodu: kodu,
                     stokAdi:  String(r.B || ''),
                     marka:    marka,
+                    isYedek:  String(r.D || '').trim().toUpperCase() === 'YDM',
                     ozelKod5: (isTYR || isSTYKU) ? String(r.E || 'DİĞER') : String(r.F || 'DİĞER'),
                     fiyat:    parseFloat(String(r.G).replace(',','.')) || 0,
                     doviz:    doviz,
@@ -3081,10 +3096,9 @@
             const dir = _sortStatePerContext[ctxKey];
             if (!dir) return;
             const inCtx = (d) => {
-                const mb = d.marka && d.marka.includes(brand);
-                if (!mb) return false;
+                if (!_itemInBrand(d, brand)) return false;
                 if (!kat || kat === 'HEPSİ') return true;
-                return d.ozelKod5 === kat;
+                return _itemCat(d, brand) === kat;
             };
             const positions = [];
             const items = [];
@@ -3104,7 +3118,8 @@
         currentBrand  = brand;
         currentFilter = 'HEPSİ';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-${brand.toLowerCase()}`).classList.add('active');
+        const _activeBtn = document.getElementById('btn-' + brand.toLowerCase().replace(/[^a-z0-9]/g,''));
+        if (_activeBtn) _activeBtn.classList.add('active');
         initSlicers();
         _applyCurrentSortIcon();
         renderTable();
@@ -3112,7 +3127,7 @@
 
     function initSlicers() {
         const container = document.getElementById('slicer-area');
-        let rawCats = [...new Set(allData.filter(d => d.marka && d.marka.includes(currentBrand)).map(d => d.ozelKod5))];
+        let rawCats = [...new Set(allData.filter(d => _itemInBrand(d, currentBrand)).map(d => _itemCat(d, currentBrand)))].filter(Boolean);
         rawCats.sort((a,b) => a.localeCompare(b,'tr',{numeric:true}));
         let categories = getOrderedCategories(currentBrand, rawCats);
 
@@ -3202,7 +3217,7 @@
             .filter(c => !searchTerm || norm(c).includes(searchTerm) || norm(musteriTemsilci[c]).includes(searchTerm))
             .sort((a, b) => (musteriRawDate[b]||0) - (musteriRawDate[a]||0));
 
-        const markaRenk = { 'PROFORCE': '#3b5bdb', 'PANATTA': '#e67700', 'TYR': '#2f9e44', 'STYKU': '#7b2d8b' };
+        const markaRenk = { 'PROFORCE': '#3b5bdb', 'PANATTA': '#e67700', 'TYR': '#2f9e44', 'STYKU': '#7b2d8b', 'Y.PARÇA': '#0c8599' };
         listArea.innerHTML = filtered.map(c => {
             const temsilci = musteriTemsilci[c];
             const tarih = musteriTarih[c];
@@ -3665,10 +3680,9 @@
     // yüklense bile uygulanan sıralama korunur (kullanıcı değiştirene kadar).
     function _commitContextSort(dir) {
         const inCtx = (d) => {
-            const mb = d.marka && d.marka.includes(currentBrand);
-            if (!mb) return false;
+            if (!_itemInBrand(d, currentBrand)) return false;
             if (currentFilter === 'HEPSİ') return true;
-            return d.ozelKod5 === currentFilter;
+            return _itemCat(d, currentBrand) === currentFilter;
         };
         const positions = [];
         const items = [];
@@ -3705,9 +3719,9 @@
         const slug = t => t ? t.replace(/İ/g,'i').replace(/I/g,'ı').toLowerCase() : '';
         const searchTerm = searchInput ? slug(searchInput.value) : '';
         let filtered = allData.filter(d => {
-            const mb = d.marka && d.marka.includes(currentBrand);
+            const mb = _itemInBrand(d, currentBrand);
             const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
-            return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter==='HEPSİ' || d.ozelKod5===currentFilter));
+            return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter==='HEPSİ' || _itemCat(d, currentBrand)===currentFilter));
         });
         // NOT: Sıralama artık fiziksel olarak allData içine işleniyor (hem sütun
         // sıralaması hem de sürükle-bırak). Bu yüzden burada yeniden sıralama yapmıyoruz;
@@ -4990,11 +5004,12 @@
         const used = new Set();
         const uName = base => { let n=base,c=2; while(used.has(n)){n=base.substring(0,28)+c++;} used.add(n); return n; };
         [secilenMarka].forEach(brand => {
-            const bd = allData.filter(d => d.marka && d.marka.includes(brand));
+            const bd = allData.filter(d => _itemInBrand(d, brand));
             if(!bd.length) return;
-            XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...bd.map(toRow)]), uName(brand==='PROFORCE'?'PRO-TÜM':brand==='TYR'?'TYR-TÜM':brand==='STYKU'?'STYKU-TÜM':'PAN-TÜM'));
-            [...new Set(bd.map(d=>d.ozelKod5).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true})).forEach(cat => {
-                const cd = bd.filter(d=>d.ozelKod5===cat);
+            const _tumAd = brand==='PROFORCE'?'PRO-TÜM':brand==='TYR'?'TYR-TÜM':brand==='STYKU'?'STYKU-TÜM':brand===YEDEK_BRAND?'YPARCA-TÜM':'PAN-TÜM';
+            XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...bd.map(toRow)]), uName(_tumAd));
+            [...new Set(bd.map(d=>_itemCat(d,brand)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true})).forEach(cat => {
+                const cd = bd.filter(d=>_itemCat(d,brand)===cat);
                 if(!cd.length) return;
                 XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([header,...cd.map(toRow)]), uName(cat.replace(/^\d+-/,'').substring(0,31)));
             });
@@ -5445,6 +5460,7 @@
             <button onclick="closeBrandModal('PANATTA')"  style="background:#ff0000;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">PANATTA</button>
             <button onclick="closeBrandModal('TYR')"      style="background:#ff6b00;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">TYR</button>
             <button onclick="closeBrandModal('STYKU')"    style="background:#7b2d8b;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">STYKU</button>
+            <button onclick="closeBrandModal('Y.PARÇA')"  style="background:#0c8599;color:white;border:none;padding:10px 24px;border-radius:6px;font-weight:bold;font-size:13px;cursor:pointer;">Y.PARÇA</button>
         </div>
         <div style="margin-top:12px;">
             <button onclick="document.getElementById('brand-select-modal').style.display='none'" style="background:#eee;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:11px;">İptal</button>
