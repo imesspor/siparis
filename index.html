@@ -160,14 +160,19 @@
         .btn-cust-download { background: var(--proforce-color); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
         .table-container { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
         /* ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ ═══ */
-        #pivot-container { display:block; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
+        #pivot-container { display:block; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); padding-right: 24px; }
         #pivot-table { table-layout: fixed; width: max-content; border-collapse: separate; border-spacing: 0; }
         #pivot-table thead { position: sticky; top: 0; z-index: 20; }
         #pivot-table th, #pivot-table td { padding: 4px 7px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; text-align: center; }
         #pivot-table th { white-space: normal; vertical-align: middle; padding-top: 4px; padding-bottom: 4px; }
         .pivot-th-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25; }
         .pivot-frozen-th { position: sticky; z-index: 25; background: linear-gradient(to bottom, #f8faff, #eef1f8) !important; font-weight: 800; text-transform: uppercase; color: var(--text-mid); letter-spacing: 0.3px; box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
-        .pivot-frozen-td { position: sticky; z-index: 6; background: var(--bg-white) !important; font-weight: 600; color: var(--text-dark); box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
+        .pivot-frozen-td { position: sticky; z-index: 6; background: var(--bg-white) !important; font-weight: 600; color: var(--text-dark); box-shadow: 2px 0 4px rgba(0,0,0,0.06); overflow: hidden; text-overflow: ellipsis; }
+        .pivot-frozen-th { overflow: hidden; text-overflow: ellipsis; }
+        .pivot-drag-td { cursor: move; color: var(--border-color); font-size: 15px; }
+        .pivot-note-input { width: 100%; border: 1px solid var(--border-light); border-radius: 4px; padding: 3px 5px; font-size: 10px; font-family: inherit; background: #fffde7; color: var(--text-dark); outline: none; box-sizing: border-box; }
+        .pivot-note-input:focus { border-color: #f5a623; background: #fff9e0; }
+        body.koyu-tema .pivot-note-input { background: #2a2f42; color: #e8ecf5; border-color: #3a4258; }
         .pivot-stok-adi { text-align: left !important; padding-left: 8px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; color: var(--accent-blue) !important; }
         .pivot-stok-adi:hover { text-decoration: underline; }
         .pivot-ithalat-th, .pivot-ithalat-td,
@@ -978,27 +983,9 @@
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-        <!-- ===== SOL GRUP: Teklif işlemleri ===== -->
-        <!-- Tekliflerim (Kayıtlı Teklifler) -->
-        <button class="nav-tab" onclick="kayitliTeklifleriAc()" id="btn-kayitli-teklifler" title="Kayıtlı teklifleri görüntüle">
-            <span class="nav-icon">📁</span>
-            <span class="nav-label">Tekliflerim</span>
-        </button>
-
-        <!-- Teklife Git -->
-        <button class="nav-tab nav-green" onclick="teklifEkraniniAc()" id="btn-sepet-goto" title="Teklife git">
-            <span class="nav-icon">🛒</span>
-            <span class="nav-label">Teklife Git</span>
-            <span class="sepet-badge" id="sepet-badge" style="background:#e63946;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;">0</span>
-        </button>
-
-        <!-- Teklif İçeri Al -->
-        <button class="nav-tab" onclick="document.getElementById('teklif-import-file').click()" title="PDF veya Excel teklif dosyası yükle">
-            <span class="nav-icon">📥</span>
-            <span class="nav-label">Teklif İçeri Al</span>
-        </button>
-        <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
-
+        <!-- Teklif ekranı bu görünümden kaldırıldı (sadece görüntüleme amaçlı) — arka planda kullanılan gizli elemanlar hata vermesin diye korunuyor -->
+        <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf" style="display:none;">
+        <span id="sepet-badge" style="display:none;">0</span>
         <!-- ===== Esnek boşluk: sol grubu sağ gruptan ayırır ===== -->
         <div class="nav-flex-spacer" style="flex:1 1 auto;"></div>
 
@@ -1364,6 +1351,16 @@
     let allData      = [];
     let currentBrand = 'PROFORCE';
     let pivotViewActive = true;
+    let pivotSortable = null;
+    let pivotNotlarMap = {};
+    try { pivotNotlarMap = JSON.parse(localStorage.getItem('pivotNotlarData') || '{}'); } catch(e) { pivotNotlarMap = {}; }
+    function _pivotSaveNote(el) {
+        const kod = el.getAttribute('data-kod');
+        const val = el.value;
+        if (val && val.trim() !== '') pivotNotlarMap[kod] = val;
+        else delete pivotNotlarMap[kod];
+        try { localStorage.setItem('pivotNotlarData', JSON.stringify(pivotNotlarMap)); } catch(e) {}
+    }
     // ── Y.PARÇA (Yedek Parça) sekmesi yardımcıları ───────────────────────────
     // ANLIK_STOK_DATA "D" sütunu = "YDM" olan satırlar yedek parçadır.
     // Y.PARÇA sekmesinde ürünler "C" sütununa (marka) göre gruplanır ve bu
@@ -3961,8 +3958,9 @@
         filtered.forEach(item => (item.satisListesi || []).forEach(s => { if (s.musteri) custSet.add(s.musteri); }));
         const custCols = Array.from(custSet).sort((a, b) => a.localeCompare(b, 'tr'));
 
-        // Donmuş (sticky) sol sütunlar
+        // Donmuş (sticky) sol sütunlar (ilk sütun: sürükle-taşı tutamacı)
         const frozenCols = [
+            { key: 'drag',     label: '⠿',        width: 26, isDrag: true },
             { key: 'stokKodu', label: 'STOK KODU', width: 85 },
             { key: 'stokAdi',  label: 'STOK ADI',  width: 160, cls: 'pivot-stok-adi' },
             { key: 'fiyat',    label: 'FİYAT',     width: 70 },
@@ -3970,6 +3968,7 @@
             { key: 'satis',    label: 'SATIŞ',     width: 55 },
             { key: 'kalan',    label: 'KALAN',     width: 55 },
             { key: 'ithalat',  label: 'İTHALAT',   width: 55 },
+            { key: 'notlar',   label: 'NOT / SİPARİŞ', width: 130, isNote: true },
         ];
         let cum = 0;
         const lefts = frozenCols.map(c => { const l = cum; cum += c.width; return l; });
@@ -3995,8 +3994,20 @@
         }
 
         tbody.innerHTML = filtered.map(item => {
-            let row = `<tr class="${item.kalan <= 0 ? 'critical-row' : ''}">`;
+            let row = `<tr class="${item.kalan <= 0 ? 'critical-row' : ''}" data-id="${(item.stokKodu||'').replace(/"/g,'&quot;')}">`;
             frozenCols.forEach((c, i) => {
+                if (c.isDrag) {
+                    row += `<td class="pivot-frozen-td pivot-drag-td w-sort" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;">⠿</td>`;
+                    return;
+                }
+                if (c.isNote) {
+                    const kod = (item.stokKodu || '');
+                    const notVal = (pivotNotlarMap[kod] || '').replace(/"/g,'&quot;');
+                    row += `<td class="pivot-frozen-td pivot-note-td" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;padding:2px 4px;">
+                        <input type="text" class="pivot-note-input" value="${notVal}" placeholder="Not / Sipariş ekle..." data-kod="${kod.replace(/"/g,'&quot;')}" onclick="event.stopPropagation()" onchange="_pivotSaveNote(this)">
+                    </td>`;
+                    return;
+                }
                 let val = item[c.key];
                 if (c.key === 'fiyat') val = formatCurrency(item.fiyat) + ' ' + (item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$');
                 const extraCls = c.cls ? ' ' + c.cls : '';
@@ -4015,6 +4026,19 @@
             row += '</tr>';
             return row;
         }).join('');
+
+        if (pivotSortable) pivotSortable.destroy();
+        pivotSortable = new Sortable(tbody, {
+            animation: 150, handle: '.w-sort',
+            onEnd: function() {
+                const ids = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id')).filter(Boolean);
+                const sorted = [];
+                ids.forEach(id => { const f = allData.find(d => d.stokKodu === id); if (f) sorted.push(f); });
+                allData.forEach(item => { if (!ids.includes(item.stokKodu)) sorted.push(item); });
+                allData = sorted;
+                localStorage.setItem('masterInventoryData', JSON.stringify(allData));
+            }
+        });
     }
 
     // =============================================
