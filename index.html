@@ -161,14 +161,14 @@
         .table-container { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
         /* ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ ═══ */
         #pivot-container { display:none; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
-        #pivot-table { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+        #pivot-table { table-layout: fixed; width: max-content; border-collapse: separate; border-spacing: 0; }
         #pivot-table thead { position: sticky; top: 0; z-index: 20; }
         #pivot-table th, #pivot-table td { padding: 4px 7px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; text-align: center; }
         .pivot-frozen-th { position: sticky; z-index: 25; background: linear-gradient(to bottom, #f8faff, #eef1f8) !important; font-weight: 800; text-transform: uppercase; color: var(--text-mid); letter-spacing: 0.3px; box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
         .pivot-frozen-td { position: sticky; z-index: 6; background: var(--bg-white) !important; font-weight: 600; color: var(--text-dark); box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
-        .pivot-stok-adi { text-align: left !important; padding-left: 8px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+        .pivot-stok-adi { text-align: left !important; padding-left: 8px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
         .pivot-ithalat-th, .pivot-ithalat-td,
-        .pivot-satis-th, .pivot-satis-td { width: 62px; min-width: 62px; max-width: 62px; overflow: hidden; text-overflow: ellipsis; padding: 4px 3px; }
+        .pivot-satis-th, .pivot-satis-td { width: 88px; min-width: 88px; max-width: 88px; overflow: hidden; text-overflow: ellipsis; padding: 4px 5px; }
         .pivot-ithalat-th { background: #e6f9ee !important; color: #0b7a41 !important; }
         .pivot-ithalat-td { background-color: #f0fff6 !important; color: #0b7a41; font-weight: 700; }
         .pivot-satis-th { background: #fff6d9 !important; color: #8a6100 !important; }
@@ -3962,12 +3962,12 @@
         // Donmuş (sticky) sol sütunlar
         const frozenCols = [
             { key: 'stokKodu', label: 'STOK KODU', width: 90 },
-            { key: 'stokAdi',  label: 'STOK ADI',  width: 220, cls: 'pivot-stok-adi' },
-            { key: 'fiyat',    label: 'FİYAT',     width: 75 },
-            { key: 'fiili',    label: 'FİİLİ',     width: 55 },
-            { key: 'satis',    label: 'SATIŞ',     width: 55 },
-            { key: 'kalan',    label: 'KALAN',     width: 55 },
-            { key: 'ithalat',  label: 'İTHALAT',   width: 65 },
+            { key: 'stokAdi',  label: 'STOK ADI',  width: 300, cls: 'pivot-stok-adi' },
+            { key: 'fiyat',    label: 'FİYAT',     width: 95 },
+            { key: 'fiili',    label: 'FİİLİ',     width: 60 },
+            { key: 'satis',    label: 'SATIŞ',     width: 60 },
+            { key: 'kalan',    label: 'KALAN',     width: 60 },
+            { key: 'ithalat',  label: 'İTHALAT',   width: 75 },
         ];
         let cum = 0;
         const lefts = frozenCols.map(c => { const l = cum; cum += c.width; return l; });
