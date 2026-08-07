@@ -159,6 +159,22 @@
         .btn-cust-preview { background: var(--accent-purple); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
         .btn-cust-download { background: var(--proforce-color); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
         .table-container { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
+        /* ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ ═══ */
+        #pivot-container { display:none; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
+        #pivot-table { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+        #pivot-table thead { position: sticky; top: 0; z-index: 20; }
+        #pivot-table th, #pivot-table td { padding: 4px 7px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; text-align: center; }
+        .pivot-frozen-th { position: sticky; z-index: 25; background: linear-gradient(to bottom, #f8faff, #eef1f8) !important; font-weight: 800; text-transform: uppercase; color: var(--text-mid); letter-spacing: 0.3px; box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
+        .pivot-frozen-td { position: sticky; z-index: 6; background: var(--bg-white) !important; font-weight: 600; color: var(--text-dark); box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
+        .pivot-stok-adi { text-align: left !important; padding-left: 8px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+        .pivot-ithalat-th { background: #e6f9ee !important; color: #0b7a41 !important; }
+        .pivot-ithalat-td { background-color: #f0fff6 !important; color: #0b7a41; font-weight: 700; }
+        .pivot-satis-th { background: #fff6d9 !important; color: #8a6100 !important; }
+        .pivot-satis-td { background-color: #fffbea !important; color: #8a6100; font-weight: 700; }
+        .pivot-toggle-btn.active-pivot { background: linear-gradient(135deg,#00a859,#00c96a) !important; color: #fff !important; }
+        body.koyu-tema .pivot-frozen-th { background: #232a3b !important; color: #e8ecf5 !important; }
+        body.koyu-tema .pivot-frozen-td { background: #1a2030 !important; color: #e8ecf5 !important; }
+        body.koyu-tema #pivot-container { background: #1a2030; border-color: #2c3550; }
         table { width: 100%; border-collapse: collapse; min-width: 1200px; table-layout: auto; }
         thead { background: linear-gradient(to bottom, #f8faff, #eef1f8); position: sticky; top: 0; z-index: 10; }
         th { padding: 5px 6px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; height: 22px; text-align: center; font-weight: 800; color: var(--text-mid); letter-spacing: 0.4px; text-transform: uppercase; }
@@ -1014,6 +1030,7 @@
             <button id="btn-styku" class="tab-btn" style="background:#7b2d8b;color:white;" onclick="switchBrand('STYKU')">STYKU</button>
             <button id="btn-ypara" class="tab-btn" style="background:#0c8599;color:white;" onclick="switchBrand('Y.PARÇA')">Y.PARÇA</button>
         </div>
+        <button id="pivot-toggle-btn" class="tema-btn pivot-toggle-btn" onclick="togglePivotView()" title="İthalat / Satış Görünümü (tarih ve müşteri bazlı, donmuş sütunlu)" aria-label="İthalat Satış Görünümü">📦↔️</button>
         <button id="gizli-toggle" class="mini-toggle" onclick="toggleGizliMod()" title="Gizli mod" aria-label="Gizli mod"><span class="mini-toggle-knob"></span></button>
         <button id="tema-toggle" class="tema-btn" onclick="toggleKoyuTema()" title="Tema değiştir" aria-label="Tema değiştir">🌙</button>
     </div>
@@ -1050,6 +1067,14 @@
             </tr>
         </thead>
         <tbody id="table-body"></tbody>
+    </table>
+</div>
+
+<!-- ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ — donmuş (freeze) sütunlar, tarih/müşteri bazlı ═══ -->
+<div id="pivot-container">
+    <table id="pivot-table">
+        <thead id="pivot-thead"></thead>
+        <tbody id="pivot-body"></tbody>
     </table>
 </div>
 
@@ -1251,17 +1276,11 @@
             <div class="teklif-card">
                 <div class="teklif-section-title">Teklif Bilgileri</div>
                 <input type="text" id="teklif-musteri" class="teklif-input-full" placeholder="Müşteri / Şirket Adı">
-                <textarea id="teklif-musteri-adres" class="teklif-input-full" placeholder="Adres" rows="2" style="resize:vertical;"></textarea>
                 <select id="teklif-para-birimi" class="teklif-select" onchange="teklifGuncelle()">
                     <option value="TL">TL (₺)</option>
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EURO (€)</option>
                 </select>
-                <div id="teklif-no-tarih-satir" style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-muted);margin:8px 0 4px;">
-                    <span>No: <b id="teklif-no-goster" style="color:#1a1f36;">—</b></span>
-                    <span>Tarih: <b id="teklif-tarih-goster" style="color:#1a1f36;">—</b></span>
-                </div>
-                <button id="teklif-revize-btn" class="teklif-action-btn" style="display:none;background:#e67700;color:white;margin-top:2px;" onclick="teklifRevizeAc()">🔄 Teklifi Revize Et</button>
             </div>
             <!-- Toplu İşlemler -->
             <div class="teklif-card">
@@ -1334,6 +1353,7 @@
 <script>
     let allData      = [];
     let currentBrand = 'PROFORCE';
+    let pivotViewActive = false;
     // ── Y.PARÇA (Yedek Parça) sekmesi yardımcıları ───────────────────────────
     // ANLIK_STOK_DATA "D" sütunu = "YDM" olan satırlar yedek parçadır.
     // Y.PARÇA sekmesinde ürünler "C" sütununa (marka) göre gruplanır ve bu
@@ -1355,8 +1375,6 @@
     let teklifArsiv = JSON.parse(localStorage.getItem('teklif_arsiv') || '[]');
     let usdKur = 43.71;
     let eurKur = 46.50;
-    window._gunlukKur = null;      // O günün ilk çekilen sabit kuru {tarih, usd, eur}
-    window._revizeTarihISO = null; // Revize akışında seçilen yeni tarih (kaydete kadar geçici)
 
     // ── Gizli mod (müşteri yanındayken bilgileri gizler — kalıcı değil, her açılışta kapalı) ──
     function toggleGizliMod() {
@@ -2694,33 +2712,14 @@
         });
     }
 
-    // ─── Kur Çek (gün içinde sabit) ───
-    // O gün ilk çekilen kur localStorage'a yazılır ve gün boyunca (sayfa kaç kez açılırsa açılsın)
-    // aynı değer kullanılır — böylece aynı gün içinde hazırlanan/revize edilen tekliflerin
-    // fiyatları gün içindeki kur dalgalanmasından etkilenmez.
+    // ─── Kur Çek ───
     async function kurCek() {
-        const bugunISO = new Date().toISOString().slice(0, 10);
-        let gunlukKur = null;
-        try { gunlukKur = JSON.parse(localStorage.getItem('imes_kur_gunluk') || 'null'); } catch(e) { gunlukKur = null; }
-
-        if (gunlukKur && gunlukKur.tarih === bugunISO && gunlukKur.usd && gunlukKur.eur) {
-            // Bugün için kur zaten sabitlenmiş — tekrar çekme
-            usdKur = gunlukKur.usd;
-            eurKur = gunlukKur.eur;
-        } else {
-            try {
-                const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                const data = await res.json();
-                usdKur = data.rates.TRY;
-                eurKur = usdKur / data.rates.EUR;
-                gunlukKur = { tarih: bugunISO, usd: usdKur, eur: eurKur };
-                try { localStorage.setItem('imes_kur_gunluk', JSON.stringify(gunlukKur)); } catch(e) {}
-            } catch(e) {
-                // Fetch başarısız — varsa son bilinen sabit kuru kullan
-                if (gunlukKur && gunlukKur.usd && gunlukKur.eur) { usdKur = gunlukKur.usd; eurKur = gunlukKur.eur; }
-            }
-        }
-        window._gunlukKur = { tarih: bugunISO, usd: usdKur, eur: eurKur };
+        try {
+            const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+            const data = await res.json();
+            usdKur = data.rates.TRY;
+            eurKur = usdKur / data.rates.EUR;
+        } catch(e) {}
         document.getElementById('kur-gosterge').textContent = `USD: ${formatCurrency(usdKur)} ₺ | EUR: ${formatCurrency(eurKur)} ₺`;
     }
 
@@ -3874,8 +3873,138 @@
                 }
             }
         });
+        if (pivotViewActive) renderPivotTable();
     }
 
+    // =============================================
+    // PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ
+    // Sol taraf (Stok Kodu ... İthalat) donuk (sticky) kalır,
+    // sağ tarafta her ithalat tarihi ve her müşteri ayrı sütun olarak kayar.
+    // =============================================
+    function togglePivotView() {
+        pivotViewActive = !pivotViewActive;
+        const normalTable = document.querySelector('.table-container');
+        const pivotBox    = document.getElementById('pivot-container');
+        const btn         = document.getElementById('pivot-toggle-btn');
+        if (pivotViewActive) {
+            if (normalTable) normalTable.style.display = 'none';
+            if (pivotBox) pivotBox.style.display = 'block';
+            if (btn) btn.classList.add('active-pivot');
+            renderPivotTable();
+        } else {
+            if (normalTable) normalTable.style.display = '';
+            if (pivotBox) pivotBox.style.display = 'none';
+            if (btn) btn.classList.remove('active-pivot');
+        }
+    }
+
+    // "123 Adet → 12.09.2026" gibi satırları {miktar, tarih} listesine çevirir
+    function _pivotParseIthalatDetay(str) {
+        if (!str) return [];
+        return str.split('\n').filter(Boolean).map(line => {
+            const m = line.match(/^(\d+)\s*Adet\s*→\s*(.+)$/);
+            if (!m) return null;
+            return { miktar: parseInt(m[1]) || 0, tarih: m[2].trim() };
+        }).filter(Boolean);
+    }
+
+    // Tarih string'ini (dd.mm.yyyy veya yyyy-mm-dd) sıralanabilir sayıya çevirir
+    function _pivotTarihSirala(str) {
+        if (!str) return null;
+        let m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+        if (m) return new Date(+m[3], +m[2] - 1, +m[1]).getTime();
+        m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (m) return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? null : d.getTime();
+    }
+
+    function renderPivotTable() {
+        const thead = document.getElementById('pivot-thead');
+        const tbody = document.getElementById('pivot-body');
+        if (!thead || !tbody) return;
+
+        const searchInput = document.getElementById('search-input');
+        const slug = t => t ? t.replace(/İ/g,'i').replace(/I/g,'ı').toLowerCase() : '';
+        const searchTerm = searchInput ? slug(searchInput.value) : '';
+
+        const filtered = allData.filter(d => {
+            const mb = _itemInBrand(d, currentBrand);
+            const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
+            return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter === 'HEPSİ' || _itemCat(d, currentBrand) === currentFilter));
+        });
+
+        // Her ürün için ithalat girdilerini önceden ayrıştır
+        filtered.forEach(item => { item._pivotIthalat = _pivotParseIthalatDetay(item.ithalatDetay); });
+
+        // Tüm benzersiz ithalat tarihlerini topla, kronolojik sırala
+        const dateSet = new Set();
+        filtered.forEach(item => item._pivotIthalat.forEach(e => dateSet.add(e.tarih)));
+        const dateCols = Array.from(dateSet).sort((a, b) => {
+            const da = _pivotTarihSirala(a), db = _pivotTarihSirala(b);
+            if (da !== null && db !== null) return da - db;
+            return a.localeCompare(b);
+        });
+
+        // Tüm benzersiz müşterileri topla, alfabetik sırala
+        const custSet = new Set();
+        filtered.forEach(item => (item.satisListesi || []).forEach(s => { if (s.musteri) custSet.add(s.musteri); }));
+        const custCols = Array.from(custSet).sort((a, b) => a.localeCompare(b, 'tr'));
+
+        // Donmuş (sticky) sol sütunlar
+        const frozenCols = [
+            { key: 'stokKodu', label: 'STOK KODU', width: 90 },
+            { key: 'stokAdi',  label: 'STOK ADI',  width: 220, cls: 'pivot-stok-adi' },
+            { key: 'fiyat',    label: 'FİYAT',     width: 75 },
+            { key: 'fiili',    label: 'FİİLİ',     width: 55 },
+            { key: 'satis',    label: 'SATIŞ',     width: 55 },
+            { key: 'kalan',    label: 'KALAN',     width: 55 },
+            { key: 'ithalat',  label: 'İTHALAT',   width: 65 },
+        ];
+        let cum = 0;
+        const lefts = frozenCols.map(c => { const l = cum; cum += c.width; return l; });
+
+        // ---- BAŞLIK ----
+        let theadHtml = '<tr>';
+        frozenCols.forEach((c, i) => {
+            theadHtml += `<th class="pivot-frozen-th" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;">${c.label}</th>`;
+        });
+        dateCols.forEach((d, i) => {
+            theadHtml += `<th class="pivot-ithalat-th" style="min-width:92px;">${i + 1}-${d}</th>`;
+        });
+        custCols.forEach((c, i) => {
+            theadHtml += `<th class="pivot-satis-th" style="min-width:110px;">${i + 1}-${c}</th>`;
+        });
+        theadHtml += '</tr>';
+        thead.innerHTML = theadHtml;
+
+        // ---- GÖVDE ----
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr><td colspan="${frozenCols.length + dateCols.length + custCols.length || 1}" style="padding:20px;text-align:center;">Bu marka/kategori için ürün bulunamadı.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(item => {
+            let row = '<tr>';
+            frozenCols.forEach((c, i) => {
+                let val = item[c.key];
+                if (c.key === 'fiyat') val = formatCurrency(item.fiyat) + ' ' + (item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$');
+                const extraCls = c.cls ? ' ' + c.cls : '';
+                const title = c.key === 'stokAdi' ? ` title="${(item.stokAdi||'').replace(/"/g,'&quot;')}"` : '';
+                row += `<td class="pivot-frozen-td${extraCls}" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;"${title}>${val != null ? val : ''}</td>`;
+            });
+            dateCols.forEach(d => {
+                const found = item._pivotIthalat.find(e => e.tarih === d);
+                row += `<td class="pivot-ithalat-td">${found ? found.miktar : ''}</td>`;
+            });
+            custCols.forEach(c => {
+                const total = (item.satisListesi || []).filter(s => s.musteri === c).reduce((sum, s) => sum + (parseInt(s.adet) || 0), 0);
+                row += `<td class="pivot-satis-td">${total ? total : ''}</td>`;
+            });
+            row += '</tr>';
+            return row;
+        }).join('');
+    }
 
     // =============================================
     // SEPET FONKSİYONLARI
@@ -4081,7 +4210,6 @@
     function teklifEkraniniAc() {
         document.getElementById('teklif-ekrani').style.display = 'block';
         document.body.style.overflow = 'hidden';
-        teklifNoTarihGuncelle();
         teklifGuncelle();
     }
 
@@ -4500,8 +4628,6 @@
         if (sepet.length > 0 && !confirm('Mevcut teklifi temizleyip yeni teklif oluşturmak istiyor musunuz?')) return;
         sepet = [];
         document.getElementById('teklif-musteri').value = '';
-        const adresEl0 = document.getElementById('teklif-musteri-adres');
-        if (adresEl0) adresEl0.value = '';
         // Yeni teklif para birimi otomatik TL
         const paraBirimiEl = document.getElementById('teklif-para-birimi');
         if (paraBirimiEl) paraBirimiEl.value = 'TL';
@@ -4510,11 +4636,6 @@
         window._aktifTeklifId = null;
         window._aktifTeklifBaslik = null;
         window._musteriSorIndirim = 0;
-        window._revizeTarihISO = null;
-        // Kur, günün sabitlenmiş güncel değerine dön
-        if (window._gunlukKur) { usdKur = window._gunlukKur.usd; eurKur = window._gunlukKur.eur; }
-        document.getElementById('kur-gosterge').textContent = `USD: ${formatCurrency(usdKur)} ₺ | EUR: ${formatCurrency(eurKur)} ₺`;
-        teklifNoTarihGuncelle();
         // Uyarı kutusunu temizle
         const uyariBox = document.getElementById('teklif-uyari-box');
         if (uyariBox) { uyariBox.innerHTML = ''; uyariBox.style.display = 'none'; }
@@ -4522,66 +4643,6 @@
         teklifGuncelle();
         renderTable();
         showToast('Yeni teklif için ekran temizlendi', '#00a859');
-    }
-
-    // Teklif No / Tarih göstergesini ve Revize butonunu günceller
-    function teklifNoTarihGuncelle() {
-        const noEl = document.getElementById('teklif-no-goster');
-        const tarihEl = document.getElementById('teklif-tarih-goster');
-        const revizeBtn = document.getElementById('teklif-revize-btn');
-        const kayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
-        if (kayit) {
-            if (noEl) noEl.textContent = kayit.teklifNo || '—';
-            if (tarihEl) tarihEl.textContent = kayit.tarihISO ? kayit.tarihISO.split('-').reverse().join('.') : '—';
-            if (revizeBtn) revizeBtn.style.display = 'block';
-        } else {
-            if (noEl) noEl.textContent = 'Kaydedilince oluşturulacak';
-            if (tarihEl) tarihEl.textContent = new Date().toISOString().slice(0,10).split('-').reverse().join('.');
-            if (revizeBtn) revizeBtn.style.display = 'none';
-        }
-    }
-
-    function yeniTeklifNoUret() {
-        const c = parseInt(localStorage.getItem('stok_ea_teklif_counter') || '0') + 1;
-        localStorage.setItem('stok_ea_teklif_counter', c);
-        return 'EA' + String(c).padStart(6, '0');
-    }
-
-    // ── Teklifi Revize Et ──
-    function teklifRevizeAc() {
-        const kayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
-        if (!kayit) return showToast('Önce kayıtlı bir teklif açın!', '#e63946');
-        const bilgiEl = document.getElementById('revize-orijinal-bilgi');
-        if (bilgiEl) bilgiEl.textContent = 'Orijinal teklif tarihi: ' + (kayit.tarihISO ? kayit.tarihISO.split('-').reverse().join('.') : '—');
-        const input = document.getElementById('revize-tarih-input');
-        if (input) input.value = window._revizeTarihISO || new Date().toISOString().slice(0,10);
-        const kurBilgiEl = document.getElementById('revize-kur-bilgi');
-        if (kurBilgiEl) kurBilgiEl.textContent = 'Orijinal tarih seçilirse teklifteki gömülü kur, farklı bir tarih seçilirse günün güncel kuru kullanılır.';
-        const m = document.getElementById('teklif-revize-modal');
-        if (m) m.style.display = 'flex';
-    }
-
-    function revizeUygula() {
-        const kayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
-        if (!kayit) return;
-        const secilenTarih = document.getElementById('revize-tarih-input').value;
-        if (!secilenTarih) return showToast('Bir tarih seçin!', '#e63946');
-
-        if (secilenTarih === kayit.tarihISO) {
-            // Orijinal tarih seçildi → teklife gömülü kuru kullan, değiştirme
-            usdKur = kayit.kurUSD;
-            eurKur = kayit.kurEUR;
-            window._revizeTarihISO = null; // kaydette kur/tarih değişmeyecek
-        } else {
-            // Başka bir tarih (ör. bugün) seçildi → günün güncel/sabit kurunu kullan
-            if (window._gunlukKur) { usdKur = window._gunlukKur.usd; eurKur = window._gunlukKur.eur; }
-            window._revizeTarihISO = secilenTarih;
-        }
-        document.getElementById('kur-gosterge').textContent = `USD: ${formatCurrency(usdKur)} ₺ | EUR: ${formatCurrency(eurKur)} ₺`;
-        document.getElementById('teklif-revize-modal').style.display = 'none';
-        teklifGuncelle();
-        renderTable();
-        showToast('Teklif ' + secilenTarih.split('-').reverse().join('.') + ' tarihine göre revize edildi. Kaydetmeyi unutmayın.', '#e67700');
     }
 
     function teklifKaydet() {
@@ -4606,8 +4667,6 @@
         if (m) m.style.display = 'none';
         const musteri = document.getElementById('teklif-musteri').value.trim();
         if (!musteri) return showToast('Müşteri adı girin!', '#e63946');
-        const adresEl = document.getElementById('teklif-musteri-adres');
-        const adres = adresEl ? adresEl.value.trim() : '';
         const cur = document.getElementById('teklif-para-birimi').value;
         const genelToplam = sepet.reduce((s, i) => s + hesaplaUrunFiyat(i, cur) * i.adet, 0) * 1.20;
 
@@ -4616,29 +4675,13 @@
             const kayit = teklifArsiv.find(x => x.id === window._aktifTeklifId);
             if (!kayit) return _teklifKaydetYap('yeni'); // güvenlik: kayıt yoksa yeni oluştur
             kayit.musteri = musteri;
-            kayit.musteriAdres = adres;
             kayit.paraBirimi = cur;
             kayit.genelToplam = genelToplam;
             kayit.tarih = new Date().toLocaleString('tr-TR');
             kayit.items = JSON.parse(JSON.stringify(sepet));
-            // "Teklifi Revize Et" akışından yeni bir tarih seçildiyse kuru ve tarihi güncelle;
-            // seçilmediyse (veya orijinal tarih korunduysa) gömülü kur/tarih olduğu gibi kalır.
-            if (window._revizeTarihISO) {
-                kayit.tarihISO = window._revizeTarihISO;
-                kayit.kurUSD = usdKur;
-                kayit.kurEUR = eurKur;
-                window._revizeTarihISO = null;
-            } else if (!kayit.tarihISO) {
-                // Eski kayıtlarda tarihISO/kur yoksa şimdi sabitle
-                kayit.tarihISO = new Date().toISOString().slice(0, 10);
-                kayit.kurUSD = usdKur;
-                kayit.kurEUR = eurKur;
-            }
-            if (!kayit.teklifNo) kayit.teklifNo = yeniTeklifNoUret();
             localStorage.setItem('teklif_arsiv', JSON.stringify(teklifArsiv));
             window._aktifTeklifBaslik = kayit.baslik || kayit.musteri;
             teklifArsivGoster();
-            teklifNoTarihGuncelle();
             showToast('✔ Teklif güncellendi: ' + (kayit.baslik || kayit.musteri), '#00a859');
             return;
         }
@@ -4680,28 +4723,20 @@
             }
         }
 
-        const yeniTarihISO = window._revizeTarihISO || new Date().toISOString().slice(0, 10);
         teklifArsiv.unshift({
             id: Date.now(),
-            teklifNo: yeniTeklifNoUret(),
             musteri,
-            musteriAdres: adres,
             baslik,
             tarih: new Date().toLocaleString('tr-TR'),
-            tarihISO: yeniTarihISO,
-            kurUSD: usdKur,
-            kurEUR: eurKur,
             items: JSON.parse(JSON.stringify(sepet)),
             paraBirimi: cur,
             genelToplam
         });
-        window._revizeTarihISO = null;
         localStorage.setItem('teklif_arsiv', JSON.stringify(teklifArsiv));
         // Yeni kaydı aktif teklif olarak işaretle
         window._aktifTeklifId = teklifArsiv[0].id;
         window._aktifTeklifBaslik = baslik;
         teklifArsivGoster();
-        teklifNoTarihGuncelle();
         showToast('✔ Teklif kaydedildi: ' + baslik, '#00a859');
     }
 
@@ -4710,27 +4745,15 @@
         if (!t) return;
         sepet = JSON.parse(JSON.stringify(t.items));
         document.getElementById('teklif-musteri').value = t.musteri;
-        const adresEl = document.getElementById('teklif-musteri-adres');
-        if (adresEl) adresEl.value = t.musteriAdres || '';
         if (t.paraBirimi) document.getElementById('teklif-para-birimi').value = t.paraBirimi;
         // Aktif teklif takibi
         window._aktifTeklifId = t.id;
         window._aktifTeklifBaslik = t.baslik || t.musteri;
-        window._revizeTarihISO = null;
-        // Teklifin kaydedildiği/gömülü kur burada sabitlenir — o teklife eklenip çıkarılan
-        // ürünler de bu kur üzerinden hesaplanır (revize edilene kadar değişmez).
-        if (t.kurUSD && t.kurEUR) {
-            usdKur = t.kurUSD;
-            eurKur = t.kurEUR;
-        }
-        document.getElementById('kur-gosterge').textContent = `USD: ${formatCurrency(usdKur)} ₺ | EUR: ${formatCurrency(eurKur)} ₺ (Teklif Tarihi Kuru)`;
-        teklifNoTarihGuncelle();
         sepetBadgeGuncelle();
         // Kayıtlı teklifler sayfasından geliyorsa o sayfayı kapat, teklif ekranını aç
         kayitliTeklifleriKapat();
         teklifEkraniniAc();
         renderTable();
-        teklifGuncelle();
         showToast('Teklif yüklendi: ' + (t.baslik || t.musteri), '#3b5bdb');
     }
 
@@ -4751,7 +4774,6 @@
             ? teklifArsiv.filter(t =>
                 slug(t.musteri).includes(slug(aramaTerm)) ||
                 slug(t.tarih).includes(slug(aramaTerm)) ||
-                slug(t.teklifNo).includes(slug(aramaTerm)) ||
                 slug(String(t.id)).includes(slug(aramaTerm))
               )
             : teklifArsiv;
@@ -4763,7 +4785,6 @@
                     <span class="arsiv-musteri">${t.baslik || t.musteri}</span>
                     <span class="arsiv-tutar">${formatCurrency(t.genelToplam)} ${sembolAl(t.paraBirimi || 'TL')}</span>
                 </div>
-                <div style="font-size:10px;color:#3b5bdb;font-weight:700;margin-bottom:2px;">No: ${t.teklifNo || '—'}</div>
                 <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">${t.tarih}${t.baslik && t.baslik !== t.musteri ? ' · ' + t.musteri : ''}</div>
                 <div class="arsiv-btns">
                     <button class="arsiv-btn" style="background:#eef2ff;color:var(--accent-blue);" onclick="teklifArsivOnizle(${t.id})">👁 Önizle</button>
@@ -4785,21 +4806,15 @@
         const origSepet = sepet;
         const origMusteri = document.getElementById('teklif-musteri').value;
         const origCur = document.getElementById('teklif-para-birimi').value;
-        const origAktifId = window._aktifTeklifId;
-        const origUsdKur = usdKur, origEurKur = eurKur;
-        // Geçici olarak arşiv verisini aktifte yükle (teklife gömülü kur ile)
+        // Geçici olarak arşiv verisini aktifte yükle
         sepet = JSON.parse(JSON.stringify(t.items));
         document.getElementById('teklif-musteri').value = t.musteri;
         document.getElementById('teklif-para-birimi').value = t.paraBirimi || 'TL';
-        window._aktifTeklifId = t.id;
-        if (t.kurUSD && t.kurEUR) { usdKur = t.kurUSD; eurKur = t.kurEUR; }
         await teklifPDFIndir();
         // Eski duruma geri al
         sepet = origSepet;
         document.getElementById('teklif-musteri').value = origMusteri;
         document.getElementById('teklif-para-birimi').value = origCur;
-        window._aktifTeklifId = origAktifId;
-        usdKur = origUsdKur; eurKur = origEurKur;
     }
 
     function teklifOnizle() {
@@ -4931,8 +4946,9 @@
         doc.text("info@imesspor.com | www.imesspor.com", 190, 18, { align: "right" });
         doc.setFontSize(9); doc.setTextColor(0);
         doc.text(`Talep Tarihi : ${dateStr}`, 190, 40, { align: "right" });
-        const aktifKayitPDF = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
-        const teklifNo = (aktifKayitPDF && aktifKayitPDF.teklifNo) ? aktifKayitPDF.teklifNo : yeniTeklifNoUret();
+        const eaCounter = parseInt(localStorage.getItem('stok_ea_teklif_counter') || '0') + 1;
+        localStorage.setItem('stok_ea_teklif_counter', eaCounter);
+        const teklifNo = 'EA' + String(eaCounter).padStart(6, '0');
         doc.text(`Teklif No    : ${teklifNo}`, 190, 45, { align: "right" });
         doc.setFontSize(10);
         doc.text(musteri.toUpperCase(), 15, 40);
@@ -5573,23 +5589,6 @@
         </div>
         <button onclick="document.getElementById('teklif-kaydet-secim-modal').style.display='none'"
             style="margin-top:14px;background:#eee;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">İptal</button>
-    </div>
-</div>
-
-<!-- ── Teklif Revize Modal ── -->
-<div id="teklif-revize-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
-    <div style="background:white;border-radius:12px;padding:24px;box-shadow:0 5px 24px rgba(0,0,0,0.25);min-width:280px;max-width:90vw;">
-        <div style="font-size:14px;font-weight:800;color:#1a1f36;margin-bottom:4px;">🔄 Teklifi Revize Et</div>
-        <div id="revize-orijinal-bilgi" style="font-size:10px;color:#8a94a6;margin-bottom:14px;"></div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:700;">Teklif Tarihi</div>
-        <input type="date" id="revize-tarih-input" class="teklif-input-full" style="margin-bottom:6px;">
-        <div id="revize-kur-bilgi" style="font-size:10px;color:#8a94a6;margin-bottom:16px;"></div>
-        <div style="display:flex;gap:8px;">
-            <button onclick="document.getElementById('teklif-revize-modal').style.display='none'"
-                style="flex:1;background:#eee;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">İptal</button>
-            <button onclick="revizeUygula()"
-                style="flex:1;background:linear-gradient(135deg,#e67700,#f08c00);color:white;border:none;padding:9px 14px;border-radius:6px;font-weight:800;font-size:11px;cursor:pointer;font-family:inherit;">Uygula</button>
-        </div>
     </div>
 </div>
 
