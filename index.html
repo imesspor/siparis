@@ -164,7 +164,8 @@
         #pivot-table { table-layout: fixed; width: max-content; border-collapse: separate; border-spacing: 0; }
         #pivot-table thead { position: sticky; top: 0; z-index: 20; }
         #pivot-table th, #pivot-table td { padding: 4px 7px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; text-align: center; }
-        #pivot-table th { white-space: normal; word-break: break-word; line-height: 1.25; height: 64px; vertical-align: middle; padding-top: 4px; padding-bottom: 4px; }
+        #pivot-table th { white-space: normal; vertical-align: middle; padding-top: 4px; padding-bottom: 4px; }
+        .pivot-th-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25; }
         .pivot-frozen-th { position: sticky; z-index: 25; background: linear-gradient(to bottom, #f8faff, #eef1f8) !important; font-weight: 800; text-transform: uppercase; color: var(--text-mid); letter-spacing: 0.3px; box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
         .pivot-frozen-td { position: sticky; z-index: 6; background: var(--bg-white) !important; font-weight: 600; color: var(--text-dark); box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
         .pivot-stok-adi { text-align: left !important; padding-left: 8px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
@@ -3976,13 +3977,13 @@
         // ---- BAŞLIK ----
         let theadHtml = '<tr>';
         frozenCols.forEach((c, i) => {
-            theadHtml += `<th class="pivot-frozen-th" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;">${c.label}</th>`;
+            theadHtml += `<th class="pivot-frozen-th" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;"><div class="pivot-th-text">${c.label}</div></th>`;
         });
         dateCols.forEach(d => {
-            theadHtml += `<th class="pivot-ithalat-th" title="${d.replace(/"/g,'&quot;')}">${d}</th>`;
+            theadHtml += `<th class="pivot-ithalat-th" title="${d.replace(/"/g,'&quot;')}"><div class="pivot-th-text">${d}</div></th>`;
         });
         custCols.forEach(c => {
-            theadHtml += `<th class="pivot-satis-th" title="${c.replace(/"/g,'&quot;')}">${c}</th>`;
+            theadHtml += `<th class="pivot-satis-th" title="${c.replace(/"/g,'&quot;')}"><div class="pivot-th-text">${c}</div></th>`;
         });
         theadHtml += '</tr>';
         thead.innerHTML = theadHtml;
