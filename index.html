@@ -167,10 +167,18 @@
         .pivot-frozen-th { position: sticky; z-index: 25; background: linear-gradient(to bottom, #f8faff, #eef1f8) !important; font-weight: 800; text-transform: uppercase; color: var(--text-mid); letter-spacing: 0.3px; box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
         .pivot-frozen-td { position: sticky; z-index: 6; background: var(--bg-white) !important; font-weight: 600; color: var(--text-dark); box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
         .pivot-stok-adi { text-align: left !important; padding-left: 8px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+        .pivot-ithalat-th, .pivot-ithalat-td,
+        .pivot-satis-th, .pivot-satis-td { width: 62px; min-width: 62px; max-width: 62px; overflow: hidden; text-overflow: ellipsis; padding: 4px 3px; }
         .pivot-ithalat-th { background: #e6f9ee !important; color: #0b7a41 !important; }
         .pivot-ithalat-td { background-color: #f0fff6 !important; color: #0b7a41; font-weight: 700; }
         .pivot-satis-th { background: #fff6d9 !important; color: #8a6100 !important; }
         .pivot-satis-td { background-color: #fffbea !important; color: #8a6100; font-weight: 700; }
+        .critical-row .pivot-frozen-td,
+        .critical-row .pivot-ithalat-td,
+        .critical-row .pivot-satis-td { color: #e63946 !important; }
+        body.koyu-tema .critical-row .pivot-frozen-td,
+        body.koyu-tema .critical-row .pivot-ithalat-td,
+        body.koyu-tema .critical-row .pivot-satis-td { color: #ff6b6b !important; }
         .pivot-toggle-btn.active-pivot { background: linear-gradient(135deg,#00a859,#00c96a) !important; color: #fff !important; }
         body.koyu-tema .pivot-frozen-th { background: #232a3b !important; color: #e8ecf5 !important; }
         body.koyu-tema .pivot-frozen-td { background: #1a2030 !important; color: #e8ecf5 !important; }
@@ -3969,11 +3977,11 @@
         frozenCols.forEach((c, i) => {
             theadHtml += `<th class="pivot-frozen-th" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;">${c.label}</th>`;
         });
-        dateCols.forEach((d, i) => {
-            theadHtml += `<th class="pivot-ithalat-th" style="min-width:92px;">${i + 1}-${d}</th>`;
+        dateCols.forEach(d => {
+            theadHtml += `<th class="pivot-ithalat-th" title="${d.replace(/"/g,'&quot;')}">${d}</th>`;
         });
-        custCols.forEach((c, i) => {
-            theadHtml += `<th class="pivot-satis-th" style="min-width:110px;">${i + 1}-${c}</th>`;
+        custCols.forEach(c => {
+            theadHtml += `<th class="pivot-satis-th" title="${c.replace(/"/g,'&quot;')}">${c}</th>`;
         });
         theadHtml += '</tr>';
         thead.innerHTML = theadHtml;
@@ -3985,7 +3993,7 @@
         }
 
         tbody.innerHTML = filtered.map(item => {
-            let row = '<tr>';
+            let row = `<tr class="${item.kalan <= 0 ? 'critical-row' : ''}">`;
             frozenCols.forEach((c, i) => {
                 let val = item[c.key];
                 if (c.key === 'fiyat') val = formatCurrency(item.fiyat) + ' ' + (item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$');
