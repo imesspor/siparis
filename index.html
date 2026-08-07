@@ -160,7 +160,7 @@
         .btn-cust-download { background: var(--proforce-color); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
         .table-container { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
         /* ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ ═══ */
-        #pivot-container { display:none; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
+        #pivot-container { display:block; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
         #pivot-table { table-layout: fixed; width: max-content; border-collapse: separate; border-spacing: 0; }
         #pivot-table thead { position: sticky; top: 0; z-index: 20; }
         #pivot-table th, #pivot-table td { padding: 4px 7px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; text-align: center; }
@@ -1040,7 +1040,6 @@
             <button id="btn-styku" class="tab-btn" style="background:#7b2d8b;color:white;" onclick="switchBrand('STYKU')">STYKU</button>
             <button id="btn-ypara" class="tab-btn" style="background:#0c8599;color:white;" onclick="switchBrand('Y.PARÇA')">Y.PARÇA</button>
         </div>
-        <button id="pivot-toggle-btn" class="tema-btn pivot-toggle-btn" onclick="togglePivotView()" title="İthalat / Satış Görünümü (tarih ve müşteri bazlı, donmuş sütunlu)" aria-label="İthalat Satış Görünümü">📦↔️</button>
         <button id="gizli-toggle" class="mini-toggle" onclick="toggleGizliMod()" title="Gizli mod" aria-label="Gizli mod"><span class="mini-toggle-knob"></span></button>
         <button id="tema-toggle" class="tema-btn" onclick="toggleKoyuTema()" title="Tema değiştir" aria-label="Tema değiştir">🌙</button>
     </div>
@@ -1051,7 +1050,7 @@
     <div id="slicer-area"></div>
 </div>
 
-<div class="table-container">
+<div class="table-container" style="display:none;">
     <table>
         <thead>
             <tr>
@@ -1363,7 +1362,7 @@
 <script>
     let allData      = [];
     let currentBrand = 'PROFORCE';
-    let pivotViewActive = false;
+    let pivotViewActive = true;
     // ── Y.PARÇA (Yedek Parça) sekmesi yardımcıları ───────────────────────────
     // ANLIK_STOK_DATA "D" sütunu = "YDM" olan satırlar yedek parçadır.
     // Y.PARÇA sekmesinde ürünler "C" sütununa (marka) göre gruplanır ve bu
