@@ -1070,6 +1070,7 @@
 <!-- ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ — donmuş (freeze) sütunlar, tarih/müşteri bazlı ═══ -->
 <div id="pivot-container">
     <table id="pivot-table">
+        <colgroup id="pivot-colgroup"></colgroup>
         <thead id="pivot-thead"></thead>
         <tbody id="pivot-body"></tbody>
     </table>
@@ -3968,10 +3969,22 @@
             { key: 'satis',    label: 'SATIŞ',     width: 55 },
             { key: 'kalan',    label: 'KALAN',     width: 55 },
             { key: 'ithalat',  label: 'İTHALAT',   width: 55 },
-            { key: 'notlar',   label: 'NOT / SİPARİŞ', width: 130, isNote: true },
+            { key: 'notlar',   label: 'NOT / SİPARİŞ', width: 55, isNote: true },
         ];
         let cum = 0;
         const lefts = frozenCols.map(c => { const l = cum; cum += c.width; return l; });
+
+        // ---- SÜTUN GENİŞLİKLERİNİ KİLİTLE (colgroup) ----
+        // table-layout:fixed ile birlikte <col> genişlikleri tarayıcı tarafından
+        // asla değiştirilemez; böylece her seri/kategoride ölçüler birebir sabit kalır.
+        const colgroup = document.getElementById('pivot-colgroup');
+        if (colgroup) {
+            let colsHtml = '';
+            frozenCols.forEach(c => { colsHtml += `<col style="width:${c.width}px;">`; });
+            dateCols.forEach(() => { colsHtml += `<col style="width:88px;">`; });
+            custCols.forEach(() => { colsHtml += `<col style="width:88px;">`; });
+            colgroup.innerHTML = colsHtml;
+        }
 
         // ---- BAŞLIK ----
         let theadHtml = '<tr>';
@@ -4004,7 +4017,7 @@
                     const kod = (item.stokKodu || '');
                     const notVal = (pivotNotlarMap[kod] || '').replace(/"/g,'&quot;');
                     row += `<td class="pivot-frozen-td pivot-note-td" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;padding:2px 4px;">
-                        <input type="text" class="pivot-note-input" value="${notVal}" placeholder="Not / Sipariş ekle..." data-kod="${kod.replace(/"/g,'&quot;')}" onclick="event.stopPropagation()" onchange="_pivotSaveNote(this)">
+                        <input type="text" class="pivot-note-input" value="${notVal}" data-kod="${kod.replace(/"/g,'&quot;')}" onclick="event.stopPropagation()" onchange="_pivotSaveNote(this)">
                     </td>`;
                     return;
                 }
