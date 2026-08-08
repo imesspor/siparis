@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- ExcelJS: kurumsal formatta biçimlendirilmiş (styled) Excel çıktısı için -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <!-- Şartname Modülü: Word (.docx) ayrıştırma için -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <!-- docx.js: Word (.docx) oluşturma için — inline bundle -->
@@ -159,38 +161,6 @@
         .btn-cust-preview { background: var(--accent-purple); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
         .btn-cust-download { background: var(--proforce-color); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 9px; cursor: pointer; font-weight: 700; font-family: inherit; }
         .table-container { background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); }
-        /* ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ ═══ */
-        #pivot-container { display:block; background: var(--bg-white); border-radius: var(--radius); border: 1px solid var(--border-color); overflow: auto; max-height: 78vh; box-shadow: var(--shadow-sm); padding-right: 24px; }
-        #pivot-table { table-layout: auto; width: max-content; border-collapse: separate; border-spacing: 0; }
-        #pivot-table thead { position: sticky; top: 0; z-index: 20; }
-        #pivot-table th, #pivot-table td { padding: 4px 7px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; text-align: center; }
-        #pivot-table th { white-space: normal; vertical-align: middle; padding-top: 4px; padding-bottom: 4px; }
-        .pivot-th-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25; }
-        .pivot-frozen-th { position: sticky; z-index: 25; background: linear-gradient(to bottom, #f8faff, #eef1f8) !important; font-weight: 800; text-transform: uppercase; color: var(--text-mid); letter-spacing: 0.3px; box-shadow: 2px 0 4px rgba(0,0,0,0.06); }
-        .pivot-frozen-td { position: sticky; z-index: 6; background: var(--bg-white) !important; font-weight: 600; color: var(--text-dark); box-shadow: 2px 0 4px rgba(0,0,0,0.06); overflow: hidden; text-overflow: ellipsis; }
-        .pivot-frozen-th { overflow: hidden; text-overflow: ellipsis; }
-        .pivot-drag-td { cursor: move; color: var(--border-color); font-size: 15px; }
-        .pivot-note-input { width: 100%; border: 1px solid var(--border-light); border-radius: 4px; padding: 3px 5px; font-size: 10px; font-family: inherit; background: #fffde7; color: var(--text-dark); outline: none; box-sizing: border-box; }
-        .pivot-note-input:focus { border-color: #f5a623; background: #fff9e0; }
-        body.koyu-tema .pivot-note-input { background: #2a2f42; color: #e8ecf5; border-color: #3a4258; }
-        .pivot-stok-adi { text-align: left !important; padding-left: 8px; max-width: 280px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; color: var(--accent-blue) !important; }
-        .pivot-stok-adi:hover { text-decoration: underline; }
-        .pivot-ithalat-th, .pivot-ithalat-td,
-        .pivot-satis-th, .pivot-satis-td { width: 88px; min-width: 88px; max-width: 88px; overflow: hidden; text-overflow: ellipsis; padding: 4px 5px; }
-        .pivot-ithalat-th { background: #e6f9ee !important; color: #0b7a41 !important; }
-        .pivot-ithalat-td { background-color: #f0fff6 !important; color: #0b7a41; font-weight: 700; }
-        .pivot-satis-th { background: #fff6d9 !important; color: #8a6100 !important; }
-        .pivot-satis-td { background-color: #fffbea !important; color: #8a6100; font-weight: 700; }
-        .critical-row .pivot-frozen-td,
-        .critical-row .pivot-ithalat-td,
-        .critical-row .pivot-satis-td { color: #e63946 !important; }
-        body.koyu-tema .critical-row .pivot-frozen-td,
-        body.koyu-tema .critical-row .pivot-ithalat-td,
-        body.koyu-tema .critical-row .pivot-satis-td { color: #ff6b6b !important; }
-        .pivot-toggle-btn.active-pivot { background: linear-gradient(135deg,#00a859,#00c96a) !important; color: #fff !important; }
-        body.koyu-tema .pivot-frozen-th { background: #232a3b !important; color: #e8ecf5 !important; }
-        body.koyu-tema .pivot-frozen-td { background: #1a2030 !important; color: #e8ecf5 !important; }
-        body.koyu-tema #pivot-container { background: #1a2030; border-color: #2c3550; }
         table { width: 100%; border-collapse: collapse; min-width: 1200px; table-layout: auto; }
         thead { background: linear-gradient(to bottom, #f8faff, #eef1f8); position: sticky; top: 0; z-index: 10; }
         th { padding: 5px 6px; border: 1px solid var(--border-light); font-size: 10px; white-space: nowrap; height: 22px; text-align: center; font-weight: 800; color: var(--text-mid); letter-spacing: 0.4px; text-transform: uppercase; }
@@ -269,6 +239,28 @@
         .sepet-badge { background: #e63946; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; }
 
         /* ── Sepet / Teklif Ekranı ── */
+        /* ═══ v2: Teklif Altyapısı (kur sabitleme, teklif no, revizyon, split export, ürün geçmişi) ═══ */
+        .arsiv-no { background: #1a1f36; color: #ffd43b; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.4px; white-space: nowrap; flex-shrink: 0; }
+        .arsiv-no-mini { background: #eef2ff; color: #3b5bdb; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 4px; margin-right: 4px; white-space: nowrap; }
+        .arsiv-kur-satir { font-size: 9.5px; color: #5f6b7a; background: #f7f8fc; border: 1px dashed var(--border-color); border-radius: 5px; padding: 3px 7px; margin-bottom: 6px; display: inline-block; }
+        .split-btn-grup { display: flex; width: 100%; margin-bottom: 6px; border-radius: 7px; overflow: hidden; }
+        .split-btn { flex: 1; border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 11px; padding: 9px 6px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 5px; transition: filter 0.15s; }
+        .split-btn:hover { filter: brightness(1.08); }
+        .split-btn-sol { background: #e63946; border-right: 1.5px solid rgba(255,255,255,0.4); }
+        .split-btn-sag { background: #0b7285; }
+        .btn-revize { background: linear-gradient(135deg, #6f42c1, #9775fa); color: white; }
+        .teklif-meta-satir { font-size: 10px; opacity: 0.95 !important; }
+        .teklif-meta-satir .meta-deger { text-align: right; font-weight: 700; line-height: 1.45; }
+        .musteri-detay-toggle { background: none; border: none; color: var(--accent-blue); font-size: 10px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 2px 0 0; text-align: left; }
+        .urun-gecmis-satir { cursor: pointer; border-radius: 5px; transition: background 0.12s; }
+        .urun-gecmis-satir:hover { background: #eef2ff; }
+        .revize-opsiyon-btn { border: none; padding: 12px 16px; border-radius: 9px; font-weight: 800; font-size: 12px; cursor: pointer; font-family: inherit; text-align: left; color: white; width: 100%; transition: transform 0.12s; }
+        .revize-opsiyon-btn:hover { transform: translateY(-1px); }
+        .revize-opsiyon-alt { font-size: 10px; font-weight: 500; opacity: 0.9; margin-top: 3px; line-height: 1.45; }
+        @media (max-width: 768px) {
+            .split-btn { padding: 12px 6px; font-size: 12px; }
+            .arsiv-no { font-size: 10px; }
+        }
         #teklif-ekrani { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main); z-index: 5000; overflow-y: auto; }
         #kayitli-teklifler-ekrani { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main); z-index: 5000; overflow-y: auto; }
         .kayitli-teklif-wrap { max-width: 920px; margin: 0; }
@@ -983,9 +975,27 @@
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-        <!-- Teklif ekranı bu görünümden kaldırıldı (sadece görüntüleme amaçlı) — arka planda kullanılan gizli elemanlar hata vermesin diye korunuyor -->
-        <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf" style="display:none;">
-        <span id="sepet-badge" style="display:none;">0</span>
+        <!-- ===== SOL GRUP: Teklif işlemleri ===== -->
+        <!-- Tekliflerim (Kayıtlı Teklifler) -->
+        <button class="nav-tab" onclick="kayitliTeklifleriAc()" id="btn-kayitli-teklifler" title="Kayıtlı teklifleri görüntüle">
+            <span class="nav-icon">📁</span>
+            <span class="nav-label">Tekliflerim</span>
+        </button>
+
+        <!-- Teklife Git -->
+        <button class="nav-tab nav-green" onclick="teklifEkraniniAc()" id="btn-sepet-goto" title="Teklife git">
+            <span class="nav-icon">🛒</span>
+            <span class="nav-label">Teklife Git</span>
+            <span class="sepet-badge" id="sepet-badge" style="background:#e63946;color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;">0</span>
+        </button>
+
+        <!-- Teklif İçeri Al -->
+        <button class="nav-tab" onclick="document.getElementById('teklif-import-file').click()" title="PDF veya Excel teklif dosyası yükle">
+            <span class="nav-icon">📥</span>
+            <span class="nav-label">Teklif İçeri Al</span>
+        </button>
+        <input type="file" id="teklif-import-file" class="hidden-input" accept=".xlsx,.xls,.pdf">
+
         <!-- ===== Esnek boşluk: sol grubu sağ gruptan ayırır ===== -->
         <div class="nav-flex-spacer" style="flex:1 1 auto;"></div>
 
@@ -1038,7 +1048,7 @@
     <div id="slicer-area"></div>
 </div>
 
-<div class="table-container" style="display:none;">
+<div class="table-container">
     <table>
         <thead>
             <tr>
@@ -1064,14 +1074,6 @@
             </tr>
         </thead>
         <tbody id="table-body"></tbody>
-    </table>
-</div>
-
-<!-- ═══ PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ — donmuş (freeze) sütunlar, tarih/müşteri bazlı ═══ -->
-<div id="pivot-container">
-    <table id="pivot-table">
-        <thead id="pivot-thead"></thead>
-        <tbody id="pivot-body"></tbody>
     </table>
 </div>
 
@@ -1273,11 +1275,21 @@
             <div class="teklif-card">
                 <div class="teklif-section-title">Teklif Bilgileri</div>
                 <input type="text" id="teklif-musteri" class="teklif-input-full" placeholder="Müşteri / Şirket Adı">
+                <input type="text" id="teklif-adi" class="teklif-input-full" placeholder="Teklif Adı (boş ise otomatik oluşturulur)">
                 <select id="teklif-para-birimi" class="teklif-select" onchange="teklifGuncelle()">
                     <option value="TL">TL (₺)</option>
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EURO (€)</option>
                 </select>
+                <button type="button" class="musteri-detay-toggle" id="musteri-detay-toggle-btn" onclick="musteriDetayToggle()">▸ Müşteri Detayları (adres, vergi dairesi...)</button>
+                <div id="musteri-detay-alani" style="display:none;margin-top:8px;">
+                    <input type="text" id="teklif-m-adres" class="teklif-input-full" placeholder="Adres">
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" id="teklif-m-vergidairesi" class="teklif-input-full" placeholder="Vergi Dairesi">
+                        <input type="text" id="teklif-m-vergino" class="teklif-input-full" placeholder="Vergi / TC No">
+                    </div>
+                    <input type="text" id="teklif-m-yetkili" class="teklif-input-full" placeholder="İlgili Kişi / Yetkili" style="margin-bottom:0;">
+                </div>
             </div>
             <!-- Toplu İşlemler -->
             <div class="teklif-card">
@@ -1299,13 +1311,26 @@
                 <div class="teklif-ozet-satir" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:6px;opacity:1;">
                     <span class="ort-indirim-label">📉 Ort. İndirim:</span><span id="ozet-ort-indirim" style="color:#ffd43b;font-weight:800;">%0,00</span>
                 </div>
+                <!-- v2 · Özellik 4: Teklif tarihi + hazırlanan kur detayı (Ort. İndirim'in hemen altında) -->
+                <div class="teklif-ozet-satir teklif-meta-satir" style="margin-top:4px;border-top:1px dashed rgba(255,255,255,0.12);padding-top:5px;">
+                    <span>📅 Teklif Tarihi:</span><span id="ozet-teklif-tarihi" class="meta-deger">—</span>
+                </div>
+                <div class="teklif-ozet-satir teklif-meta-satir" style="align-items:flex-start;">
+                    <span style="white-space:nowrap;">💱 Hazırlanan Kur:</span><span id="ozet-kur-detay" class="meta-deger">—</span>
+                </div>
                 <span id="ozet-indirim-tutar" style="display:none;">0,00</span>
             </div>
             <!-- Aksiyonlar -->
             <button class="teklif-action-btn btn-onizle" onclick="teklifOnizle()">👁 Önizle</button>
-            <button class="teklif-action-btn btn-indir-pdf" onclick="teklifPDFIndir()">📄 PDF İndir</button>
+            <!-- v2 · Özellik 7: Split export butonu (PDF | Excel) -->
+            <div class="split-btn-grup">
+                <button class="split-btn split-btn-sol" onclick="teklifPDFIndir()">📄 PDF İndir</button>
+                <button class="split-btn split-btn-sag" onclick="teklifExcelIndir()" title="Kurumsal formatta biçimlendirilmiş Excel indir">📊 Excel İndir</button>
+            </div>
             <button class="teklif-action-btn" style="background:#6f42c1;color:white;" onclick="teklifSartnameIndir()">📋 Şartname İndir (Word)</button>
             <button class="teklif-action-btn btn-kaydet" onclick="teklifKaydet()">💾 Kaydet</button>
+            <!-- v2 · Özellik 3: Teklif revizyon butonu -->
+            <button class="teklif-action-btn btn-revize" onclick="teklifRevizeAc()">🔁 Teklifi Revize Et</button>
             <button class="teklif-action-btn btn-yeni" onclick="yeniTeklif()">✚ Yeni Teklif</button>
         </div>
         <!-- SAĞ: Sepet Ürünleri -->
@@ -1350,17 +1375,6 @@
 <script>
     let allData      = [];
     let currentBrand = 'PROFORCE';
-    let pivotViewActive = true;
-    let pivotSortable = null;
-    let pivotNotlarMap = {};
-    try { pivotNotlarMap = JSON.parse(localStorage.getItem('pivotNotlarData') || '{}'); } catch(e) { pivotNotlarMap = {}; }
-    function _pivotSaveNote(el) {
-        const kod = el.getAttribute('data-kod');
-        const val = el.value;
-        if (val && val.trim() !== '') pivotNotlarMap[kod] = val;
-        else delete pivotNotlarMap[kod];
-        try { localStorage.setItem('pivotNotlarData', JSON.stringify(pivotNotlarMap)); } catch(e) {}
-    }
     // ── Y.PARÇA (Yedek Parça) sekmesi yardımcıları ───────────────────────────
     // ANLIK_STOK_DATA "D" sütunu = "YDM" olan satırlar yedek parçadır.
     // Y.PARÇA sekmesinde ürünler "C" sütununa (marka) göre gruplanır ve bu
@@ -1382,6 +1396,466 @@
     let teklifArsiv = JSON.parse(localStorage.getItem('teklif_arsiv') || '[]');
     let usdKur = 43.71;
     let eurKur = 46.50;
+
+    // Teklif şartları (PDF ve Excel çıktısında ortak kullanılır)
+    const TEKLIF_SARTLARI = [
+            "* Ürünlerin nakliye bedeli alıcı firma/kişi tarafından karşılanacaktır.",
+            "* Ürünlerin kurulum yapılacak alana indirilmesi için kiralanacak vinç, forklift ve hamaliye gibi ücretler alıcı tarafından karşılanacaktır",
+            "* Fiyatlarımıza montaj ve garanti kapsamındaki Teknik Servis dahildir.",
+            "* Kurulum ve montaj anlaşılan ödemeler tamamlandıktan sonra 5 (beş) iş günü içinde yapılacaktır.",
+            "* Kurulumu yapılacak alan eksiksiz olarak İmes Spor'a teslim edilecektir.",
+            "* Ürünlerimiz 2 yıl garantilidir.",
+            "* Teklifimizin geçerlilik tarihi 3 (üç) gündür.",
+            "* Döviz fiyatı verilen teklifler gün kuru üzerinden verilmiş olup, anlaşma yapıldığı gün merkez bankası kur fiyatı dikkate alınacaktır",
+            "* Teklifimizi olumlu karşılamanızı ümit eder, iyi çalışmalar dileriz."
+    ];
+
+    // Kurumsal logo (PDF ve Excel çıktısında ortak kullanılır)
+    const IMES_LOGO_B64 = "data:image/jpeg;base64,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";
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  v2 · KUR & TEKLİF ALTYAPISI
+    //  "DB" katmanı (localStorage şeması — SQL karşılıkları backend-api-referans.md'de):
+    //   • kur_gunluk_arsiv : { "YYYY-MM-DD": { usd, eur, sabit, sabitZamani, kaynak } }
+    //   • teklif_no_sayac  : { "2026": 12 }  →  TEK-2026-0012
+    //   • teklif_arsiv kayıtlarına eklenen sütunlar:
+    //       teklifNo, tarihISO, kurSnapshot { usd, eur, tarih, etiket, kaynak },
+    //       musteriBilgi { ad, adres, vergiDairesi, vergiNo, yetkili }, revizyon { mod, kaynakId, zaman }
+    // ════════════════════════════════════════════════════════════════════════
+    const KUR_KILIT_SAATI = 12;   // Özellik 1: kur bu saatten sonra o gün için dondurulur
+    let gunlukKur = null;         // Bugünün (sabitlenmiş ya da canlı) kuru
+
+    // Aktif kur bağlamı: ekrandaki hesaplar o an hangi kurla yapılıyor?
+    // kaynak: 'gunluk' = bugünün kuru | 'sabit' = açık teklifin gömülü kuru | 'manuel' = elle girilen kur
+    window._aktifKurMeta = { kaynak: 'gunluk', tarih: null, etiket: '' };
+    window._revizyonMod  = null;  // 'mevcut-kur' | 'guncel-kur' | null
+
+    function _esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function bugunKey(d) { const t = d || new Date(); return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0'); }
+    function kurArsivOku()      { try { return JSON.parse(localStorage.getItem('kur_gunluk_arsiv') || '{}'); } catch(e) { return {}; } }
+    function kurArsivYaz(arsiv) { try { localStorage.setItem('kur_gunluk_arsiv', JSON.stringify(arsiv)); } catch(e) {} }
+
+    // ─── Özellik 1 · Günlük Kur Sabitleme (Exchange Rate Lock) ───────────────
+    async function canliKurCek() {
+        try {
+            const res  = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+            const data = await res.json();
+            const usd  = data.rates.TRY;
+            return { usd: usd, eur: usd / data.rates.EUR, kaynak: 'api' };
+        } catch(e) {
+            // API erişilemezse: en son bilinen gün kuru → yoksa mevcut varsayılanlar
+            const arsiv = kurArsivOku();
+            const sonKey = Object.keys(arsiv).sort().pop();
+            if (sonKey) return { usd: arsiv[sonKey].usd, eur: arsiv[sonKey].eur, kaynak: 'son-bilinen' };
+            return { usd: usdKur, eur: eurKur, kaynak: 'varsayilan' };
+        }
+    }
+
+    async function gunlukKurYukle() {
+        const key   = bugunKey();
+        const arsiv = kurArsivOku();
+        let kayit   = arsiv[key];
+        if (kayit && kayit.sabit) {
+            gunlukKur = kayit;                       // Gün içinde zaten sabitlenmiş → dokunma
+        } else {
+            const canli   = await canliKurCek();
+            const simdi   = new Date();
+            const sabitMi = simdi.getHours() >= KUR_KILIT_SAATI;   // 12:00 ve sonrası → dondur
+            kayit = { usd: canli.usd, eur: canli.eur, sabit: sabitMi,
+                      sabitZamani: sabitMi ? simdi.toISOString() : null, kaynak: canli.kaynak };
+            arsiv[key] = kayit;
+            kurArsivYaz(arsiv);
+            gunlukKur = kayit;
+            if (!sabitMi) kurKilitZamanla();         // Sayfa açıkken 12:00 gelirse otomatik kilitle
+        }
+        // Ekranda güncel kur bağlamı aktifse global hesap kurlarını eşitle
+        if (window._aktifKurMeta.kaynak === 'gunluk') {
+            usdKur = gunlukKur.usd; eurKur = gunlukKur.eur;
+            window._aktifKurMeta.tarih  = new Date().toISOString();
+            window._aktifKurMeta.etiket = new Date().toLocaleDateString('tr-TR');
+        }
+        kurGostergeGuncelle();
+        kurDetayPanelGuncelle();
+    }
+
+    function kurKilitZamanla() {
+        const simdi = new Date();
+        const hedef = new Date(simdi); hedef.setHours(KUR_KILIT_SAATI, 0, 5, 0);
+        const kalan = hedef - simdi;
+        if (kalan <= 0) return;
+        clearTimeout(window._kurKilitTimer);
+        window._kurKilitTimer = setTimeout(async () => {
+            const key   = bugunKey();
+            const arsiv = kurArsivOku();
+            const canli = await canliKurCek();
+            arsiv[key] = { usd: canli.usd, eur: canli.eur, sabit: true,
+                           sabitZamani: new Date().toISOString(), kaynak: canli.kaynak };
+            kurArsivYaz(arsiv);
+            gunlukKur = arsiv[key];
+            if (window._aktifKurMeta.kaynak === 'gunluk') { usdKur = gunlukKur.usd; eurKur = gunlukKur.eur; teklifGuncelle(); }
+            kurGostergeGuncelle(); kurDetayPanelGuncelle();
+            showToast('🔒 Günün kuru 12:00 itibarıyla sabitlendi', '#3b5bdb');
+        }, kalan);
+    }
+
+    // ─── Aktif kur bağlamı yardımcıları ──────────────────────────────────────
+    function aktifKurSnapshotAl() {   // Özellik 2: kaydedilen teklife gömülecek kur
+        const m = window._aktifKurMeta;
+        return {
+            usd: usdKur, eur: eurKur,
+            tarih:  m.tarih  || new Date().toISOString(),
+            etiket: m.etiket || new Date().toLocaleDateString('tr-TR'),
+            kaynak: m.kaynak === 'gunluk' ? ((gunlukKur && gunlukKur.sabit) ? 'gun-sabit' : 'canli') : m.kaynak
+        };
+    }
+    function aktifKurSabitle(snapshot) {   // Kayıtlı teklif açılınca: gömülü kur devreye girer
+        if (!snapshot) return;
+        usdKur = snapshot.usd; eurKur = snapshot.eur;
+        window._aktifKurMeta = { kaynak: 'sabit', tarih: snapshot.tarih, etiket: snapshot.etiket || '' };
+        kurGostergeGuncelle(); kurDetayPanelGuncelle();
+    }
+    function aktifKurGuncelDon() {         // Yeni teklif / güncel kurla revizyon: bugünün kuruna dön
+        if (gunlukKur) { usdKur = gunlukKur.usd; eurKur = gunlukKur.eur; }
+        window._aktifKurMeta = { kaynak: 'gunluk', tarih: new Date().toISOString(), etiket: new Date().toLocaleDateString('tr-TR') };
+        kurGostergeUncelleGuvenli();
+    }
+    function kurGostergeUncelleGuvenli() { kurGostergeGuncelle(); kurDetayPanelGuncelle(); }
+    function aktifKurManuelUygula(secilenDoviz, manuelKur, tarihYazisi) {
+        if (secilenDoviz === 'USD' || secilenDoviz === 'TL') usdKur = manuelKur;
+        if (secilenDoviz === 'EUR') eurKur = manuelKur;
+        window._aktifKurMeta = { kaynak: 'manuel', tarih: new Date().toISOString(), etiket: tarihYazisi || new Date().toLocaleDateString('tr-TR') };
+        kurGostergeGuncelle(); kurDetayPanelGuncelle();
+    }
+
+    function kurGostergeGuncelle() {
+        const el = document.getElementById('kur-gosterge');
+        if (!el) return;
+        const m = window._aktifKurMeta;
+        let prefix = '', bg = '#f0fff4', border = '#b7ebc8', renk = '#00a859';
+        if (m.kaynak === 'sabit') {
+            prefix = '📌 TEKLİF KURU' + (m.etiket ? ' (' + m.etiket + ')' : '') + ' • ';
+            bg = '#eef2ff'; border = '#bac8ff'; renk = '#3b5bdb';
+        } else if (m.kaynak === 'manuel') {
+            prefix = '✍️ MANUEL KUR (' + (m.etiket || '') + ') • ';
+            bg = '#fff8e6'; border = '#f59f00'; renk = '#b35800';
+        } else if (gunlukKur && gunlukKur.sabit) {
+            prefix = '🔒 SABİT GÜN KURU • ';
+        }
+        el.textContent = prefix + 'USD: ' + formatCurrency(usdKur) + ' ₺ | EUR: ' + formatCurrency(eurKur) + ' ₺';
+        el.style.background = bg; el.style.borderColor = border; el.style.color = renk;
+    }
+
+    // Özellik 4: özet kutusundaki "Teklif Tarihi" + "Hazırlanan Kur" satırları
+    function kurDetayPanelGuncelle() {
+        const tarihEl = document.getElementById('ozet-teklif-tarihi');
+        const kurEl   = document.getElementById('ozet-kur-detay');
+        if (!tarihEl || !kurEl) return;
+        const kayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
+        tarihEl.textContent = kayit
+            ? ((kayit.tarih || '').split(' ')[0] || kayit.tarih || '—')
+            : new Date().toLocaleDateString('tr-TR') + ' (taslak)';
+        const m = window._aktifKurMeta;
+        const kaynakYazi = m.kaynak === 'sabit'  ? '📌 Kayıt günü kuru' + (m.etiket ? ' · ' + m.etiket : '')
+                         : m.kaynak === 'manuel' ? '✍️ Manuel kur' + (m.etiket ? ' · ' + m.etiket : '')
+                         : (gunlukKur && gunlukKur.sabit ? '🔒 Günün sabit kuru' : '⏳ Canlı kur (12:00\'de sabitlenir)');
+        kurEl.innerHTML = '1 USD = ' + formatCurrency(usdKur) + ' ₺<br>1 EUR = ' + formatCurrency(eurKur) + ' ₺' +
+                          '<br><span style="font-size:9px;opacity:0.8;font-weight:600;">' + kaynakYazi + '</span>';
+    }
+
+    // Kayıtlı bir teklifin gömülü kuru ile geçici işlem yap (önizleme / arşiv export)
+    async function withTeklifKuru(kayit, fn) {
+        const s = kayit && kayit.kurSnapshot;
+        if (!s) return await fn();
+        const oU = usdKur, oE = eurKur, oM = Object.assign({}, window._aktifKurMeta);
+        usdKur = s.usd; eurKur = s.eur;
+        window._aktifKurMeta = { kaynak: 'sabit', tarih: s.tarih, etiket: s.etiket || '' };
+        try { return await fn(); }
+        finally { usdKur = oU; eurKur = oE; window._aktifKurMeta = oM; kurGostergeGuncelle(); kurDetayPanelGuncelle(); }
+    }
+
+    // ─── Özellik 6 · Teklif Numarası (TEK-YYYY-NNNN) ─────────────────────────
+    function teklifNoUret(yil) {
+        yil = yil || new Date().getFullYear();
+        let sayac; try { sayac = JSON.parse(localStorage.getItem('teklif_no_sayac') || '{}'); } catch(e) { sayac = {}; }
+        sayac[yil] = (sayac[yil] || 0) + 1;
+        localStorage.setItem('teklif_no_sayac', JSON.stringify(sayac));
+        return 'TEK-' + yil + '-' + String(sayac[yil]).padStart(4, '0');
+    }
+
+    // ─── DB Migrasyonu: eski kayıtlara teklifNo / kurSnapshot / musteriBilgi ekle ───
+    function dbMigrasyonV2() {
+        let degisti = false;
+        const sirali = [...teklifArsiv].sort((a, b) => (a.id || 0) - (b.id || 0)); // eskiden yeniye numara ver
+        sirali.forEach(t => {
+            if (!t.tarihISO && t.id) { try { t.tarihISO = new Date(t.id).toISOString(); } catch(e) { t.tarihISO = new Date().toISOString(); } degisti = true; }
+            if (!t.teklifNo) {
+                const yil = t.tarihISO ? new Date(t.tarihISO).getFullYear() : new Date().getFullYear();
+                t.teklifNo = teklifNoUret(yil); degisti = true;
+            }
+            if (!t.kurSnapshot) {   // Eski kayıt: bugünden itibaren bu kurla dondurulur
+                t.kurSnapshot = { usd: usdKur, eur: eurKur, tarih: t.tarihISO || new Date().toISOString(),
+                                  etiket: (t.tarih || '').split(' ')[0] || new Date().toLocaleDateString('tr-TR'), kaynak: 'migrasyon' };
+                degisti = true;
+            }
+            if (!t.musteriBilgi) { t.musteriBilgi = { ad: t.musteri || '', adres: '', vergiDairesi: '', vergiNo: '', yetkili: '' }; degisti = true; }
+        });
+        if (degisti) localStorage.setItem('teklif_arsiv', JSON.stringify(teklifArsiv));
+    }
+
+    // ─── Özellik 5 · Müşteri detayları form yardımcıları ─────────────────────
+    function musteriDetayToggle() {
+        const alan = document.getElementById('musteri-detay-alani');
+        const btn  = document.getElementById('musteri-detay-toggle-btn');
+        const acik = alan.style.display !== 'none';
+        alan.style.display = acik ? 'none' : 'block';
+        if (btn) btn.textContent = (acik ? '▸' : '▾') + ' Müşteri Detayları (adres, vergi dairesi...)';
+    }
+    function musteriBilgiOku(ad) {
+        const v = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+        return { ad: ad || v('teklif-musteri'), adres: v('teklif-m-adres'),
+                 vergiDairesi: v('teklif-m-vergidairesi'), vergiNo: v('teklif-m-vergino'), yetkili: v('teklif-m-yetkili') };
+    }
+    function musteriBilgiFormaYaz(mb) {
+        mb = mb || {};
+        const s = (id, val) => { const e = document.getElementById(id); if (e) e.value = val || ''; };
+        s('teklif-m-adres', mb.adres); s('teklif-m-vergidairesi', mb.vergiDairesi);
+        s('teklif-m-vergino', mb.vergiNo); s('teklif-m-yetkili', mb.yetkili);
+    }
+
+    // ─── Özellik 3 · Teklif Revizyon Sistemi ─────────────────────────────────
+    function teklifRevizeAc() {
+        const kayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
+        if (!kayit) return showToast('Revizyon için önce "Tekliflerim"den kayıtlı bir teklif açın.', '#f59f00');
+        document.getElementById('revize-teklif-ad').textContent = (kayit.teklifNo ? kayit.teklifNo + ' · ' : '') + (kayit.baslik || kayit.musteri);
+        const s = kayit.kurSnapshot;
+        document.getElementById('revize-sabit-kur-bilgi').innerHTML = s
+            ? 'Gömülü kur korunur: <b>1 USD = ' + formatCurrency(s.usd) + ' ₺ · 1 EUR = ' + formatCurrency(s.eur) + ' ₺</b>' + (s.etiket ? ' (' + _esc(s.etiket) + ')' : '')
+            : 'Teklifin kaydedildiği gündeki gömülü kur ve dondurulmuş fiyatlar korunur.';
+        const g = gunlukKur || { usd: usdKur, eur: eurKur };
+        document.getElementById('revize-guncel-kur-bilgi').innerHTML =
+            'Fiyatlar bugünün kuru ile yeniden hesaplanır: <b>1 USD = ' + formatCurrency(g.usd) + ' ₺ · 1 EUR = ' + formatCurrency(g.eur) + ' ₺</b>';
+        document.getElementById('teklif-revize-modal').style.display = 'flex';
+    }
+    async function teklifRevizeSec(mod) {
+        document.getElementById('teklif-revize-modal').style.display = 'none';
+        const kayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
+        if (!kayit) return;
+        if (mod === 'mevcut') {
+            if (kayit.kurSnapshot) aktifKurSabitle(kayit.kurSnapshot);
+            window._revizyonMod = 'mevcut-kur';
+            showToast('🔁 Revizyon modu: teklifin sabit (gömülü) kuru korunuyor', '#3b5bdb');
+        } else {
+            if (!gunlukKur) await gunlukKurYukle();
+            aktifKurGuncelDon();
+            window._revizyonMod = 'guncel-kur';
+            showToast('💱 Fiyatlar güncel kur ile yeniden hesaplandı — kaydetmeyi unutmayın', '#e8590c');
+        }
+        teklifGuncelle();
+    }
+
+    // ─── Özellik 8 · Ürün Kullanım / Teklif Geçmişi ──────────────────────────
+    function urunTeklifGecmisi(stokKodu) {
+        return teklifArsiv
+            .filter(t => (t.items || []).some(i => i.stokKodu === stokKodu))
+            .map(t => {
+                const it = (t.items || []).find(i => i.stokKodu === stokKodu) || {};
+                return { id: t.id, teklifNo: t.teklifNo || '—', baslik: t.baslik || t.musteri,
+                         musteri: t.musteri, tarih: t.tarih || '-', adet: it.adet || 0 };
+            });
+    }
+    function urunTeklifGecmisiHtml(stokKodu) {
+        const liste = urunTeklifGecmisi(stokKodu);
+        let html = '<div class="modal-section"><h4>🧾 TEKLİF GEÇMİŞİ (' + liste.length + ')</h4>';
+        if (liste.length === 0) {
+            html += '<div class="info-row" style="color:#999">Bu ürün henüz hiçbir teklifte kullanılmadı.</div>';
+        } else {
+            html += '<div class="info-row" style="color:#3b5bdb;font-weight:700;border-bottom:1px dashed var(--border-light);">Bu ürün toplam <b>' + liste.length + '</b> farklı teklifte kullanıldı.</div>';
+            liste.forEach(g => {
+                html += '<div class="info-row urun-gecmis-satir" onclick="urunGecmisTeklifAc(' + g.id + ')" title="Teklifi kayıtlı (gömülü) kuru ile aç — kur güncellenmez">' +
+                        '<span class="arsiv-no-mini">' + _esc(g.teklifNo) + '</span> <b>' + _esc(g.baslik) + '</b>' +
+                        '<span style="color:#5f6b7a;"> — ' + _esc(g.musteri) + '</span>' +
+                        '<span style="color:#8a94a6;font-size:10px;"> (' + _esc(g.tarih) + ' · ' + g.adet + ' adet)</span></div>';
+            });
+        }
+        return html + '</div>';
+    }
+    function urunGecmisTeklifAc(id) {
+        document.getElementById('info-modal').style.display = 'none';
+        teklifArsivdenYukle(id);   // Teklif, gömülü kuruyla açılır; standart düzenleme kuralları geçerli kalır
+    }
+
+    // ─── Özellik 7 · Biçimlendirilmiş (Styled) Excel Export ──────────────────
+    async function teklifExcelIndir() {
+        if (sepet.length === 0) return showToast('Sepet boş!', '#e63946');
+        const kayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
+        await _teklifExcelOlustur({
+            items: sepet,
+            musteri: document.getElementById('teklif-musteri').value || 'MÜŞTERİ BELİRTİLMEDİ',
+            cur: document.getElementById('teklif-para-birimi').value,
+            kayit: kayit
+        });
+    }
+    async function arsivTeklifExcelIndir(id) {
+        const t = teklifArsiv.find(x => x.id === id);
+        if (!t) return;
+        await withTeklifKuru(t, () => _teklifExcelOlustur({
+            items: t.items, musteri: t.musteri, cur: t.paraBirimi || 'TL', kayit: t
+        }));
+    }
+    async function _teklifExcelOlustur(ctx) {
+        if (typeof ExcelJS === 'undefined') return showToast('Excel kütüphanesi yüklenemedi — internet bağlantısını kontrol edin', '#e63946');
+        const cur = ctx.cur, sembol = cur === 'TL' ? '₺' : (cur === 'USD' ? '$' : '€');
+        const paraFmt = '#,##0.00 "' + sembol + '"';
+        const kayit = ctx.kayit;
+        const teklifNoYazi = (kayit && kayit.teklifNo) ? kayit.teklifNo : ('EA' + String(parseInt(localStorage.getItem('stok_ea_teklif_counter') || '0') + 1).padStart(6, '0'));
+        const tarihYazi = kayit ? ((kayit.tarih || '').split(' ')[0] || new Date().toLocaleDateString('tr-TR')) : new Date().toLocaleDateString('tr-TR');
+        const mb = (kayit && kayit.musteriBilgi) || musteriBilgiOku(ctx.musteri);
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'İMES SPOR Teklif Paneli';
+        const ws = wb.addWorksheet('Teklif', { views: [{ showGridLines: false }], pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+        ws.columns = [ { width: 5 }, { width: 15 }, { width: 46 }, { width: 14 }, { width: 9 }, { width: 14 }, { width: 7 }, { width: 16 } ];
+
+        const LACIVERT = 'FF1A1F36', GRI = 'FF5F6B7A', ZEBRA = 'FFF7F8FC', VURGU = 'FFEEF2FF', SARI = 'FFFFD43B';
+        const ince = { style: 'thin', color: { argb: 'FFD0D5DD' } };
+        const tumKenar = { top: ince, left: ince, bottom: ince, right: ince };
+
+        // Logo + başlık bandı
+        try {
+            const imgId = wb.addImage({ base64: IMES_LOGO_B64.split(',')[1], extension: 'jpeg' });
+            ws.addImage(imgId, { tl: { col: 0.15, row: 0.15 }, ext: { width: 118, height: 76 } });
+        } catch(e) {}
+        ws.mergeCells('D1:H1');
+        ws.getCell('D1').value = 'info@imesspor.com | www.imesspor.com';
+        ws.getCell('D1').font = { name: 'Calibri', size: 9, color: { argb: GRI } };
+        ws.getCell('D1').alignment = { horizontal: 'right' };
+        ws.mergeCells('A5:H5');
+        const baslikH = ws.getCell('A5');
+        baslikH.value = 'FİYAT TEKLİFİ';
+        baslikH.font = { name: 'Calibri', size: 15, bold: true, color: { argb: 'FFFFFFFF' } };
+        baslikH.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LACIVERT } };
+        baslikH.alignment = { horizontal: 'center', vertical: 'middle' };
+        ws.getRow(5).height = 26;
+
+        // Meta blok: sol müşteri, sağ teklif bilgileri
+        const meta = [
+            ['MÜŞTERİ', (ctx.musteri || '').toUpperCase(), 'Teklif No', teklifNoYazi],
+            ['Adres', mb.adres || '-', 'Teklif Tarihi', tarihYazi],
+            ['Vergi D. / No', [mb.vergiDairesi, mb.vergiNo].filter(Boolean).join(' / ') || '-', 'Kur (1 USD / 1 EUR)', formatCurrency(usdKur) + ' ₺ / ' + formatCurrency(eurKur) + ' ₺'],
+            ['İlgili', mb.yetkili || '-', 'Para Birimi', cur]
+        ];
+        meta.forEach((satir, i) => {
+            const r = ws.getRow(7 + i);
+            r.getCell(1).value = satir[0]; ws.mergeCells(7 + i, 1, 7 + i, 2);
+            r.getCell(3).value = satir[1];
+            r.getCell(6).value = satir[2]; ws.mergeCells(7 + i, 6, 7 + i, 7);
+            r.getCell(8).value = satir[3];
+            r.getCell(1).font = { size: 9, bold: true, color: { argb: GRI } };
+            r.getCell(3).font = { size: 10, bold: i === 0 };
+            r.getCell(6).font = { size: 9, bold: true, color: { argb: GRI } };
+            r.getCell(6).alignment = { horizontal: 'right' };
+            r.getCell(8).font = { size: 10, bold: true, color: { argb: i === 2 ? 'FF3B5BDB' : LACIVERT } };
+            r.getCell(8).alignment = { horizontal: 'right' };
+        });
+
+        // Ürün tablosu
+        const bas = 12;
+        const kolonlar = ['No', 'Stok Kodu', 'Ürün Adı', 'Liste Fiyatı', 'İnd. %', 'Birim Fiyat', 'Adet', 'Toplam'];
+        const hRow = ws.getRow(bas);
+        kolonlar.forEach((k, i) => {
+            const c = hRow.getCell(i + 1);
+            c.value = k;
+            c.font = { size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LACIVERT } };
+            c.alignment = { horizontal: 'center', vertical: 'middle' };
+            c.border = tumKenar;
+        });
+        hRow.height = 20;
+
+        let araToplam = 0;
+        ctx.items.forEach((item, idx) => {
+            const listeF = hesaplaListeFiyat(item, cur);
+            const birimF = hesaplaUrunFiyat(item, cur);
+            const toplam = birimF * item.adet;
+            araToplam += toplam;
+            const r = ws.getRow(bas + 1 + idx);
+            const degerler = [idx + 1, item.stokKodu, item.stokAdi, listeF, (item.indirim || 0) / 100, birimF, item.adet, toplam];
+            degerler.forEach((v, i) => {
+                const c = r.getCell(i + 1);
+                c.value = v;
+                c.border = tumKenar;
+                c.font = { size: 9.5 };
+                if (idx % 2 === 1) c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ZEBRA } };
+                if (i === 3 || i === 5 || i === 7) { c.numFmt = paraFmt; c.alignment = { horizontal: 'right' }; }
+                else if (i === 4) { c.numFmt = '0.00%'; c.alignment = { horizontal: 'center' }; }
+                else if (i === 2) { c.alignment = { horizontal: 'left', wrapText: true, vertical: 'middle' }; }
+                else c.alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+            r.getCell(8).font = { size: 9.5, bold: true };
+        });
+
+        // Toplamlar
+        const kdv = araToplam * 0.20, genel = araToplam + kdv;
+        const tBas = bas + ctx.items.length + 2;
+        [['Ara Toplam', araToplam, false], ['KDV (%20)', kdv, false], ['GENEL TOPLAM', genel, true]].forEach((satir, i) => {
+            const r = ws.getRow(tBas + i);
+            ws.mergeCells(tBas + i, 6, tBas + i, 7);
+            r.getCell(6).value = satir[0];
+            r.getCell(8).value = satir[1];
+            r.getCell(8).numFmt = paraFmt;
+            r.getCell(6).alignment = { horizontal: 'right' };
+            r.getCell(8).alignment = { horizontal: 'right' };
+            if (satir[2]) {
+                [6, 7, 8].forEach(ci => { r.getCell(ci).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: VURGU } };
+                    r.getCell(ci).border = { top: { style: 'double', color: { argb: 'FF3B5BDB' } } }; });
+                r.getCell(6).font = { size: 11, bold: true, color: { argb: 'FF3B5BDB' } };
+                r.getCell(8).font = { size: 11, bold: true, color: { argb: 'FF3B5BDB' } };
+            } else { r.getCell(6).font = { size: 10, bold: true, color: { argb: GRI } }; r.getCell(8).font = { size: 10 }; }
+        });
+        // Kur dip notu
+        const notR = ws.getRow(tBas + 4);
+        ws.mergeCells(tBas + 4, 1, tBas + 4, 8);
+        const kurKaynak = window._aktifKurMeta.kaynak === 'sabit' ? 'kayıt günü sabit kuru' : (gunlukKur && gunlukKur.sabit ? 'günün sabitlenmiş kuru' : 'günün kuru');
+        notR.getCell(1).value = 'Bu teklif ' + tarihYazi + ' tarihli ' + kurKaynak + ' ile hazırlanmıştır: 1 USD = ' + formatCurrency(usdKur) + ' ₺ · 1 EUR = ' + formatCurrency(eurKur) + ' ₺';
+        notR.getCell(1).font = { size: 9, italic: true, color: { argb: GRI } };
+
+        // Teklif şartları
+        const sBas = tBas + 6;
+        ws.mergeCells(sBas, 1, sBas, 8);
+        ws.getCell(sBas, 1).value = 'TEKLİF ŞARTLARI';
+        ws.getCell(sBas, 1).font = { size: 11, bold: true, color: { argb: LACIVERT } };
+        ws.getCell(sBas, 1).border = { bottom: { style: 'thin', color: { argb: SARI } } };
+        TEKLIF_SARTLARI.forEach((madde, i) => {
+            ws.mergeCells(sBas + 1 + i, 1, sBas + 1 + i, 8);
+            const c = ws.getCell(sBas + 1 + i, 1);
+            c.value = madde;
+            c.font = { size: 8.5, color: { argb: 'FF3A4252' } };
+            c.alignment = { wrapText: true };
+        });
+        const adresR = sBas + TEKLIF_SARTLARI.length + 2;
+        ws.mergeCells(adresR, 1, adresR, 8);
+        ws.getCell(adresR, 1).value = 'Üniversite Mahallesi, Bahar Sokak No:3 Avcılar / İSTANBUL';
+        ws.getCell(adresR, 1).font = { size: 8, color: { argb: GRI } };
+        ws.getCell(adresR, 1).alignment = { horizontal: 'right' };
+
+        // İndir / paylaş
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const fileName = (ctx.musteri || 'Teklif') + ' Teklif.xlsx';
+        if (navigator.share && /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            try {
+                const file = new File([blob], fileName, { type: blob.type });
+                await navigator.share({ files: [file] });
+                return;
+            } catch(e) { /* paylaşım iptal → normal indir */ }
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+        showToast('📊 Excel indirildi: ' + fileName, '#0b7285');
+    }
 
     // ── Gizli mod (müşteri yanındayken bilgileri gizler — kalıcı değil, her açılışta kapalı) ──
     function toggleGizliMod() {
@@ -2719,16 +3193,10 @@
         });
     }
 
-    // ─── Kur Çek ───
-    async function kurCek() {
-        try {
-            const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-            const data = await res.json();
-            usdKur = data.rates.TRY;
-            eurKur = usdKur / data.rates.EUR;
-        } catch(e) {}
-        document.getElementById('kur-gosterge').textContent = `USD: ${formatCurrency(usdKur)} ₺ | EUR: ${formatCurrency(eurKur)} ₺`;
-    }
+    // ─── Kur Çek (v2: günlük kur sabitleme mantığına yönlendirir — Özellik 1) ───
+    // 12:00 öncesi canlı kur gösterilir; 12:00 ve sonrasındaki ilk yüklemede gün kuru
+    // dondurulur ve o gün hazırlanan TÜM teklifler bu sabit kur ile hesaplanır.
+    async function kurCek() { await gunlukKurYukle(); }
 
     async function onStartCacheGorseller() {
         const b64Cache = JSON.parse(localStorage.getItem('imes_gorsel_b64') || '{}');
@@ -2787,7 +3255,8 @@
                 } catch(e) {}
             }
         }
-        kurCek();
+        dbMigrasyonV2();   // v2: eski kayıtlara teklifNo / kurSnapshot / musteriBilgi ekle
+        kurCek();          // v2: günlük kur sabitleme mantığı ile yükler (12:00 kilidi)
         teklifArsivGoster();
         setTimeout(onStartCacheGorseller, 2000);
     };
@@ -3456,7 +3925,7 @@
 
         // Logo
         try {
-            const logoB64 = "data:image/jpeg;base64,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";
+            const logoB64 = IMES_LOGO_B64;
             doc.addImage(logoB64, 'JPEG', 15, 13, 23, 15, undefined, 'FAST');
         } catch(e) {}
 
@@ -3880,166 +4349,8 @@
                 }
             }
         });
-        if (pivotViewActive) renderPivotTable();
     }
 
-    // =============================================
-    // PİVOT (İTHALAT/SATIŞ) GÖRÜNÜMÜ
-    // Sol taraf (Stok Kodu ... İthalat) donuk (sticky) kalır,
-    // sağ tarafta her ithalat tarihi ve her müşteri ayrı sütun olarak kayar.
-    // =============================================
-    function togglePivotView() {
-        pivotViewActive = !pivotViewActive;
-        const normalTable = document.querySelector('.table-container');
-        const pivotBox    = document.getElementById('pivot-container');
-        const btn         = document.getElementById('pivot-toggle-btn');
-        if (pivotViewActive) {
-            if (normalTable) normalTable.style.display = 'none';
-            if (pivotBox) pivotBox.style.display = 'block';
-            if (btn) btn.classList.add('active-pivot');
-            renderPivotTable();
-        } else {
-            if (normalTable) normalTable.style.display = '';
-            if (pivotBox) pivotBox.style.display = 'none';
-            if (btn) btn.classList.remove('active-pivot');
-        }
-    }
-
-    // "123 Adet → 12.09.2026" gibi satırları {miktar, tarih} listesine çevirir
-    function _pivotParseIthalatDetay(str) {
-        if (!str) return [];
-        return str.split('\n').filter(Boolean).map(line => {
-            const m = line.match(/^(\d+)\s*Adet\s*→\s*(.+)$/);
-            if (!m) return null;
-            return { miktar: parseInt(m[1]) || 0, tarih: m[2].trim() };
-        }).filter(Boolean);
-    }
-
-    // Tarih string'ini (dd.mm.yyyy veya yyyy-mm-dd) sıralanabilir sayıya çevirir
-    function _pivotTarihSirala(str) {
-        if (!str) return null;
-        let m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-        if (m) return new Date(+m[3], +m[2] - 1, +m[1]).getTime();
-        m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-        if (m) return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
-        const d = new Date(str);
-        return isNaN(d.getTime()) ? null : d.getTime();
-    }
-
-    function renderPivotTable() {
-        const thead = document.getElementById('pivot-thead');
-        const tbody = document.getElementById('pivot-body');
-        if (!thead || !tbody) return;
-
-        const searchInput = document.getElementById('search-input');
-        const slug = t => t ? t.replace(/İ/g,'i').replace(/I/g,'ı').toLowerCase() : '';
-        const searchTerm = searchInput ? slug(searchInput.value) : '';
-
-        const filtered = allData.filter(d => {
-            const mb = _itemInBrand(d, currentBrand);
-            const ms = slug(d.stokKodu).includes(searchTerm) || slug(d.stokAdi).includes(searchTerm);
-            return searchTerm !== '' ? (mb && ms) : (mb && (currentFilter === 'HEPSİ' || _itemCat(d, currentBrand) === currentFilter));
-        });
-
-        // Her ürün için ithalat girdilerini önceden ayrıştır
-        filtered.forEach(item => { item._pivotIthalat = _pivotParseIthalatDetay(item.ithalatDetay); });
-
-        // Tüm benzersiz ithalat tarihlerini topla, kronolojik sırala
-        const dateSet = new Set();
-        filtered.forEach(item => item._pivotIthalat.forEach(e => dateSet.add(e.tarih)));
-        const dateCols = Array.from(dateSet).sort((a, b) => {
-            const da = _pivotTarihSirala(a), db = _pivotTarihSirala(b);
-            if (da !== null && db !== null) return da - db;
-            return a.localeCompare(b);
-        });
-
-        // Tüm benzersiz müşterileri topla, alfabetik sırala
-        const custSet = new Set();
-        filtered.forEach(item => (item.satisListesi || []).forEach(s => { if (s.musteri) custSet.add(s.musteri); }));
-        const custCols = Array.from(custSet).sort((a, b) => a.localeCompare(b, 'tr'));
-
-        // Donmuş (sticky) sol sütunlar (ilk sütun: sürükle-taşı tutamacı)
-        const frozenCols = [
-            { key: 'drag',     label: '⠿',        width: 26, isDrag: true },
-            { key: 'stokKodu', label: 'STOK KODU', width: 85 },
-            { key: 'stokAdi',  label: 'STOK ADI',  width: 280, cls: 'pivot-stok-adi' },
-            { key: 'fiyat',    label: 'FİYAT',     width: 70 },
-            { key: 'fiili',    label: 'FİİLİ',     width: 55 },
-            { key: 'satis',    label: 'SATIŞ',     width: 55 },
-            { key: 'kalan',    label: 'KALAN',     width: 55 },
-            { key: 'ithalat',  label: 'İTHALAT',   width: 55 },
-            { key: 'notlar',   label: 'NOT / SİPARİŞ', width: 55, isNote: true },
-        ];
-        let cum = 0;
-        const lefts = frozenCols.map(c => { const l = cum; cum += c.width; return l; });
-
-        // ---- BAŞLIK ----
-        let theadHtml = '<tr>';
-        frozenCols.forEach((c, i) => {
-            theadHtml += `<th class="pivot-frozen-th" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;"><div class="pivot-th-text">${c.label}</div></th>`;
-        });
-        dateCols.forEach(d => {
-            theadHtml += `<th class="pivot-ithalat-th" title="${d.replace(/"/g,'&quot;')}"><div class="pivot-th-text">${d}</div></th>`;
-        });
-        custCols.forEach(c => {
-            theadHtml += `<th class="pivot-satis-th" title="${c.replace(/"/g,'&quot;')}"><div class="pivot-th-text">${c}</div></th>`;
-        });
-        theadHtml += '</tr>';
-        thead.innerHTML = theadHtml;
-
-        // ---- GÖVDE ----
-        if (!filtered.length) {
-            tbody.innerHTML = `<tr><td colspan="${frozenCols.length + dateCols.length + custCols.length || 1}" style="padding:20px;text-align:center;">Bu marka/kategori için ürün bulunamadı.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = filtered.map(item => {
-            let row = `<tr class="${item.kalan <= 0 ? 'critical-row' : ''}" data-id="${(item.stokKodu||'').replace(/"/g,'&quot;')}">`;
-            frozenCols.forEach((c, i) => {
-                if (c.isDrag) {
-                    row += `<td class="pivot-frozen-td pivot-drag-td w-sort" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;">⠿</td>`;
-                    return;
-                }
-                if (c.isNote) {
-                    const kod = (item.stokKodu || '');
-                    const notVal = (pivotNotlarMap[kod] || '').replace(/"/g,'&quot;');
-                    row += `<td class="pivot-frozen-td pivot-note-td" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;padding:2px 4px;">
-                        <input type="text" class="pivot-note-input" value="${notVal}" data-kod="${kod.replace(/"/g,'&quot;')}" onclick="event.stopPropagation()" onchange="_pivotSaveNote(this)">
-                    </td>`;
-                    return;
-                }
-                let val = item[c.key];
-                if (c.key === 'fiyat') val = formatCurrency(item.fiyat) + ' ' + (item.doviz === 'TL' ? '₺' : item.doviz === 'EUR' ? '€' : '$');
-                const extraCls = c.cls ? ' ' + c.cls : '';
-                const title = c.key === 'stokAdi' ? ` title="${(item.stokAdi||'').replace(/"/g,'&quot;')}"` : '';
-                const clickAttr = c.key === 'stokAdi' ? ` onclick="showDetail('${(item.stokKodu||'').replace(/'/g,"\\'")}')"` : '';
-                row += `<td class="pivot-frozen-td${extraCls}" style="left:${lefts[i]}px;width:${c.width}px;min-width:${c.width}px;"${title}${clickAttr}>${val != null ? val : ''}</td>`;
-            });
-            dateCols.forEach(d => {
-                const found = item._pivotIthalat.find(e => e.tarih === d);
-                row += `<td class="pivot-ithalat-td">${found ? found.miktar : ''}</td>`;
-            });
-            custCols.forEach(c => {
-                const total = (item.satisListesi || []).filter(s => s.musteri === c).reduce((sum, s) => sum + (parseInt(s.adet) || 0), 0);
-                row += `<td class="pivot-satis-td">${total ? total : ''}</td>`;
-            });
-            row += '</tr>';
-            return row;
-        }).join('');
-
-        if (pivotSortable) pivotSortable.destroy();
-        pivotSortable = new Sortable(tbody, {
-            animation: 150, handle: '.w-sort',
-            onEnd: function() {
-                const ids = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id')).filter(Boolean);
-                const sorted = [];
-                ids.forEach(id => { const f = allData.find(d => d.stokKodu === id); if (f) sorted.push(f); });
-                allData.forEach(item => { if (!ids.includes(item.stokKodu)) sorted.push(item); });
-                allData = sorted;
-                localStorage.setItem('masterInventoryData', JSON.stringify(allData));
-            }
-        });
-    }
 
     // =============================================
     // SEPET FONKSİYONLARI
@@ -4178,13 +4489,8 @@
             const manuelKur = parseFloat(document.getElementById('musteri-sor-kur').value.replace(',','.'));
             const manuelTarih = document.getElementById('musteri-sor-tarih').value.trim();
             if (!isNaN(manuelKur) && manuelKur > 0) {
-                if (secilenDoviz === 'USD' || secilenDoviz === 'TL') usdKur = manuelKur;
-                if (secilenDoviz === 'EUR') eurKur = manuelKur;
-                const tarihYazisi = manuelTarih || new Date().toLocaleDateString('tr-TR');
-                document.getElementById('kur-gosterge').textContent = `USD: ${formatCurrency(usdKur)} ₺ | EUR: ${formatCurrency(eurKur)} ₺ (${tarihYazisi})`;
-                document.getElementById('kur-gosterge').style.background = '#fff8e6';
-                document.getElementById('kur-gosterge').style.borderColor = '#f59f00';
-                document.getElementById('kur-gosterge').style.color = '#b35800';
+                // v2: manuel kur aktif kur bağlamına işlenir → kaydedilirken teklife gömülür
+                aktifKurManuelUygula(secilenDoviz, manuelKur, manuelTarih || new Date().toLocaleDateString('tr-TR'));
             }
             // İndirim oranını sakla (sepete eklenecek ürüne uygulanacak)
             const indirimStr = document.getElementById('musteri-sor-indirim').value;
@@ -4447,6 +4753,7 @@
             document.getElementById('ozet-ara-toplam').textContent = '0,00 ' + sembol;
             document.getElementById('ozet-kdv').textContent = '0,00 ' + sembol;
             document.getElementById('ozet-genel-toplam').textContent = '0,00 ' + sembol;
+            kurDetayPanelGuncelle();   // v2: tarih + kur satırları boş sepette de güncel kalsın
             return;
         }
         bos.style.display = 'none';
@@ -4560,6 +4867,7 @@
         document.getElementById('ozet-genel-toplam').textContent = formatCurrency(genelToplam) + ' ' + sembol;
         document.getElementById('ozet-ort-indirim').textContent = '%' + formatCurrency(ortIndirim);
         document.getElementById('ozet-indirim-tutar').textContent = formatCurrency(indirimTutari) + ' ' + sembol;
+        kurDetayPanelGuncelle();   // v2 · Özellik 4: Ort. İndirim'in altındaki tarih + kur satırları
 
         // ── UYARI SİSTEMİ ──
         const uyarilar = [];
@@ -4668,9 +4976,15 @@
         if (paraBirimiEl) paraBirimiEl.value = 'TL';
         document.getElementById('toplu-indirim-input').value = '';
         document.getElementById('hedef-toplam-input').value = '';
+        // v2: teklif adı + müşteri detayları temizlenir, bugünün (sabit/canlı) kuruna dönülür
+        const adEl = document.getElementById('teklif-adi');
+        if (adEl) adEl.value = '';
+        musteriBilgiFormaYaz({});
         window._aktifTeklifId = null;
         window._aktifTeklifBaslik = null;
         window._musteriSorIndirim = 0;
+        window._revizyonMod = null;
+        aktifKurGuncelDon();
         // Uyarı kutusunu temizle
         const uyariBox = document.getElementById('teklif-uyari-box');
         if (uyariBox) { uyariBox.innerHTML = ''; uyariBox.style.display = 'none'; }
@@ -4697,6 +5011,9 @@
     }
 
     // mod: 'uzerine' = mevcut teklifin üzerine yaz, 'ayri'/'yeni' = yeni kayıt oluştur
+    // v2 (Özellik 2): kayıt anında aktif kur teklife SNAPSHOT olarak dikey gömülür (kurSnapshot).
+    // v2 (Özellik 5): formdaki güncel müşteri bilgileri + Teklif Adı kayda yazılır.
+    // v2 (Özellik 6): her yeni kayda kalıcı Teklif No (TEK-YYYY-NNNN) atanır.
     function _teklifKaydetYap(mod) {
         const m = document.getElementById('teklif-kaydet-secim-modal');
         if (m) m.style.display = 'none';
@@ -4704,29 +5021,42 @@
         if (!musteri) return showToast('Müşteri adı girin!', '#e63946');
         const cur = document.getElementById('teklif-para-birimi').value;
         const genelToplam = sepet.reduce((s, i) => s + hesaplaUrunFiyat(i, cur) * i.adet, 0) * 1.20;
+        const ozelAdEl = document.getElementById('teklif-adi');
+        const ozelAd = ozelAdEl ? ozelAdEl.value.trim() : '';
+        const simdi = new Date();
 
-        // ── ÜZERİNE KAYDET: mevcut kaydı yerinde güncelle (aynı id, aynı başlık) ──
+        // ── ÜZERİNE KAYDET: mevcut kaydı yerinde güncelle (aynı id, aynı teklif no) ──
         if (mod === 'uzerine' && window._aktifTeklifId) {
             const kayit = teklifArsiv.find(x => x.id === window._aktifTeklifId);
             if (!kayit) return _teklifKaydetYap('yeni'); // güvenlik: kayıt yoksa yeni oluştur
             kayit.musteri = musteri;
+            if (ozelAd) kayit.baslik = ozelAd;
             kayit.paraBirimi = cur;
             kayit.genelToplam = genelToplam;
-            kayit.tarih = new Date().toLocaleString('tr-TR');
+            kayit.tarih = simdi.toLocaleString('tr-TR');
+            kayit.tarihISO = simdi.toISOString();
             kayit.items = JSON.parse(JSON.stringify(sepet));
+            if (!kayit.teklifNo) kayit.teklifNo = teklifNoUret();
+            kayit.kurSnapshot  = aktifKurSnapshotAl();   // düzenleme sırasında aktif olan kur gömülür
+            kayit.musteriBilgi = musteriBilgiOku(musteri);
+            if (window._revizyonMod) kayit.revizyon = { mod: window._revizyonMod, kaynakId: kayit.id, zaman: simdi.toISOString() };
             localStorage.setItem('teklif_arsiv', JSON.stringify(teklifArsiv));
             window._aktifTeklifBaslik = kayit.baslik || kayit.musteri;
+            window._revizyonMod = null;
             teklifArsivGoster();
-            showToast('✔ Teklif güncellendi: ' + (kayit.baslik || kayit.musteri), '#00a859');
+            kurDetayPanelGuncelle();
+            showToast('✔ Teklif güncellendi: ' + kayit.teklifNo + ' · ' + (kayit.baslik || kayit.musteri), '#00a859');
             return;
         }
 
-        // ── AYRI / YENİ KAYDET: yeni bir arşiv kaydı oluştur ──
+        // ── YENİ TEKLİF OLARAK KAYDET: formdaki güncel Müşteri / Teklif Adı ile yeni kayıt ──
         let baslik;
-        if (mod === 'ayri' && window._aktifTeklifId) {
+        const kaynakKayit = window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null;
+        if (ozelAd && (!kaynakKayit || ozelAd !== (kaynakKayit.baslik || ''))) {
+            baslik = ozelAd;   // kullanıcı formda özel bir teklif adı girdi → doğrudan kullan
+        } else if (mod === 'ayri' && kaynakKayit) {
             // Mevcut teklifin ayrı bir versiyonu → Rev01, Rev02...
-            const orijinal = teklifArsiv.find(x => x.id === window._aktifTeklifId);
-            const orijBaslik = orijinal ? (orijinal.baslik || orijinal.musteri) : musteri;
+            const orijBaslik = kaynakKayit.baslik || kaynakKayit.musteri;
             const revMatch = orijBaslik.match(/_Rev(\d+)$/i);
             if (revMatch) {
                 const revNo = parseInt(revMatch[1]) + 1;
@@ -4758,21 +5088,37 @@
             }
         }
 
-        teklifArsiv.unshift({
-            id: Date.now(),
+        // Benzersiz kayıt id'si (aynı milisaniyede iki kayıt oluşsa bile çakışmaz)
+        let yeniId = Date.now();
+        while (teklifArsiv.some(x => x.id === yeniId)) yeniId++;
+        const yeniKayit = {
+            id: yeniId,
+            teklifNo: teklifNoUret(),                    // Özellik 6: kalıcı teklif numarası
             musteri,
             baslik,
-            tarih: new Date().toLocaleString('tr-TR'),
+            tarih: simdi.toLocaleString('tr-TR'),
+            tarihISO: simdi.toISOString(),
             items: JSON.parse(JSON.stringify(sepet)),
             paraBirimi: cur,
-            genelToplam
-        });
+            genelToplam,
+            kurSnapshot: aktifKurSnapshotAl(),           // Özellik 2: kur teklife dondurularak gömülür
+            musteriBilgi: musteriBilgiOku(musteri),      // Özellik 5: serbest müşteri bilgileri
+            revizyon: (window._revizyonMod && kaynakKayit)
+                ? { mod: window._revizyonMod, kaynakId: kaynakKayit.id, kaynakNo: kaynakKayit.teklifNo || null, zaman: simdi.toISOString() }
+                : null
+        };
+        teklifArsiv.unshift(yeniKayit);
         localStorage.setItem('teklif_arsiv', JSON.stringify(teklifArsiv));
-        // Yeni kaydı aktif teklif olarak işaretle
-        window._aktifTeklifId = teklifArsiv[0].id;
+        // Yeni kaydı aktif teklif olarak işaretle; aktif kur bağlamı = az önce gömülen snapshot
+        window._aktifTeklifId = yeniKayit.id;
         window._aktifTeklifBaslik = baslik;
+        window._revizyonMod = null;
+        window._aktifKurMeta = { kaynak: 'sabit', tarih: yeniKayit.kurSnapshot.tarih, etiket: yeniKayit.kurSnapshot.etiket };
+        if (ozelAdEl) ozelAdEl.value = baslik;
         teklifArsivGoster();
-        showToast('✔ Teklif kaydedildi: ' + baslik, '#00a859');
+        kurGostergeGuncelle();
+        kurDetayPanelGuncelle();
+        showToast('✔ Teklif kaydedildi: ' + yeniKayit.teklifNo + ' · ' + baslik, '#00a859');
     }
 
     function teklifArsivdenYukle(id) {
@@ -4781,15 +5127,23 @@
         sepet = JSON.parse(JSON.stringify(t.items));
         document.getElementById('teklif-musteri').value = t.musteri;
         if (t.paraBirimi) document.getElementById('teklif-para-birimi').value = t.paraBirimi;
+        // v2 · Özellik 5: teklif adı + müşteri detayları forma geri yüklenir
+        const adEl = document.getElementById('teklif-adi');
+        if (adEl) adEl.value = t.baslik || '';
+        musteriBilgiFormaYaz(t.musteriBilgi);
         // Aktif teklif takibi
         window._aktifTeklifId = t.id;
         window._aktifTeklifBaslik = t.baslik || t.musteri;
+        window._revizyonMod = null;
+        // v2 · Özellik 2: teklif, KAYDEDİLDİĞİ GÜNÜN gömülü kuru ile açılır — fiyatlar otomatik güncellenmez.
+        // (2 yıl sonra dahi açılsa aynı kur ve aynı fiyatlar görüntülenir.)
+        if (t.kurSnapshot) aktifKurSabitle(t.kurSnapshot);
         sepetBadgeGuncelle();
         // Kayıtlı teklifler sayfasından geliyorsa o sayfayı kapat, teklif ekranını aç
         kayitliTeklifleriKapat();
         teklifEkraniniAc();
         renderTable();
-        showToast('Teklif yüklendi: ' + (t.baslik || t.musteri), '#3b5bdb');
+        showToast('Teklif yüklendi: ' + (t.teklifNo ? t.teklifNo + ' · ' : '') + (t.baslik || t.musteri) + ' (kayıtlı kur ile)', '#3b5bdb');
     }
 
     function teklifArsivdenSil(id) {
@@ -4809,30 +5163,41 @@
             ? teklifArsiv.filter(t =>
                 slug(t.musteri).includes(slug(aramaTerm)) ||
                 slug(t.tarih).includes(slug(aramaTerm)) ||
+                slug(t.teklifNo || '').includes(slug(aramaTerm)) ||
+                slug(t.baslik || '').includes(slug(aramaTerm)) ||
                 slug(String(t.id)).includes(slug(aramaTerm))
               )
             : teklifArsiv;
         if (filtrelenmis.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">' + (aramaTerm ? 'Sonuç bulunamadı.' : 'Kayıtlı teklif yok.') + '</div>'; return; }
-        const cur = (document.getElementById('teklif-para-birimi') || {}).value || 'TL';
-        el.innerHTML = filtrelenmis.map(t => `
+        el.innerHTML = filtrelenmis.map(t => {
+            const s = t.kurSnapshot;
+            const kurYazi = s ? `💱 1 USD = ${formatCurrency(s.usd)} ₺ · 1 EUR = ${formatCurrency(s.eur)} ₺ <b>(kayıt kuru)</b>` : '';
+            return `
             <div class="arsiv-item">
                 <div class="arsiv-item-top">
-                    <span class="arsiv-musteri">${t.baslik || t.musteri}</span>
+                    <span style="display:flex;align-items:center;gap:7px;min-width:0;">
+                        <span class="arsiv-no">${_esc(t.teklifNo || '—')}</span>
+                        <span class="arsiv-musteri" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(t.baslik || t.musteri)}</span>
+                    </span>
                     <span class="arsiv-tutar">${formatCurrency(t.genelToplam)} ${sembolAl(t.paraBirimi || 'TL')}</span>
                 </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-bottom:5px;">${t.tarih}${t.baslik && t.baslik !== t.musteri ? ' · ' + t.musteri : ''}</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${_esc(t.tarih)}${t.baslik && t.baslik !== t.musteri ? ' · ' + _esc(t.musteri) : ''}${t.revizyon ? ' · <span style="color:#6f42c1;font-weight:700;">🔁 ' + (t.revizyon.mod === 'guncel-kur' ? 'Güncel kurla revize' : 'Sabit kurla revize') + '</span>' : ''}</div>
+                ${kurYazi ? `<div class="arsiv-kur-satir">${kurYazi}</div>` : ''}
                 <div class="arsiv-btns">
                     <button class="arsiv-btn" style="background:#eef2ff;color:var(--accent-blue);" onclick="teklifArsivOnizle(${t.id})">👁 Önizle</button>
-                    <button class="arsiv-btn" style="background:#fff8f0;color:#e67700;" onclick="arsivPDFIndir(${t.id})">📄 PDF İndir</button>
+                    <button class="arsiv-btn" style="background:#fff8f0;color:#e67700;" onclick="arsivPDFIndir(${t.id})">📄 PDF</button>
+                    <button class="arsiv-btn" style="background:#e6fcf5;color:#0b7285;" onclick="arsivTeklifExcelIndir(${t.id})">📊 Excel</button>
                     <button class="arsiv-btn" style="background:#f0fff4;color:#00a859;" onclick="teklifArsivdenYukle(${t.id})">📂 Aç</button>
                     <button class="arsiv-btn" style="background:#fff1f2;color:#e63946;" onclick="teklifArsivdenSil(${t.id})">🗑 Sil</button>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     }
 
     function teklifArsivOnizle(id) {
         const t = teklifArsiv.find(x => x.id === id);
-        if (t) onizleData(t.items, t.musteri, t.tarih, t.paraBirimi || 'TL');
+        // v2: önizleme, teklifin gömülü (kayıt günü) kuru ile hesaplanır — güncel kurdan etkilenmez
+        if (t) withTeklifKuru(t, () => onizleData(t.items, t.musteri, t.tarih, t.paraBirimi || 'TL'));
     }
 
     async function arsivPDFIndir(id) {
@@ -4845,11 +5210,17 @@
         sepet = JSON.parse(JSON.stringify(t.items));
         document.getElementById('teklif-musteri').value = t.musteri;
         document.getElementById('teklif-para-birimi').value = t.paraBirimi || 'TL';
-        await teklifPDFIndir();
-        // Eski duruma geri al
-        sepet = origSepet;
-        document.getElementById('teklif-musteri').value = origMusteri;
-        document.getElementById('teklif-para-birimi').value = origCur;
+        // v2: PDF, teklifin gömülü kuru + kalıcı teklif no + orijinal tarihi ile üretilir
+        window._pdfKayit = t;
+        try {
+            await withTeklifKuru(t, () => teklifPDFIndir());
+        } finally {
+            window._pdfKayit = null;
+            // Eski duruma geri al
+            sepet = origSepet;
+            document.getElementById('teklif-musteri').value = origMusteri;
+            document.getElementById('teklif-para-birimi').value = origCur;
+        }
     }
 
     function teklifOnizle() {
@@ -4967,7 +5338,9 @@
         const cur = document.getElementById('teklif-para-birimi').value;
         const sembol = cur === 'TL' ? 'TL' : (cur === 'USD' ? '$' : '€');
         const musteri = document.getElementById('teklif-musteri').value || 'MÜŞTERİ BELİRTİLMEDİ';
-        const dateStr = new Date().toLocaleDateString('tr-TR');
+        // v2: kayıtlı teklif için orijinal tarih + kalıcı teklif no + gömülü kur bilgisi kullanılır
+        const _pdfKayit = window._pdfKayit || (window._aktifTeklifId ? teklifArsiv.find(x => x.id === window._aktifTeklifId) : null);
+        const dateStr = (_pdfKayit && (_pdfKayit.tarih || '').split(' ')[0]) || new Date().toLocaleDateString('tr-TR');
 
         // Logo (embedded)
         try {
@@ -4981,10 +5354,18 @@
         doc.text("info@imesspor.com | www.imesspor.com", 190, 18, { align: "right" });
         doc.setFontSize(9); doc.setTextColor(0);
         doc.text(`Talep Tarihi : ${dateStr}`, 190, 40, { align: "right" });
-        const eaCounter = parseInt(localStorage.getItem('stok_ea_teklif_counter') || '0') + 1;
-        localStorage.setItem('stok_ea_teklif_counter', eaCounter);
-        const teklifNo = 'EA' + String(eaCounter).padStart(6, '0');
+        let teklifNo;
+        if (_pdfKayit && _pdfKayit.teklifNo) {
+            teklifNo = _pdfKayit.teklifNo;   // kalıcı teklif numarası (TEK-YYYY-NNNN)
+        } else {
+            const eaCounter = parseInt(localStorage.getItem('stok_ea_teklif_counter') || '0') + 1;
+            localStorage.setItem('stok_ea_teklif_counter', eaCounter);
+            teklifNo = 'EA' + String(eaCounter).padStart(6, '0');
+        }
         doc.text(`Teklif No    : ${teklifNo}`, 190, 45, { align: "right" });
+        doc.setFontSize(8); doc.setTextColor(90);
+        doc.text(`Kur: 1 USD = ${formatCurrency(usdKur)} TL · 1 EUR = ${formatCurrency(eurKur)} TL`, 190, 50, { align: "right" });
+        doc.setFontSize(9); doc.setTextColor(0);
         doc.setFontSize(10);
         doc.text(musteri.toUpperCase(), 15, 40);
         doc.line(15, 55, 195, 55);
@@ -5108,17 +5489,7 @@
         let termsY = finalY + 20;
         doc.setFontSize(10); doc.text("TEKLİF ŞARTLARI", 15, termsY);
         doc.setFontSize(8);
-        const terms = [
-            "* Ürünlerin nakliye bedeli alıcı firma/kişi tarafından karşılanacaktır.",
-            "* Ürünlerin kurulum yapılacak alana indirilmesi için kiralanacak vinç, forklift ve hamaliye gibi ücretler alıcı tarafından karşılanacaktır",
-            "* Fiyatlarımıza montaj ve garanti kapsamındaki Teknik Servis dahildir.",
-            "* Kurulum ve montaj anlaşılan ödemeler tamamlandıktan sonra 5 (beş) iş günü içinde yapılacaktır.",
-            "* Kurulumu yapılacak alan eksiksiz olarak İmes Spor'a teslim edilecektir.",
-            "* Ürünlerimiz 2 yıl garantilidir.",
-            "* Teklifimizin geçerlilik tarihi 3 (üç) gündür.",
-            "* Döviz fiyatı verilen teklifler gün kuru üzerinden verilmiş olup, anlaşma yapıldığı gün merkez bankası kur fiyatı dikkate alınacaktır",
-            "* Teklifimizi olumlu karşılamanızı ümit eder, iyi çalışmalar dileriz."
-        ];
+        const terms = TEKLIF_SARTLARI;
         terms.forEach((line, i) => doc.text(line, 15, termsY + 6 + (i * 4.5)));
 
         let signY = termsY + 6 + (terms.length * 4.5) + 10;
@@ -5178,6 +5549,9 @@
                 });
         } else html += `<div class="info-row" style="color:#999">Sipariş yok.</div>`;
         html += '</div>';
+
+        // v2 · Özellik 8: Ürünün kullanıldığı tekliflerin geçmişi (tıklanınca teklif gömülü kuruyla açılır)
+        html += urunTeklifGecmisiHtml(stokKodu);
 
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('info-modal').style.display = 'flex';
@@ -5618,11 +5992,32 @@
             </button>
             <button onclick="_teklifKaydetYap('ayri')"
                 style="background:linear-gradient(135deg,#00a859,#00c96a);color:white;border:none;padding:11px 20px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;text-align:left;">
-                📄 Ayrı Kaydet
-                <div style="font-size:10px;font-weight:500;opacity:0.85;margin-top:2px;">Yeni bir versiyon olarak kaydedilir (orijinal korunur)</div>
+                🆕 Yeni Teklif Olarak Kaydet
+                <div style="font-size:10px;font-weight:500;opacity:0.85;margin-top:2px;">Formdaki güncel Müşteri / Teklif Adı ile yeni teklif no alınarak AYRI bir kayıt oluşturulur (orijinal korunur)</div>
             </button>
         </div>
         <button onclick="document.getElementById('teklif-kaydet-secim-modal').style.display='none'"
+            style="margin-top:14px;background:#eee;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">İptal</button>
+    </div>
+</div>
+
+<!-- ── v2 · Özellik 3: Teklif Revizyon Modalı ── -->
+<div id="teklif-revize-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:white;border-radius:12px;padding:26px 24px;box-shadow:0 5px 24px rgba(0,0,0,0.25);width:420px;max-width:92vw;text-align:center;">
+        <div style="font-size:14px;font-weight:800;color:#1a1f36;margin-bottom:4px;">🔁 Teklifi Revize Et</div>
+        <div id="revize-teklif-ad" style="font-size:12px;color:#6f42c1;font-weight:700;margin-bottom:6px;"></div>
+        <div style="font-size:11px;color:#8a94a6;margin-bottom:18px;">Revizyon hangi kur üzerinden yapılsın?</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="revize-opsiyon-btn" style="background:linear-gradient(135deg,#3b5bdb,#5c7cfa);" onclick="teklifRevizeSec('mevcut')">
+                📌 Mevcut (Sabit) Kur ile Revize Et
+                <div class="revize-opsiyon-alt" id="revize-sabit-kur-bilgi">Teklifin kaydedildiği gündeki gömülü kur ve dondurulmuş fiyatlar korunur.</div>
+            </button>
+            <button class="revize-opsiyon-btn" style="background:linear-gradient(135deg,#e8590c,#f76707);" onclick="teklifRevizeSec('guncel')">
+                💱 Güncel Kur ile Revize Et
+                <div class="revize-opsiyon-alt" id="revize-guncel-kur-bilgi">Ürün fiyatları bugünün aktif kuru ile yeniden hesaplanır.</div>
+            </button>
+        </div>
+        <button onclick="document.getElementById('teklif-revize-modal').style.display='none'"
             style="margin-top:14px;background:#eee;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;">İptal</button>
     </div>
 </div>
